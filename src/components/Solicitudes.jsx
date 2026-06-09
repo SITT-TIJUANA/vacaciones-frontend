@@ -40,7 +40,7 @@ export default function Solicitudes({ onActualizarNotif }) {
       <div className="section-header">
         <h2 className="section-title">Solicitudes</h2>
         <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
-          <select className="form-control" style={{ width:150 }} value={filtroEstatus} onChange={e=>setFiltroEstatus(e.target.value)}>
+          <select className="form-control" style={{ width:150 }} value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}>
             <option value="">Todos</option>
             <option value="pendiente">⏳ Pendientes</option>
             <option value="aprobada">✅ Aprobadas</option>
@@ -67,7 +67,6 @@ export default function Solicitudes({ onActualizarNotif }) {
           {filtradas.map(s => (
             <div key={s.id} className="card" style={{ padding:'16px 20px' }}>
               <div style={{ display:'flex', alignItems:'flex-start', gap:14, flexWrap:'wrap' }}>
-                {/* Foto empleado — solo admin/rrhh */}
                 {esAdmin && (
                   <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
                     {s.foto_url
@@ -82,8 +81,6 @@ export default function Solicitudes({ onActualizarNotif }) {
                     </div>
                   </div>
                 )}
-
-                {/* Detalles */}
                 <div style={{ flex:1, minWidth:140 }}>
                   <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:'var(--txt)', marginBottom:4 }}>
                     📅 {fmtFecha(s.fecha_inicio)} → {fmtFecha(s.fecha_fin)}
@@ -99,10 +96,7 @@ export default function Solicitudes({ onActualizarNotif }) {
                       {s.estatus}
                     </span>
                   </div>
-                  {s.motivo && (
-                    <div style={{ fontSize:12, color:'var(--g60)', marginTop:3 }}>💬 {s.motivo}</div>
-                  )}
-                  {/* Comentario de rechazo — visible para todos */}
+                  {s.motivo && <div style={{ fontSize:12, color:'var(--g60)', marginTop:3 }}>💬 {s.motivo}</div>}
                   {s.comentario_resolucion && (
                     <div style={{ marginTop:8, padding:'8px 12px', background:'#FFEBEE', borderRadius:8, border:'1px solid #FFCDD2', fontSize:12, color:'#B71C1C', fontWeight:600 }}>
                       ❌ Motivo de rechazo: {s.comentario_resolucion}
@@ -113,16 +107,10 @@ export default function Solicitudes({ onActualizarNotif }) {
                     {s.aprobado_por_username && ` · Por: ${s.aprobado_por_username}`}
                   </div>
                 </div>
-
-                {/* Botones admin */}
                 {esAdmin && s.estatus === 'pendiente' && (
                   <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                    <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>
-                      ✅ Aprobar
-                    </button>
-                    <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>
-                      ❌ Rechazar
-                    </button>
+                    <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>✅ Aprobar</button>
+                    <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>❌ Rechazar</button>
                   </div>
                 )}
               </div>
@@ -131,37 +119,36 @@ export default function Solicitudes({ onActualizarNotif }) {
         </div>
       )}
 
-      {/* Modal nueva solicitud */}
       {modalNueva && (
-        <ModalNuevaSolicitud
+        <FormNuevaSolicitud
           onClose={() => setModalNueva(false)}
           onCreada={() => { cargar(); setModalNueva(false); onActualizarNotif?.(); }}
         />
       )}
 
-      {/* Modal rechazar */}
       {resolviendo && (
         <ModalRechazar
           onClose={() => setResolviendo(null)}
-          onConfirmar={(comentario) => resolver(resolviendo.id, 'rechazada', comentario)}
+          onConfirmar={(c) => resolver(resolviendo.id, 'rechazada', c)}
         />
       )}
     </div>
   );
 }
 
-function ModalNuevaSolicitud({ onClose, onCreada }) {
-  const [form, setForm] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
+// Formulario completamente nuevo — sin modal, inline en la página
+function FormNuevaSolicitud({ onClose, onCreada }) {
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
+  const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
-  const [diasCalc, setDiasCalc] = useState(0);
 
-  // Calcular días hábiles
-  useEffect(() => {
-    if (!form.fecha_inicio || !form.fecha_fin) { setDiasCalc(0); return; }
-    const ini = new Date(form.fecha_inicio);
-    const fin = new Date(form.fecha_fin);
-    if (fin < ini) { setDiasCalc(0); return; }
+  const calcDias = () => {
+    if (!fechaInicio || !fechaFin) return 0;
+    const ini = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    if (fin < ini) return 0;
     let dias = 0;
     const cur = new Date(ini);
     while (cur <= fin) {
@@ -169,66 +156,113 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
       if (d !== 0 && d !== 6) dias++;
       cur.setDate(cur.getDate() + 1);
     }
-    setDiasCalc(dias);
-  }, [form.fecha_inicio, form.fecha_fin]);
+    return dias;
+  };
 
-  const handleSubmit = async () => {
-    if (!form.fecha_inicio || !form.fecha_fin) { setError('Selecciona las fechas'); return; }
-    if (diasCalc === 0) { setError('Las fechas seleccionadas no tienen días hábiles'); return; }
+  const dias = calcDias();
+
+  const enviar = async () => {
+    if (!fechaInicio || !fechaFin) { setError('Selecciona las fechas'); return; }
+    if (dias === 0) { setError('No hay días hábiles en ese rango'); return; }
     setEnviando(true); setError('');
     try {
-      await api.post('/api/solicitudes', form);
+      await api.post('/api/solicitudes', { fecha_inicio: fechaInicio, fecha_fin: fechaFin, motivo });
       onCreada();
     } catch(e) {
       setError(e.response?.data?.error || 'Error al enviar');
-    } finally { setEnviando(false); }
+      setEnviando(false);
+    }
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.65)', backdropFilter:'blur(6px)', display:'flex', flexDirection:'column', justifyContent:'flex-end' }} onClick={onClose}>
-      <div style={{ background:'var(--w)', borderRadius:'24px 24px 0 0', width:'100%', padding:'0 0 env(safe-area-inset-bottom,0px)' }} onClick={e => e.stopPropagation()}>
-        {/* Handle */}
-        <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 4px' }}>
-          <div style={{ width:40, height:4, background:'var(--g20)', borderRadius:2 }} />
-        </div>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'rgba(0,0,0,0.6)',
+      backdropFilter: 'blur(4px)',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      padding: '20px 16px 40px',
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--w)',
+        borderRadius: 20,
+        width: '100%',
+        maxWidth: 480,
+        marginTop: 60,
+        overflow: 'visible',
+      }} onClick={e => e.stopPropagation()}>
+
         {/* Header */}
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'4px 20px 16px' }}>
-          <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:20, color:'var(--g)' }}>
-            Nueva Solicitud
+        <div style={{
+          background: 'linear-gradient(135deg, var(--g-dk), var(--g))',
+          borderRadius: '20px 20px 0 0',
+          padding: '18px 20px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:18, color:'#fff' }}>
+            📝 Nueva Solicitud
           </div>
-          <button onClick={onClose} style={{ background:'var(--g-soft)', border:'none', width:32, height:32, borderRadius:'50%', cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--g)', fontWeight:900 }}>✕</button>
+          <button onClick={onClose} style={{
+            background: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)',
+            color: '#fff', width: 36, height: 36, borderRadius: '50%',
+            cursor: 'pointer', fontSize: 18, fontWeight: 900,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</button>
         </div>
-        {/* BOTONES ARRIBA — siempre visibles sin importar el teclado */}
-        <div style={{ display:'flex', gap:10, padding:'0 20px 16px' }}>
-          <button className="btn-institucional" style={{ flex:1 }} onClick={onClose}>Cancelar</button>
-          <button className="btn-institucional filled" style={{ flex:2 }} onClick={handleSubmit} disabled={enviando}>
-            {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
-          </button>
-        </div>
-        {/* Contenido */}
-        <div style={{ padding:'0 20px 24px', display:'flex', flexDirection:'column', gap:14 }}>
-          {error && <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>⚠️ {error}</div>}
+
+        {/* Cuerpo */}
+        <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {error && (
+            <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>
+              ⚠️ {error}
+            </div>
+          )}
+
           <div className="form-group">
-            <label>Fecha Inicio</label>
-            <input type="date" className="form-control" value={form.fecha_inicio} onChange={e => setForm({...form, fecha_inicio:e.target.value})} />
+            <label>Fecha Inicio *</label>
+            <input type="date" className="form-control"
+              value={fechaInicio}
+              onChange={e => setFechaInicio(e.target.value)} />
           </div>
+
           <div className="form-group">
-            <label>Fecha Fin</label>
-            <input type="date" className="form-control" value={form.fecha_fin} min={form.fecha_inicio} onChange={e => setForm({...form, fecha_fin:e.target.value})} />
+            <label>Fecha Fin *</label>
+            <input type="date" className="form-control"
+              value={fechaFin}
+              min={fechaInicio}
+              onChange={e => setFechaFin(e.target.value)} />
           </div>
-          {diasCalc > 0 && (
-            <div style={{ background:'var(--g-soft)', borderRadius:12, padding:'12px 14px', border:'1px solid rgba(107,15,43,0.15)', display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:36, color:'var(--g)', lineHeight:1 }}>{diasCalc}</div>
+
+          {dias > 0 && (
+            <div style={{ background:'var(--g-soft)', borderRadius:12, padding:'12px 16px', border:'1px solid rgba(107,15,43,0.15)', display:'flex', alignItems:'center', gap:14 }}>
+              <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:40, color:'var(--g)', lineHeight:1 }}>{dias}</div>
               <div>
-                <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:'var(--g)' }}>días hábiles</div>
+                <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:14, color:'var(--g)' }}>días hábiles</div>
                 <div style={{ fontSize:11, color:'var(--g60)' }}>se descontarán de tu periodo</div>
               </div>
             </div>
           )}
+
           <div className="form-group">
             <label>Motivo (opcional)</label>
-            <textarea className="form-control" rows={2} placeholder="Describe el motivo..." value={form.motivo} onChange={e => setForm({...form, motivo:e.target.value})} />
+            <textarea className="form-control" rows={3}
+              placeholder="Describe el motivo de tus vacaciones..."
+              value={motivo}
+              onChange={e => setMotivo(e.target.value)} />
           </div>
+        </div>
+
+        {/* Botones */}
+        <div style={{ padding: '16px 20px 20px', display: 'flex', gap: 10 }}>
+          <button className="btn-institucional" style={{ flex: 1 }} onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn-institucional filled" style={{ flex: 2 }} onClick={enviar} disabled={enviando}>
+            {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
+          </button>
         </div>
       </div>
     </div>
@@ -248,12 +282,9 @@ function ModalRechazar({ onClose, onConfirmar }) {
           <div className="form-group">
             <label>Motivo del rechazo</label>
             <textarea className="form-control" rows={3}
-              placeholder="Indica el motivo del rechazo... (el empleado lo verá)"
+              placeholder="El empleado verá este motivo..."
               value={comentario} onChange={e => setComentario(e.target.value)} />
           </div>
-          <p style={{ fontSize:11, color:'var(--g60)', marginTop:8 }}>
-            💡 El empleado verá este motivo en su sección de solicitudes.
-          </p>
         </div>
         <div className="modal-footer">
           <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
