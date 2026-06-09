@@ -185,29 +185,29 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}
-        style={{ display:'flex', flexDirection:'column', maxHeight:'88dvh', overflow:'hidden' }}>
-        <div className="modal-header" style={{ flexShrink:0 }}>
-          <h2>📝 Nueva Solicitud de Vacaciones</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.65)', backdropFilter:'blur(6px)', display:'flex', flexDirection:'column', justifyContent:'flex-end' }} onClick={onClose}>
+      <div style={{ background:'var(--w)', borderRadius:'24px 24px 0 0', width:'100%', padding:'0 0 env(safe-area-inset-bottom,0px)' }} onClick={e => e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 4px' }}>
+          <div style={{ width:40, height:4, background:'var(--g20)', borderRadius:2 }} />
         </div>
-        <div className="modal-body" style={{ flex:'1 1 auto', overflowY:'auto', minHeight:0, display:'flex', flexDirection:'column', gap:16 }}>
-          {error && (
-            <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>
-              ⚠️ {error}
-            </div>
-          )}
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'4px 20px 16px' }}>
+          <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:20, color:'var(--g)' }}>
+            Nueva Solicitud
+          </div>
+          <button onClick={onClose} style={{ background:'var(--g-soft)', border:'none', width:32, height:32, borderRadius:'50%', cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--g)', fontWeight:900 }}>✕</button>
+        </div>
+        {/* Contenido */}
+        <div style={{ padding:'0 20px', display:'flex', flexDirection:'column', gap:14 }}>
+          {error && <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>⚠️ {error}</div>}
           <div className="form-group">
             <label>Fecha Inicio</label>
-            <input type="date" className="form-control" value={form.fecha_inicio}
-              onChange={e => setForm({...form, fecha_inicio:e.target.value})} />
+            <input type="date" className="form-control" value={form.fecha_inicio} onChange={e => setForm({...form, fecha_inicio:e.target.value})} />
           </div>
           <div className="form-group">
             <label>Fecha Fin</label>
-            <input type="date" className="form-control" value={form.fecha_fin}
-              min={form.fecha_inicio}
-              onChange={e => setForm({...form, fecha_fin:e.target.value})} />
+            <input type="date" className="form-control" value={form.fecha_fin} min={form.fecha_inicio} onChange={e => setForm({...form, fecha_fin:e.target.value})} />
           </div>
           {diasCalc > 0 && (
             <div style={{ background:'var(--g-soft)', borderRadius:12, padding:'12px 14px', border:'1px solid rgba(107,15,43,0.15)', display:'flex', alignItems:'center', gap:12 }}>
@@ -220,14 +220,13 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
           )}
           <div className="form-group">
             <label>Motivo (opcional)</label>
-            <textarea className="form-control" rows={3}
-              placeholder="Describe el motivo de tus vacaciones..."
-              value={form.motivo} onChange={e => setForm({...form, motivo:e.target.value})} />
+            <textarea className="form-control" rows={2} placeholder="Describe el motivo..." value={form.motivo} onChange={e => setForm({...form, motivo:e.target.value})} />
           </div>
         </div>
-        <div className="modal-footer" style={{ flexShrink:0 }}>
-          <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
-          <button className="btn-institucional filled btn-sm" onClick={handleSubmit} disabled={enviando}>
+        {/* BOTONES — siempre al fondo */}
+        <div style={{ display:'flex', gap:10, padding:'16px 20px 20px' }}>
+          <button className="btn-institucional" style={{ flex:1 }} onClick={onClose}>Cancelar</button>
+          <button className="btn-institucional filled" style={{ flex:2 }} onClick={handleSubmit} disabled={enviando}>
             {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
           </button>
         </div>
