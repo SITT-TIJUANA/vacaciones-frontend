@@ -82,15 +82,16 @@ async function getLogoBase64() {
 async function getFotoBase64(url) {
   if (!url) return null;
   try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = url + '?t=' + Date.now();
-    await new Promise((res) => { img.onload = res; img.onerror = res; setTimeout(res, 3000); });
-    if (!img.complete || img.naturalWidth === 0) return null;
-    const c = document.createElement('canvas');
-    c.width = img.naturalWidth; c.height = img.naturalHeight;
-    c.getContext('2d').drawImage(img, 0, 0);
-    return c.toDataURL('image/png');
+    // Usar fetch para evitar problemas CORS con Cloudinary
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
   } catch(e) { return null; }
 }
 
