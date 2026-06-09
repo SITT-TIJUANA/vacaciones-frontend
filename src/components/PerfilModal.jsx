@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,7 +14,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
   const [nuevaFoto, setNuevaFoto] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
-  const fotoRef = require('react').useRef();
+  const fotoRef = useRef();
   const [registrarVacs, setRegistrarVacs] = useState(false);
   const [formVacs, setFormVacs] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
   const [guardandoVacs, setGuardandoVacs] = useState(false);
