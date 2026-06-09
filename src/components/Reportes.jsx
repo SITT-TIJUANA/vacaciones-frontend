@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import api from '../services/api';
+import ConfigPDF from './ConfigPDF';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler);
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -86,6 +87,7 @@ export default function Reportes() {
   const [busqueda, setBusqueda] = useState('');
   const [empleadoFiltro, setEmpleadoFiltro] = useState('');
   const [exportando, setExportando] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   const cargar = () => {
     setCargando(true);
@@ -106,7 +108,7 @@ export default function Reportes() {
   const empSeleccionado = empleadoFiltro ? detalle.find(e => e.id === empleadoFiltro) : null;
 
   // ── EXPORTAR PDF ─────────────────────────────────────
-  const exportarPDF = async () => {
+  const exportarPDF = async (cfg) => {
     setExportando(true);
     try {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -117,7 +119,16 @@ export default function Reportes() {
         ? `Reporte Individual: ${empSeleccionado.apellido_paterno} ${empSeleccionado.nombre}`
         : `Reporte General de Vacaciones ${anio}`;
 
-      addHeaderPDF(doc, tituloDoc, fecha, logo);
+      // Aplicar colores de configuración
+      const CP = cfg.hexToRgb(cfg.colorPrimario);
+      const CS = cfg.hexToRgb(cfg.colorSecundario);
+      // Override colores globales temporalmente
+      const origGuinda = [...GUINDA];
+      GUINDA.splice(0,3,...CP);
+      const origDorado = [...DORADO];
+      DORADO.splice(0,3,...CS);
+
+      addHeaderPDF(doc, cfg.titulo || tituloDoc, cfg.subtitulo || cfg.institucion || fecha, logo);
 
       let y = 54;
 
@@ -233,6 +244,48 @@ export default function Reportes() {
           },
         });
       }
+
+      // ── Firma ────────────────────────────────────────
+      if (cfg.incluirFirmas && cfg.firmas?.length > 0) {
+        const pageH = doc.internal.pageSize.height;
+        const firmaY = pageH - 55;
+        doc.setFillColor(...GUINDA);
+        doc.rect(14, firmaY - 8, 182, 7, 'F');
+        doc.setTextColor(255,255,255);
+        doc.setFontSize(9); doc.setFont('helvetica','bold');
+        doc.text('FIRMAS DE AUTORIZACIÓN', 18, firmaY - 3.5);
+
+        const fw = 182 / cfg.firmas.length;
+        cfg.firmas.forEach((f, i) => {
+          const fx = 14 + i * fw;
+          const lineY = firmaY + 22;
+          doc.setDrawColor(...GUINDA);
+          doc.setLineWidth(0.5);
+          doc.line(fx + 8, lineY, fx + fw - 8, lineY);
+          doc.setTextColor(107, 15, 43);
+          doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+          doc.text(f.etiqueta || 'Firma', fx + fw/2, lineY + 4, { align:'center' });
+          if (f.nombre) {
+            doc.setFontSize(8); doc.setTextColor(26,22,20);
+            doc.text(f.nombre, fx + fw/2, lineY + 9, { align:'center' });
+          }
+          doc.setFontSize(7); doc.setTextColor(107, 15, 43);
+          doc.text(f.puesto || '', fx + fw/2, lineY + 13.5, { align:'center' });
+        });
+      }
+
+      // ── Nota final ──────────────────────────────────
+      if (cfg.notaFinal) {
+        const lines = doc.splitTextToSize(cfg.notaFinal, 182);
+        const lastY = doc.lastAutoTable?.finalY || 200;
+        doc.setFontSize(8); doc.setTextColor(130,120,120);
+        doc.setFont('helvetica','italic');
+        doc.text(lines, 14, lastY + 12);
+      }
+
+      // Restaurar colores
+      GUINDA.splice(0,3,...origGuinda);
+      DORADO.splice(0,3,...origDorado);
 
       addFooterPDF(doc);
       doc.save(`Reporte_SITT_${anio}${empSeleccionado ? '_' + empSeleccionado.apellido_paterno : ''}.pdf`);
@@ -397,8 +450,8 @@ export default function Reportes() {
             <input className="form-control" placeholder="Nombre..." value={busqueda} onChange={e=>setBusqueda(e.target.value)} />
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-            <button className="btn-institucional filled" onClick={exportarPDF} disabled={exportando}>
-              {exportando ? '⏳...' : '📄 PDF'}
+            <button className="btn-institucional filled" onClick={() => setShowConfig(true)} disabled={exportando}>
+              {exportando ? '⏳...' : '⚙️ PDF'}
             </button>
             <button className="btn-institucional dorado" onClick={exportarExcel} disabled={exportando}>
               {exportando ? '⏳...' : '📊 Excel'}
@@ -480,5 +533,13 @@ export default function Reportes() {
         )}
       </div>
     </div>
+
+      {showConfig && (
+        <ConfigPDF
+          empSeleccionado={empSeleccionado}
+          onCerrar={() => setShowConfig(false)}
+          onGenerar={(cfg) => { setShowConfig(false); exportarPDF(cfg); }}
+        />
+      )}
   );
 }
