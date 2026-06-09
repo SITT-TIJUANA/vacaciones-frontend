@@ -141,31 +141,36 @@
   .modal {
     border-radius: 24px 24px 0 0 !important;
     max-height: 88dvh !important;
-    height: 88dvh;
     width: 100% !important;
     max-width: 100% !important;
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     overflow: hidden !important;
     animation: slideUpModal 0.35s var(--ease);
+    margin: 0 !important;
   }
   .modal-lg { max-width: 100% !important; }
   .modal-header {
     border-radius: 24px 24px 0 0 !important;
     padding: 14px 16px !important;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
   }
   .modal-header h2 { font-size: 15px; }
   .modal-body {
-    padding: 14px 14px !important;
-    flex: 1;
+    padding: 14px !important;
+    flex: 1 1 auto !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
+    min-height: 0 !important;
   }
   .modal-footer {
-    padding: 10px 14px !important;
-    gap: 8px;
-    flex-shrink: 0;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    border-top: 1px solid var(--g20);
+    background: var(--w);
+    display: flex !important;
+    justify-content: flex-end !important;
   }
   @keyframes slideUpModal {
     from { transform: translateY(100%); opacity: 0; }
@@ -275,3 +280,53 @@
     padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 }
+
+  /* ── CALENDARIO MÓVIL ── */
+  .calendario-nav {
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: center;
+  }
+  .calendario-nav-btns {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  /* Grid 7 columnas ajustado */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 2px !important;
+  }
+  .cal-header-dia {
+    font-size: 9px !important;
+    padding: 5px 2px !important;
+  }
+  .cal-celda {
+    min-height: 52px !important;
+    padding: 4px 3px !important;
+    border-radius: 6px !important;
+  }
+  .cal-dia-num {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+  }
+  .cal-evento {
+    padding: 1px 3px !important;
+    border-radius: 4px !important;
+    font-size: 8px !important;
+    gap: 2px !important;
+  }
+  .cal-evento img {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .cal-evento span { display: none !important; }
+
+  /* Leyenda en móvil */
+  .cal-leyenda {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    font-size: 11px !important;
+  }
