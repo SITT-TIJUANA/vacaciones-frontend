@@ -1,9 +1,10 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import './assets/styles/global.css';
+import './assets/styles/mobile.css';
 
 function ProtectedRoute({ children }) {
   const { usuario, cargando } = useAuth();
@@ -28,13 +29,13 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <HashRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </HashRouter>
+        </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
   );
