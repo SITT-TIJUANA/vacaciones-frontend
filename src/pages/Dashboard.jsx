@@ -9,6 +9,7 @@ import Bajas from '../components/Bajas';
 import DiasAdeudados from '../components/DiasAdeudados';
 import Calendario from '../components/Calendario';
 import VincularCuenta from '../components/VincularCuenta';
+import InstalarApp from '../components/InstalarApp';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -180,6 +181,8 @@ export default function Dashboard() {
       </nav>
 
       {showVincular&&<VincularCuenta onClose={()=>setShowVincular(false)} onVinculado={async()=>{await refrescarUsuario();setShowVincular(false);}} />}
+
+      <InstalarApp />
 
       {showInfo&&(
         <div className="modal-overlay" onClick={()=>setShowInfo(false)}>
