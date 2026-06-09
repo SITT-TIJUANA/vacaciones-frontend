@@ -179,18 +179,20 @@
 
   /* ── PERFIL MODAL ── */
   .perfil-header {
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    padding: 14px 14px 10px !important;
-    gap: 10px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 20px 14px 12px !important;
+    gap: 8px !important;
     flex-shrink: 0;
   }
-  .perfil-foto { width: 58px !important; height: 58px !important; border-width: 2px !important; }
-  .perfil-nombre { font-size: 14px !important; }
-  .perfil-puesto { font-size: 11px !important; margin-top: 2px !important; }
-  .dias-ring { margin-left: 0 !important; text-align: center; flex-shrink: 0; }
-  .dias-ring .numero { font-size: 32px !important; }
+  .perfil-foto { width: 72px !important; height: 72px !important; border-width: 3px !important; }
+  .perfil-nombre { font-size: 15px !important; text-align: center !important; }
+  .perfil-puesto { font-size: 11px !important; margin-top: 2px !important; text-align: center !important; }
+  .dias-ring { margin-left: 0 !important; text-align: center !important; flex-shrink: 0; }
+  .dias-ring .numero { font-size: 36px !important; }
   .dias-ring .etiqueta { font-size: 8px !important; }
+  .perfil-header > div { text-align: center !important; }
 
   /* ── FORMULARIOS ── */
   .form-grid { grid-template-columns: 1fr; gap: 10px; }
@@ -248,7 +250,7 @@
   .baja-stats > div { min-width: 100px; flex: 1; }
 
   /* ── INSTALAR APP BTN ── */
-  .instalar-btn-float { bottom: 78px !important; right: 12px !important; }
+  .instalar-btn-float { bottom: 82px !important; right: 12px !important; }
 }
 
 /* ── SMALL PHONES (< 390px) ── */
