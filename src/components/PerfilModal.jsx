@@ -181,7 +181,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
             )}
 
             {/* Info */}
-            <div style={{ flex:1, paddingRight: 44 }}>
+            <div style={{ flex:1 }}>
               <div className="perfil-nombre">{nombre}</div>
               <div className="perfil-puesto">{empleado.puesto || 'Sin puesto'}</div>
               {empleado.departamento && <div style={{ marginTop:5, fontSize:12, opacity:0.8 }}>🏢 {empleado.departamento}</div>}
@@ -195,7 +195,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
             </div>
 
             {/* Días disponibles */}
-            <div className="dias-ring" style={{ flexShrink:0 }}>
+            <div className="dias-ring" style={{ flexShrink:0, marginLeft:'auto' }}>
               <div className="numero">{periodoActual.dias_disponibles ?? '—'}</div>
               <div className="etiqueta">días disp.</div>
               <div style={{ fontSize:10, opacity:0.7, marginTop:3 }}>{anioActual}</div>
