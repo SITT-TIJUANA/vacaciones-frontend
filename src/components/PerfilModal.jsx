@@ -132,7 +132,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
           </div>
 
           {/* ── BARRA PROGRESO ── */}
-          <div style={{ padding:'14px 24px 0', background:'var(--w)' }}>
+          <div style={{ padding:'12px 16px 0', background:'var(--w)', flexShrink:0 }}>
             <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5, fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g)' }}>
               <span>Vacaciones {anioActual}</span>
               <span>{periodoActual.dias_tomados||0} / {periodoActual.dias_correspondientes||0} días ({pct}%)</span>
@@ -143,7 +143,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
           </div>
 
           {/* ── TABS como botones bonitos ── */}
-          <div style={{ display:'flex', gap:8, padding:'14px 24px 0', background:'var(--w)', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:6, padding:'10px 16px 0', background:'var(--w)', flexWrap:'nowrap', flexShrink:0 }}>
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 style={{
@@ -163,7 +163,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
           </div>
 
           {/* ── CONTENIDO TABS ── */}
-          <div className="modal-body">
+          <div className="modal-body" style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch' }}>
 
             {/* INFO */}
             {tab === 'info' && (
