@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import PeriodosDetalle from './PeriodosDetalle';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -133,6 +134,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
   const TABS = [
     { id: 'info',        label: 'Información', icon: '📋' },
     { id: 'periodos',    label: 'Periodos',     icon: '📅' },
+    { id: 'historial',   label: 'Historial',    icon: '🗂️' },
     { id: 'solicitudes', label: 'Solicitudes',  icon: '📝' },
   ];
 
@@ -354,6 +356,11 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* HISTORIAL DETALLADO */}
+            {tab === 'historial' && (
+              <PeriodosDetalle empleadoId={empleadoId} periodos={periodos} />
             )}
 
             {/* SOLICITUDES */}
