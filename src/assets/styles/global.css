@@ -307,3 +307,16 @@ tbody tr:last-child{border-bottom:none;}
 ::-webkit-scrollbar-track{background:var(--g10);}
 ::-webkit-scrollbar-thumb{background:var(--g);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--g-dk);}
+
+/* ── BOTÓN VINCULAR CUENTA ── */
+.vincular-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 30px; cursor: pointer;
+  font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700;
+  border: 1.5px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85); transition: var(--tf); white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+.vincular-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.55); color: #fff; transform: scale(1.03); }
+.vincular-btn.vinculado { background: rgba(201,168,76,0.2); border-color: rgba(201,168,76,0.5); color: var(--d-lt); }
+.vincular-btn.vinculado:hover { background: rgba(201,168,76,0.32); color: #fff; }
