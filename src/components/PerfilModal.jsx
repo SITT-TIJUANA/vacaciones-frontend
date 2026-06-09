@@ -9,6 +9,12 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
   const [fotoExpandida, setFotoExpandida] = useState(false);
   const [tab, setTab] = useState('info');
   const [editandoPeriodo, setEditandoPeriodo] = useState(null);
+  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [formPerfil, setFormPerfil] = useState({});
+  const [nuevaFoto, setNuevaFoto] = useState(null);
+  const [previewFoto, setPreviewFoto] = useState(null);
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false);
+  const fotoRef = require('react').useRef();
   const [registrarVacs, setRegistrarVacs] = useState(false);
   const [formVacs, setFormVacs] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
   const [guardandoVacs, setGuardandoVacs] = useState(false);
@@ -43,6 +49,42 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
     } catch (e) {
       alert(e.response?.data?.error || 'Error al guardar');
     }
+  };
+
+  const abrirEditarPerfil = () => {
+    setFormPerfil({
+      nombre: empleado.nombre || '',
+      apellido_paterno: empleado.apellido_paterno || '',
+      apellido_materno: empleado.apellido_materno || '',
+      numero_empleado: empleado.numero_empleado || '',
+      puesto: empleado.puesto || '',
+      departamento: empleado.departamento || '',
+      fecha_ingreso: empleado.fecha_ingreso ? empleado.fecha_ingreso.split('T')[0] : '',
+      email: empleado.email || '',
+      telefono: empleado.telefono || '',
+    });
+    setNuevaFoto(null);
+    setPreviewFoto(null);
+    setEditandoPerfil(true);
+  };
+
+  const guardarPerfil = async () => {
+    setGuardandoPerfil(true);
+    try {
+      const fd = new FormData();
+      Object.entries(formPerfil).forEach(([k, v]) => fd.append(k, v));
+      if (nuevaFoto) fd.append('foto', nuevaFoto);
+      if (previewFoto === 'BORRAR') fd.append('borrar_foto', 'true');
+      await api.put(`/api/empleados/${empleadoId}`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const r = await api.get(`/api/empleados/${empleadoId}`);
+      setDatos(r.data);
+      setEditandoPerfil(false);
+      onActualizar?.();
+    } catch(e) {
+      alert(e.response?.data?.error || 'Error al guardar');
+    } finally { setGuardandoPerfil(false); }
   };
 
   const guardarVacaciones = async () => {
@@ -117,6 +159,18 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.45)'}
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
             >✕</button>
+
+            {/* Botón editar perfil — solo admin/rrhh */}
+            {esAdminRRHH && (
+              <button onClick={e => { e.stopPropagation(); abrirEditarPerfil(); }}
+                style={{ position:'absolute', top:12, left:12, zIndex:10,
+                  background:'rgba(255,255,255,0.2)', border:'2px solid rgba(255,255,255,0.4)',
+                  color:'#fff', borderRadius:20, padding:'6px 12px', cursor:'pointer',
+                  fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11,
+                  display:'flex', alignItems:'center', gap:5, transition:'all 0.2s' }}>
+                ✏️ Editar
+              </button>
+            )}
 
             {/* Foto */}
             {empleado.foto_url ? (
@@ -332,6 +386,82 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
           </div>
         </div>
       </div>
+
+      {/* Modal editar perfil */}
+      {editandoPerfil && esAdminRRHH && (
+        <div className="modal-overlay" onClick={() => setEditandoPerfil(false)}>
+          <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>✏️ Editar Perfil</h2>
+              <button className="modal-close" onClick={() => setEditandoPerfil(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 160px', gap:24, alignItems:'start' }}>
+                <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                  <div>
+                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11, color:'var(--g)', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:12, paddingBottom:8, borderBottom:'2px solid var(--g-soft)' }}>👤 Datos Personales</div>
+                    <div className="form-grid">
+                      <div className="form-group"><label>Nombre *</label><input className="form-control" value={formPerfil.nombre||''} onChange={e=>setFormPerfil({...formPerfil,nombre:e.target.value})} /></div>
+                      <div className="form-group"><label>Apellido Paterno *</label><input className="form-control" value={formPerfil.apellido_paterno||''} onChange={e=>setFormPerfil({...formPerfil,apellido_paterno:e.target.value})} /></div>
+                      <div className="form-group"><label>Apellido Materno</label><input className="form-control" value={formPerfil.apellido_materno||''} onChange={e=>setFormPerfil({...formPerfil,apellido_materno:e.target.value})} /></div>
+                      <div className="form-group"><label>Número de Empleado</label><input className="form-control" value={formPerfil.numero_empleado||''} onChange={e=>setFormPerfil({...formPerfil,numero_empleado:e.target.value})} /></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11, color:'var(--g)', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:12, paddingBottom:8, borderBottom:'2px solid var(--g-soft)' }}>🏢 Datos Laborales</div>
+                    <div className="form-grid">
+                      <div className="form-group"><label>Puesto</label><input className="form-control" value={formPerfil.puesto||''} onChange={e=>setFormPerfil({...formPerfil,puesto:e.target.value})} /></div>
+                      <div className="form-group"><label>Departamento</label><input className="form-control" value={formPerfil.departamento||''} onChange={e=>setFormPerfil({...formPerfil,departamento:e.target.value})} /></div>
+                      <div className="form-group"><label>Fecha de Ingreso</label><input type="date" className="form-control" value={formPerfil.fecha_ingreso||''} onChange={e=>setFormPerfil({...formPerfil,fecha_ingreso:e.target.value})} /></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11, color:'var(--g)', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:12, paddingBottom:8, borderBottom:'2px solid var(--g-soft)' }}>📞 Contacto</div>
+                    <div className="form-grid">
+                      <div className="form-group"><label>Correo</label><input type="email" className="form-control" value={formPerfil.email||''} onChange={e=>setFormPerfil({...formPerfil,email:e.target.value})} /></div>
+                      <div className="form-group"><label>Teléfono</label><input className="form-control" value={formPerfil.telefono||''} onChange={e=>setFormPerfil({...formPerfil,telefono:e.target.value})} /></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Foto */}
+                <div style={{ display:'flex', flexDirection:'column', gap:10, alignItems:'center', paddingTop:20 }}>
+                  <div style={{ width:130, height:130, borderRadius:'50%', overflow:'hidden', border:'4px solid var(--d)', flexShrink:0, background:'var(--g10)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}
+                    onClick={() => fotoRef.current?.click()}>
+                    {previewFoto || empleado.foto_url
+                      ? <img src={previewFoto || empleado.foto_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      : <span style={{ fontSize:48 }}>👤</span>
+                    }
+                  </div>
+                  <input ref={fotoRef} type="file" accept="image/*" style={{ display:'none' }}
+                    onChange={e => {
+                      const f = e.target.files[0];
+                      if (!f) return;
+                      setNuevaFoto(f);
+                      const reader = new FileReader();
+                      reader.onload = ev => setPreviewFoto(ev.target.result);
+                      reader.readAsDataURL(f);
+                    }} />
+                  <button className="btn-institucional dorado btn-sm" onClick={() => fotoRef.current?.click()}>
+                    📷 Cambiar foto
+                  </button>
+                  {(previewFoto || empleado.foto_url) && (
+                    <button className="btn-institucional peligro btn-sm" onClick={() => { setNuevaFoto(null); setPreviewFoto('BORRAR'); }}>
+                      🗑️ Quitar foto
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-institucional btn-sm" onClick={() => setEditandoPerfil(false)}>Cancelar</button>
+              <button className="btn-institucional filled btn-lg" onClick={guardarPerfil} disabled={guardandoPerfil}>
+                {guardandoPerfil ? '⏳ Guardando...' : '💾 Guardar Cambios'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Foto expandida */}
       {fotoExpandida && empleado.foto_url && (
