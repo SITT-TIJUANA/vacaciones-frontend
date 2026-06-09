@@ -187,12 +187,12 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}
-        style={{ display:'flex', flexDirection:'column' }}>
+        style={{ display:'flex', flexDirection:'column', maxHeight:'88dvh', overflow:'hidden' }}>
         <div className="modal-header" style={{ flexShrink:0 }}>
           <h2>📝 Nueva Solicitud de Vacaciones</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        <div className="modal-body" style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
+        <div className="modal-body" style={{ flex:'1 1 auto', overflowY:'auto', minHeight:0, display:'flex', flexDirection:'column', gap:16 }}>
           {error && (
             <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>
               ⚠️ {error}
