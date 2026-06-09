@@ -132,26 +132,26 @@
   .empleado-card-front .nombre-overlay p { font-size: 9px; }
   .empleado-card-back .dias-badge { width: 68px; height: 68px; font-size: 32px; }
 
-  /* ── MODAL MÓVIL — sube desde abajo ── */
+  /* ── MODAL MÓVIL — centrado en pantalla ── */
   .modal-overlay {
-    align-items: flex-end !important;
-    padding: 0 !important;
-    backdrop-filter: blur(6px);
+    align-items: center !important;
+    padding: 16px !important;
+    backdrop-filter: blur(8px);
   }
   .modal {
-    border-radius: 24px 24px 0 0 !important;
+    border-radius: 20px !important;
     max-height: 88dvh !important;
     width: 100% !important;
     max-width: 100% !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
-    animation: slideUpModal 0.35s var(--ease);
+    animation: popIn 0.3s var(--ease);
     margin: 0 !important;
   }
   .modal-lg { max-width: 100% !important; }
   .modal-header {
-    border-radius: 24px 24px 0 0 !important;
+    border-radius: 20px 20px 0 0 !important;
     padding: 14px 16px !important;
     flex-shrink: 0 !important;
   }
@@ -172,27 +172,25 @@
     display: flex !important;
     justify-content: flex-end !important;
   }
-  @keyframes slideUpModal {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
 
-  /* ── PERFIL MODAL ── */
+  /* ── PERFIL MODAL HEADER ── */
   .perfil-header {
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-    padding: 20px 14px 12px !important;
-    gap: 8px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    padding: 14px !important;
+    gap: 10px !important;
     flex-shrink: 0;
   }
-  .perfil-foto { width: 72px !important; height: 72px !important; border-width: 3px !important; }
-  .perfil-nombre { font-size: 15px !important; text-align: center !important; }
-  .perfil-puesto { font-size: 11px !important; margin-top: 2px !important; text-align: center !important; }
-  .dias-ring { margin-left: 0 !important; text-align: center !important; flex-shrink: 0; }
-  .dias-ring .numero { font-size: 36px !important; }
+  .perfil-foto { width: 60px !important; height: 60px !important; border-width: 2px !important; }
+  .perfil-nombre { font-size: 13px !important; }
+  .perfil-puesto { font-size: 10px !important; margin-top: 1px !important; }
+  .dias-ring { margin-left: auto !important; text-align: center !important; flex-shrink: 0; }
+  .dias-ring .numero { font-size: 32px !important; }
   .dias-ring .etiqueta { font-size: 8px !important; }
-  .perfil-header > div { text-align: center !important; }
 
   /* ── FORMULARIOS ── */
   .form-grid { grid-template-columns: 1fr; gap: 10px; }
