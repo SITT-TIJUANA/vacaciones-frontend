@@ -79,19 +79,21 @@ export default function Calendario() {
 
       {/* Navegación del mes */}
       <div className="card" style={{ marginBottom: 24 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
-          <button className="btn-institucional btn-sm" onClick={() => cambiarMes(-1)}>← Anterior</button>
-          <div style={{ textAlign:'center' }}>
+        <div className="calendario-nav" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <div style={{ textAlign:'center', flex:1 }}>
             <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:28, color:'var(--g)' }}>
               {MESES[mes-1]}
             </div>
             <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:14, color:'var(--g60)' }}>{anio}</div>
           </div>
-          <button className="btn-institucional btn-sm" onClick={() => cambiarMes(1)}>Siguiente →</button>
+          <div className="calendario-nav-btns" style={{ display:'flex', justifyContent:'space-between', gap:8 }}>
+            <button className="btn-institucional btn-sm" onClick={() => cambiarMes(-1)}>← Anterior</button>
+            <button className="btn-institucional btn-sm" onClick={() => cambiarMes(1)}>Siguiente →</button>
+          </div>
         </div>
 
         {/* Leyenda */}
-        <div style={{ display:'flex', gap:20, marginBottom:20, flexWrap:'wrap' }}>
+        <div className="cal-leyenda" style={{ display:'flex', gap:16, marginBottom:16, flexWrap:'wrap' }}>
           {[
             { color:'rgba(201,168,76,0.3)', border:'2px solid #C9A84C', label:'Aprobado (próximo)' },
             { color:'rgba(39,174,96,0.3)', border:'2px solid #27ae60', label:'De vacaciones (hoy)' },
@@ -109,21 +111,22 @@ export default function Calendario() {
         ) : (
           <>
             {/* Encabezados días */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4, marginBottom:4 }}>
+            <div className="cal-grid" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3, marginBottom:3 }}>
               {DIAS_SEMANA.map(d => (
-                <div key={d} style={{ textAlign:'center', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11, color:'var(--g)', padding:'8px 4px', textTransform:'uppercase', letterSpacing:'0.5px' }}>
+                <div key={d} className="cal-header-dia" style={{ textAlign:'center', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11, color:'var(--g)', padding:'7px 2px', textTransform:'uppercase', letterSpacing:'0.3px' }}>
                   {d}
                 </div>
               ))}
             </div>
 
             {/* Celdas del calendario */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:4 }}>
+            <div className="cal-grid" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
               {celdas.map((dia, i) => {
                 const eventosHoy = getEventosDia(dia);
                 const esHoyDia = esHoy(dia);
                 return (
                   <div key={i}
+                    className="cal-celda"
                     onClick={() => dia && eventosHoy.length > 0 && setSeleccionado({ dia, eventos: eventosHoy })}
                     style={{
                       minHeight: 80,
@@ -138,7 +141,7 @@ export default function Calendario() {
                   >
                     {dia && (
                       <>
-                        <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight: esHoyDia ? 900 : 600, fontSize:13, color: esHoyDia ? 'var(--g)' : 'var(--txt)', marginBottom:4 }}>
+                        <div className="cal-dia-num" style={{ fontFamily:'Montserrat,sans-serif', fontWeight: esHoyDia ? 900 : 600, fontSize:13, color: esHoyDia ? 'var(--g)' : 'var(--txt)', marginBottom:4 }}>
                           {dia}
                           {esHoyDia && <span style={{ marginLeft:4, fontSize:9, background:'var(--g)', color:'#fff', padding:'1px 5px', borderRadius:8, fontWeight:800 }}>HOY</span>}
                         </div>
@@ -146,7 +149,7 @@ export default function Calendario() {
                           {eventosHoy.slice(0,3).map((ev, j) => {
                             const activo = estaDeVacaciones(ev);
                             return (
-                              <div key={j} style={{
+                              <div key={j} className="cal-evento" style={{
                                 display:'flex', alignItems:'center', gap:4,
                                 background: activo ? 'rgba(39,174,96,0.2)' : 'rgba(201,168,76,0.2)',
                                 border: `1px solid ${activo ? '#27ae60' : '#C9A84C'}`,
