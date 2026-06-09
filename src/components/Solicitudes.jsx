@@ -198,8 +198,15 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
           </div>
           <button onClick={onClose} style={{ background:'var(--g-soft)', border:'none', width:32, height:32, borderRadius:'50%', cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--g)', fontWeight:900 }}>✕</button>
         </div>
+        {/* BOTONES ARRIBA — siempre visibles sin importar el teclado */}
+        <div style={{ display:'flex', gap:10, padding:'0 20px 16px' }}>
+          <button className="btn-institucional" style={{ flex:1 }} onClick={onClose}>Cancelar</button>
+          <button className="btn-institucional filled" style={{ flex:2 }} onClick={handleSubmit} disabled={enviando}>
+            {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
+          </button>
+        </div>
         {/* Contenido */}
-        <div style={{ padding:'0 20px', display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ padding:'0 20px 24px', display:'flex', flexDirection:'column', gap:14 }}>
           {error && <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>⚠️ {error}</div>}
           <div className="form-group">
             <label>Fecha Inicio</label>
@@ -222,13 +229,6 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
             <label>Motivo (opcional)</label>
             <textarea className="form-control" rows={2} placeholder="Describe el motivo..." value={form.motivo} onChange={e => setForm({...form, motivo:e.target.value})} />
           </div>
-        </div>
-        {/* BOTONES — siempre al fondo */}
-        <div style={{ display:'flex', gap:10, padding:'16px 20px 20px' }}>
-          <button className="btn-institucional" style={{ flex:1 }} onClick={onClose}>Cancelar</button>
-          <button className="btn-institucional filled" style={{ flex:2 }} onClick={handleSubmit} disabled={enviando}>
-            {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
-          </button>
         </div>
       </div>
     </div>
