@@ -441,5 +441,6 @@ tbody tr:last-child{border-bottom:none;}
 @media (display-mode: standalone) {
   .dash-header { padding-top: env(safe-area-inset-top, 14px); }
   .bottom-nav { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
-  body { background-color: #6B0F2B; }
+  body { background-color: var(--w) !important; }
+  .dash-layout { background-color: var(--w) !important; }
 }
