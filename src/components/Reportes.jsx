@@ -532,8 +532,6 @@ export default function Reportes() {
           </div>
         )}
       </div>
-    </div>
-
       {showConfig && (
         <ConfigPDF
           empSeleccionado={empSeleccionado}
@@ -541,5 +539,6 @@ export default function Reportes() {
           onGenerar={(cfg) => { setShowConfig(false); exportarPDF(cfg); }}
         />
       )}
+    </div>
   );
 }
