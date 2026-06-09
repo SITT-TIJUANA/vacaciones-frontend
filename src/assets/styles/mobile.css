@@ -134,36 +134,58 @@
 
   /* ── MODAL MÓVIL — sube desde abajo ── */
   .modal-overlay {
-    align-items: flex-end;
-    padding: 0;
+    align-items: flex-end !important;
+    padding: 0 !important;
     backdrop-filter: blur(6px);
   }
   .modal {
-    border-radius: 24px 24px 0 0;
-    max-height: 92dvh;
-    width: 100%;
-    max-width: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    border-radius: 24px 24px 0 0 !important;
+    max-height: 88dvh !important;
+    height: 88dvh;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
     animation: slideUpModal 0.35s var(--ease);
   }
-  .modal-lg { max-width: 100%; }
-  .modal-header { border-radius: 24px 24px 0 0; padding: 16px 18px; }
-  .modal-header h2 { font-size: 16px; }
-  .modal-body { padding: 16px; }
-  .modal-footer { padding: 12px 16px; gap: 8px; }
+  .modal-lg { max-width: 100% !important; }
+  .modal-header {
+    border-radius: 24px 24px 0 0 !important;
+    padding: 14px 16px !important;
+    flex-shrink: 0;
+  }
+  .modal-header h2 { font-size: 15px; }
+  .modal-body {
+    padding: 14px 14px !important;
+    flex: 1;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-footer {
+    padding: 10px 14px !important;
+    gap: 8px;
+    flex-shrink: 0;
+  }
   @keyframes slideUpModal {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
 
   /* ── PERFIL MODAL ── */
-  .perfil-header { flex-wrap: wrap; padding: 18px 16px 14px; gap: 12px; }
-  .perfil-foto { width: 72px; height: 72px; border-width: 3px; }
-  .perfil-nombre { font-size: 16px; }
-  .perfil-puesto { font-size: 12px; }
-  .dias-ring .numero { font-size: 40px; }
-  .dias-ring .etiqueta { font-size: 9px; }
+  .perfil-header {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    padding: 14px 14px 10px !important;
+    gap: 10px !important;
+    flex-shrink: 0;
+  }
+  .perfil-foto { width: 58px !important; height: 58px !important; border-width: 2px !important; }
+  .perfil-nombre { font-size: 14px !important; }
+  .perfil-puesto { font-size: 11px !important; margin-top: 2px !important; }
+  .dias-ring { margin-left: 0 !important; text-align: center; flex-shrink: 0; }
+  .dias-ring .numero { font-size: 32px !important; }
+  .dias-ring .etiqueta { font-size: 8px !important; }
 
   /* ── FORMULARIOS ── */
   .form-grid { grid-template-columns: 1fr; gap: 10px; }
