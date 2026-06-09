@@ -3,7 +3,7 @@ import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+
 import api from '../services/api';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend);
@@ -246,6 +246,17 @@ export default function Reportes() {
   const exportarExcel = async () => {
     setExportando(true);
     try {
+      // Cargar SheetJS dinámicamente desde CDN
+      let XLSX = window.XLSX;
+      if (!XLSX) {
+        await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+        XLSX = window.XLSX;
+      }
       const [empRes, solRes] = await Promise.all([
         api.get('/api/empleados'),
         api.get('/api/solicitudes'),
