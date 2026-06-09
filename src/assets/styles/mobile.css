@@ -1,0 +1,255 @@
+/* ============================================================
+   DISEÑO MÓVIL COMPLETO — SITT Vacaciones
+   ============================================================ */
+
+/* ── BOTTOM NAV MÓVIL — estilo iconos expandibles ── */
+@media (max-width: 768px) {
+
+  /* Reset body/layout */
+  body { overflow-x: hidden; }
+  .dash-layout { min-height: 100dvh; display: flex; flex-direction: column; }
+  .dash-main {
+    flex: 1;
+    padding: 12px 12px 100px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── HEADER MÓVIL ── */
+  .dash-header {
+    padding: 10px 14px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .dash-logo { width: 36px; height: 36px; }
+  .dash-title { font-size: 16px; }
+  .dash-subtitle { font-size: 8px; letter-spacing: 1px; }
+  .dash-header-right { gap: 6px; }
+  .icon-btn { width: 36px; height: 36px; font-size: 18px; }
+  .dash-user { padding: 4px 8px; gap: 6px; }
+  .dash-user-name { font-size: 11px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-user-rol { display: none; }
+  .vincular-btn { padding: 6px 10px; font-size: 10px; gap: 4px; }
+  .vincular-btn span:last-child { display: none; }
+
+  /* ── BOTTOM NAV MÓVIL ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(74,10,30,0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(201,168,76,0.25);
+    display: flex; align-items: center;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    gap: 2px;
+    box-shadow: 0 -6px 30px rgba(74,10,30,0.5);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .bottom-nav::-webkit-scrollbar { display: none; }
+
+  .bottom-nav-item {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: min-width 0.25s ease, background 0.2s;
+    background: none; border: none; cursor: pointer;
+    padding: 0 8px;
+  }
+  .bottom-nav-item::before {
+    position: absolute; z-index: -1; content: '';
+    display: block; border-radius: 10px;
+    width: 100%; height: 100%; top: 0;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    background: rgba(255,255,255,0.1);
+  }
+  .bottom-nav-item.active {
+    min-width: 80px;
+    background: rgba(201,168,76,0.18);
+  }
+  .bottom-nav-item.active::before { transform: translateX(0); }
+  .bottom-nav-item.active .bottom-nav-label {
+    transform: translateX(0); opacity: 1;
+  }
+  .bottom-nav-item.active .bottom-nav-icon {
+    transform: translateY(-3px) scale(1.15);
+    filter: drop-shadow(0 3px 6px rgba(201,168,76,0.5));
+  }
+
+  .bottom-nav-icon {
+    font-size: 22px; flex-shrink: 0;
+    position: relative; z-index: 1;
+    transition: transform 0.25s ease, filter 0.2s;
+  }
+  .bottom-nav-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 9px; font-weight: 800;
+    color: var(--d);
+    text-transform: uppercase; letter-spacing: 0.3px;
+    transform: translateX(100%); opacity: 0;
+    transition: transform 0.25s ease, opacity 0.2s;
+    white-space: nowrap; margin-left: 4px;
+    position: relative; z-index: 1;
+  }
+  .bottom-nav-badge {
+    position: absolute; top: 2px; right: 2px;
+    background: var(--d); color: var(--g-dk);
+    font-size: 8px; font-weight: 900;
+    padding: 1px 5px; border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    min-width: 16px; text-align: center;
+  }
+
+  /* ── SECTION TITLES ── */
+  .section-title { font-size: 22px; }
+  .section-title::before { height: 26px; }
+  .section-header { margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+
+  /* ── CARDS ── */
+  .card { padding: 14px; border-radius: 14px; }
+  .kpi-card { padding: 14px; }
+  .kpi-card .kpi-value { font-size: 32px; }
+  .kpi-card .kpi-label { font-size: 10px; }
+  .kpi-card::after { font-size: 38px; }
+
+  /* ── GRIDS ── */
+  .grid-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+  .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+  .grid-empleados { gap: 14px; justify-content: center; }
+
+  /* ── TARJETAS EMPLEADO ── */
+  .empleado-card { width: 155px; height: 205px; }
+  .empleado-card-front .nombre-overlay h3 { font-size: 12px; }
+  .empleado-card-front .nombre-overlay p { font-size: 9px; }
+  .empleado-card-back .dias-badge { width: 68px; height: 68px; font-size: 32px; }
+
+  /* ── MODAL MÓVIL — sube desde abajo ── */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+    backdrop-filter: blur(6px);
+  }
+  .modal {
+    border-radius: 24px 24px 0 0;
+    max-height: 92dvh;
+    width: 100%;
+    max-width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: slideUpModal 0.35s var(--ease);
+  }
+  .modal-lg { max-width: 100%; }
+  .modal-header { border-radius: 24px 24px 0 0; padding: 16px 18px; }
+  .modal-header h2 { font-size: 16px; }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 12px 16px; gap: 8px; }
+  @keyframes slideUpModal {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ── PERFIL MODAL ── */
+  .perfil-header { flex-wrap: wrap; padding: 18px 16px 14px; gap: 12px; }
+  .perfil-foto { width: 72px; height: 72px; border-width: 3px; }
+  .perfil-nombre { font-size: 16px; }
+  .perfil-puesto { font-size: 12px; }
+  .dias-ring .numero { font-size: 40px; }
+  .dias-ring .etiqueta { font-size: 9px; }
+
+  /* ── FORMULARIOS ── */
+  .form-grid { grid-template-columns: 1fr; gap: 10px; }
+  .form-control { padding: 10px 12px; font-size: 14px; border-radius: 10px; }
+  .form-group label { font-size: 10px; }
+
+  /* ── BOTONES ── */
+  .btn-institucional { font-size: 12px; height: 2.6em; border-radius: 8px; }
+  .btn-lg { font-size: 13px; height: 3em; }
+  .btn-xl { font-size: 14px; height: 3.4em; border-radius: 10px; }
+  .btn-sm { font-size: 11px; height: 2em; padding: 0 10px; }
+
+  /* ── TABLA ── */
+  .tabla-wrapper { border-radius: 10px; font-size: 11px; }
+  thead th { padding: 9px 8px; font-size: 9px; letter-spacing: 0.3px; }
+  tbody td { padding: 9px 8px; }
+
+  /* ── SEARCH ── */
+  .input__container {
+    transform: none !important; box-shadow: var(--sh-sm) !important;
+    max-width: 100%; border-radius: 10px;
+  }
+  .input__container:hover { transform: none !important; }
+  .input__search { font-size: 13px; padding: 7px 10px; }
+
+  /* ── LOGIN MÓVIL ── */
+  .login-page { padding: 16px; align-items: flex-end; }
+  .login-container { gap: 16px; }
+  .login-header { flex-direction: row; text-align: left; gap: 12px; }
+  .login-escudo { width: 56px; height: 56px; }
+  .login-title-main { font-size: 14px; }
+  .login-form {
+    padding: 24px 20px;
+    border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 100%;
+  }
+  .login-form-title { font-size: 22px; }
+  .inputForm { height: 50px; border-radius: 10px; }
+  .inputForm .input { font-size: 14px; }
+
+  /* ── REPORTES MÓVIL ── */
+  .reportes-filtros > div { flex-direction: column; gap: 10px; }
+
+  /* ── NOTIF PANEL ── */
+  .notif-panel {
+    position: fixed; top: auto; bottom: 90px;
+    right: 8px; left: 8px; width: auto;
+    border-radius: 16px;
+    max-height: 60dvh; overflow-y: auto;
+  }
+
+  /* ── BAJAS ── */
+  .baja-card-inner { flex-direction: column; }
+  .baja-stats { flex-wrap: wrap; gap: 8px; }
+  .baja-stats > div { min-width: 100px; flex: 1; }
+
+  /* ── INSTALAR APP BTN ── */
+  .instalar-btn-float { bottom: 78px !important; right: 12px !important; }
+}
+
+/* ── SMALL PHONES (< 390px) ── */
+@media (max-width: 390px) {
+  .dash-title { font-size: 14px; }
+  .grid-4 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .empleado-card { width: 140px; height: 190px; }
+  .kpi-card .kpi-value { font-size: 28px; }
+  .bottom-nav-icon { font-size: 20px; }
+}
+
+/* ── TABLET (768 - 1024px) ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dash-main { padding: 20px 18px 90px; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .empleado-card { width: 170px; height: 225px; }
+}
+
+/* ── PWA STANDALONE ── */
+@media (display-mode: standalone) {
+  body { background-color: #fff !important; }
+  .dash-layout { background-color: #fff !important; }
+  .particles-canvas { opacity: 0.6; }
+  .dash-header {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  .bottom-nav {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}
