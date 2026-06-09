@@ -24,7 +24,7 @@ export default function Solicitudes({ onActualizarNotif }) {
 
   const resolver = async (id, estatus, comentario = '') => {
     try {
-      await api.put(`/api/solicitudes/${id}/resolver`, { estatus, comentario });
+      await api.put(`/api/solicitudes/${id}/resolver`, { estatus, comentario_resolucion: comentario });
       cargar();
       onActualizarNotif?.();
       setResolviendo(null);
@@ -38,14 +38,14 @@ export default function Solicitudes({ onActualizarNotif }) {
   return (
     <div className="fade-in">
       <div className="section-header">
-        <h2 className="section-title">Solicitudes de Vacaciones</h2>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select className="form-control" style={{ width: 160 }} value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}>
-            <option value="">Todos los estatus</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="aprobada">Aprobadas</option>
-            <option value="rechazada">Rechazadas</option>
-            <option value="cancelada">Canceladas</option>
+        <h2 className="section-title">Solicitudes</h2>
+        <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+          <select className="form-control" style={{ width:150 }} value={filtroEstatus} onChange={e=>setFiltroEstatus(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="pendiente">⏳ Pendientes</option>
+            <option value="aprobada">✅ Aprobadas</option>
+            <option value="rechazada">❌ Rechazadas</option>
+            <option value="cancelada">🚫 Canceladas</option>
           </select>
           {usuario?.empleado_id && (
             <button className="btn-institucional filled" onClick={() => setModalNueva(true)}>
@@ -58,53 +58,39 @@ export default function Solicitudes({ onActualizarNotif }) {
       {cargando ? (
         <div className="loader-wrapper"><div className="loader" /></div>
       ) : filtradas.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--gris-texto)' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-          <p style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: 16 }}>Sin solicitudes</p>
+        <div style={{ textAlign:'center', padding:60, color:'var(--g60)' }}>
+          <div style={{ fontSize:56, marginBottom:16 }} className="float-anim">📋</div>
+          <p style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:20, color:'var(--g)' }}>Sin solicitudes</p>
         </div>
       ) : (
-        <div className="tabla-wrapper card">
-          <table>
-            <thead>
-              <tr>
-                {esAdmin && <th>Empleado</th>}
-                <th>Periodo</th>
-                <th>Días</th>
-                <th>Motivo</th>
-                <th>Estatus</th>
-                <th>Fecha Solicitud</th>
-                {esAdmin && <th>Acciones</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filtradas.map(s => (
-                <tr key={s.id}>
-                  {esAdmin && (
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {s.foto_url
-                          ? <img src={s.foto_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                          : <span style={{ fontSize: 20 }}>👤</span>
-                        }
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>{s.nombre} {s.apellido_paterno}</span>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {filtradas.map(s => (
+            <div key={s.id} className="card" style={{ padding:'16px 20px' }}>
+              <div style={{ display:'flex', alignItems:'flex-start', gap:14, flexWrap:'wrap' }}>
+                {/* Foto empleado — solo admin/rrhh */}
+                {esAdmin && (
+                  <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+                    {s.foto_url
+                      ? <img src={s.foto_url} alt="" style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover', border:'2px solid var(--g)' }} />
+                      : <div style={{ width:44, height:44, borderRadius:'50%', background:'var(--g10)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>👤</div>
+                    }
+                    <div>
+                      <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:'var(--g)' }}>
+                        {s.nombre} {s.apellido_paterno}
                       </div>
-                    </td>
-                  )}
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>
-                      {fmtFecha(s.fecha_inicio)} → {fmtFecha(s.fecha_fin)}
+                      <div style={{ fontSize:11, color:'var(--g60)' }}>{s.departamento||''}</div>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--gris-texto)' }}>{s.anio}</div>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'Montserrat', fontWeight: 800, color: 'var(--guinda)', fontSize: 16 }}>
-                      {s.dias_solicitados}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: 13, color: 'var(--gris-texto)', maxWidth: 160 }}>
-                    {s.motivo || '—'}
-                  </td>
-                  <td>
+                  </div>
+                )}
+
+                {/* Detalles */}
+                <div style={{ flex:1, minWidth:140 }}>
+                  <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:'var(--txt)', marginBottom:4 }}>
+                    📅 {fmtFecha(s.fecha_inicio)} → {fmtFecha(s.fecha_fin)}
+                  </div>
+                  <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap', marginBottom:4 }}>
+                    <span style={{ fontFamily:'Montserrat,sans-serif', fontWeight:900, color:'var(--g)', fontSize:22 }}>{s.dias_solicitados}</span>
+                    <span style={{ fontSize:12, color:'var(--g60)' }}>días · {s.anio}</span>
                     <span className={`badge badge-${s.estatus}`}>
                       {s.estatus === 'pendiente' && '⏳ '}
                       {s.estatus === 'aprobada' && '✅ '}
@@ -112,30 +98,36 @@ export default function Solicitudes({ onActualizarNotif }) {
                       {s.estatus === 'cancelada' && '🚫 '}
                       {s.estatus}
                     </span>
-                  </td>
-                  <td style={{ fontSize: 12, color: 'var(--gris-texto)' }}>
-                    {fmtFecha(s.created_at)}
-                  </td>
-                  {esAdmin && (
-                    <td>
-                      {s.estatus === 'pendiente' && (
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            className="btn-institucional dorado btn-sm"
-                            onClick={() => resolver(s.id, 'aprobada')}
-                          >✅ Aprobar</button>
-                          <button
-                            className="btn-institucional peligro btn-sm"
-                            onClick={() => setResolviendo({ id: s.id, accion: 'rechazada' })}
-                          >❌ Rechazar</button>
-                        </div>
-                      )}
-                    </td>
+                  </div>
+                  {s.motivo && (
+                    <div style={{ fontSize:12, color:'var(--g60)', marginTop:3 }}>💬 {s.motivo}</div>
                   )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {/* Comentario de rechazo — visible para todos */}
+                  {s.comentario_resolucion && (
+                    <div style={{ marginTop:8, padding:'8px 12px', background:'#FFEBEE', borderRadius:8, border:'1px solid #FFCDD2', fontSize:12, color:'#B71C1C', fontWeight:600 }}>
+                      ❌ Motivo de rechazo: {s.comentario_resolucion}
+                    </div>
+                  )}
+                  <div style={{ fontSize:11, color:'var(--g60)', marginTop:4 }}>
+                    Solicitado: {fmtFecha(s.created_at)}
+                    {s.aprobado_por_username && ` · Por: ${s.aprobado_por_username}`}
+                  </div>
+                </div>
+
+                {/* Botones admin */}
+                {esAdmin && s.estatus === 'pendiente' && (
+                  <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                    <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>
+                      ✅ Aprobar
+                    </button>
+                    <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>
+                      ❌ Rechazar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -143,11 +135,11 @@ export default function Solicitudes({ onActualizarNotif }) {
       {modalNueva && (
         <ModalNuevaSolicitud
           onClose={() => setModalNueva(false)}
-          onCreada={() => { cargar(); setModalNueva(false); }}
+          onCreada={() => { cargar(); setModalNueva(false); onActualizarNotif?.(); }}
         />
       )}
 
-      {/* Modal rechazar con comentario */}
+      {/* Modal rechazar */}
       {resolviendo && (
         <ModalRechazar
           onClose={() => setResolviendo(null)}
@@ -159,48 +151,81 @@ export default function Solicitudes({ onActualizarNotif }) {
 }
 
 function ModalNuevaSolicitud({ onClose, onCreada }) {
-  const [form, setForm] = useState({ fecha_inicio: '', fecha_fin: '', motivo: '' });
+  const [form, setForm] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+  const [diasCalc, setDiasCalc] = useState(0);
+
+  // Calcular días hábiles
+  useEffect(() => {
+    if (!form.fecha_inicio || !form.fecha_fin) { setDiasCalc(0); return; }
+    const ini = new Date(form.fecha_inicio);
+    const fin = new Date(form.fecha_fin);
+    if (fin < ini) { setDiasCalc(0); return; }
+    let dias = 0;
+    const cur = new Date(ini);
+    while (cur <= fin) {
+      const d = cur.getDay();
+      if (d !== 0 && d !== 6) dias++;
+      cur.setDate(cur.getDate() + 1);
+    }
+    setDiasCalc(dias);
+  }, [form.fecha_inicio, form.fecha_fin]);
 
   const handleSubmit = async () => {
     if (!form.fecha_inicio || !form.fecha_fin) { setError('Selecciona las fechas'); return; }
+    if (diasCalc === 0) { setError('Las fechas seleccionadas no tienen días hábiles'); return; }
     setEnviando(true); setError('');
     try {
       await api.post('/api/solicitudes', form);
       onCreada();
-    } catch (e) {
+    } catch(e) {
       setError(e.response?.data?.error || 'Error al enviar');
-    } finally {
-      setEnviando(false);
-    }
+    } finally { setEnviando(false); }
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}
+        style={{ display:'flex', flexDirection:'column' }}>
+        <div className="modal-header" style={{ flexShrink:0 }}>
           <h2>📝 Nueva Solicitud de Vacaciones</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {error && <div style={{ background: '#FFF3CD', border: '1px solid #FFEEBA', borderLeft: '4px solid #856404', padding: '10px 14px', borderRadius: 8, fontSize: 13, color: '#856404', fontWeight: 600 }}>⚠️ {error}</div>}
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Fecha Inicio</label>
-              <input type="date" className="form-control" value={form.fecha_inicio} onChange={e => setForm({ ...form, fecha_inicio: e.target.value })} />
+        <div className="modal-body" style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:16 }}>
+          {error && (
+            <div style={{ background:'#FFF3CD', border:'1px solid #FFEEBA', borderLeft:'4px solid #856404', padding:'10px 14px', borderRadius:8, fontSize:13, color:'#856404', fontWeight:600 }}>
+              ⚠️ {error}
             </div>
-            <div className="form-group">
-              <label>Fecha Fin</label>
-              <input type="date" className="form-control" value={form.fecha_fin} onChange={e => setForm({ ...form, fecha_fin: e.target.value })} min={form.fecha_inicio} />
-            </div>
+          )}
+          <div className="form-group">
+            <label>Fecha Inicio</label>
+            <input type="date" className="form-control" value={form.fecha_inicio}
+              onChange={e => setForm({...form, fecha_inicio:e.target.value})} />
           </div>
           <div className="form-group">
+            <label>Fecha Fin</label>
+            <input type="date" className="form-control" value={form.fecha_fin}
+              min={form.fecha_inicio}
+              onChange={e => setForm({...form, fecha_fin:e.target.value})} />
+          </div>
+          {diasCalc > 0 && (
+            <div style={{ background:'var(--g-soft)', borderRadius:12, padding:'12px 14px', border:'1px solid rgba(107,15,43,0.15)', display:'flex', alignItems:'center', gap:12 }}>
+              <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:36, color:'var(--g)', lineHeight:1 }}>{diasCalc}</div>
+              <div>
+                <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:'var(--g)' }}>días hábiles</div>
+                <div style={{ fontSize:11, color:'var(--g60)' }}>se descontarán de tu periodo</div>
+              </div>
+            </div>
+          )}
+          <div className="form-group">
             <label>Motivo (opcional)</label>
-            <textarea className="form-control" rows={3} placeholder="Describe el motivo de tus vacaciones..." value={form.motivo} onChange={e => setForm({ ...form, motivo: e.target.value })} />
+            <textarea className="form-control" rows={3}
+              placeholder="Describe el motivo de tus vacaciones..."
+              value={form.motivo} onChange={e => setForm({...form, motivo:e.target.value})} />
           </div>
         </div>
-        <div className="modal-footer">
+        <div className="modal-footer" style={{ flexShrink:0 }}>
           <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
           <button className="btn-institucional filled btn-sm" onClick={handleSubmit} disabled={enviando}>
             {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
@@ -214,8 +239,8 @@ function ModalNuevaSolicitud({ onClose, onCreada }) {
 function ModalRechazar({ onClose, onConfirmar }) {
   const [comentario, setComentario] = useState('');
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{ maxWidth:420 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>❌ Rechazar Solicitud</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
@@ -223,12 +248,19 @@ function ModalRechazar({ onClose, onConfirmar }) {
         <div className="modal-body">
           <div className="form-group">
             <label>Motivo del rechazo</label>
-            <textarea className="form-control" rows={3} placeholder="Indica el motivo del rechazo..." value={comentario} onChange={e => setComentario(e.target.value)} />
+            <textarea className="form-control" rows={3}
+              placeholder="Indica el motivo del rechazo... (el empleado lo verá)"
+              value={comentario} onChange={e => setComentario(e.target.value)} />
           </div>
+          <p style={{ fontSize:11, color:'var(--g60)', marginTop:8 }}>
+            💡 El empleado verá este motivo en su sección de solicitudes.
+          </p>
         </div>
         <div className="modal-footer">
           <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
-          <button className="btn-institucional peligro btn-sm" onClick={() => onConfirmar(comentario)}>Confirmar Rechazo</button>
+          <button className="btn-institucional peligro btn-sm" onClick={() => onConfirmar(comentario)}>
+            ❌ Confirmar Rechazo
+          </button>
         </div>
       </div>
     </div>
@@ -237,5 +269,5 @@ function ModalRechazar({ onClose, onConfirmar }) {
 
 function fmtFecha(f) {
   if (!f) return '—';
-  return new Date(f).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(f).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
 }
