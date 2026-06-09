@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
     try { return JSON.parse(localStorage.getItem('usuario')); } catch { return null; }
   });
   const [cargando, setCargando] = useState(true);
+  const [modoEmpleado, setModoEmpleado] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -26,17 +27,31 @@ export function AuthProvider({ children }) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('usuario', JSON.stringify(data.usuario));
     setUsuario(data.usuario);
+    setModoEmpleado(false);
     return data.usuario;
   };
 
   const logout = () => {
     localStorage.clear();
     setUsuario(null);
+    setModoEmpleado(false);
     window.location.href = '/vacaciones-frontend/';
   };
 
+  const refrescarUsuario = async () => {
+    const { data } = await api.get('/api/auth/me');
+    localStorage.setItem('usuario', JSON.stringify(data));
+    setUsuario(data);
+    return data;
+  };
+
+  const rolEfectivo = modoEmpleado ? 'empleado' : usuario?.rol;
+
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, cargando }}>
+    <AuthContext.Provider value={{
+      usuario, rolEfectivo, modoEmpleado, setModoEmpleado,
+      login, logout, refrescarUsuario, cargando,
+    }}>
       {children}
     </AuthContext.Provider>
   );
