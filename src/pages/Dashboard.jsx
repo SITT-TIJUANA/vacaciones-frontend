@@ -19,7 +19,6 @@ const NAV_ITEMS = [
   { id:'miperfil',     icon:'👤', label:'Mi Perfil',   roles:['admin','rrhh','empleado'] },
   { id:'solicitudes',  icon:'📋', label:'Solicitudes', roles:['admin','rrhh','empleado'] },
   { id:'calendario',   icon:'📅', label:'Calendario',  roles:['admin','rrhh','empleado'] },
-  { id:'calendario',   icon:'📅', label:'Calendario',  roles:['admin','rrhh'] },
   { id:'reportes',     icon:'📊', label:'Reportes',    roles:['admin','rrhh'] },
   { id:'adeudados',    icon:'💰', label:'Adeudados',   roles:['admin','rrhh'] },
   { id:'alta',         icon:'➕', label:'Alta',         roles:['admin','rrhh'] },
