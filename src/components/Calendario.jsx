@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 export default function Calendario() {
+  const { usuario, rolEfectivo } = useAuth();
+  const esEmpleado = rolEfectivo === 'empleado';
   const hoy = new Date();
   const [mes, setMes] = useState(hoy.getMonth() + 1);
   const [anio, setAnio] = useState(hoy.getFullYear());
@@ -15,10 +18,16 @@ export default function Calendario() {
   useEffect(() => {
     setCargando(true);
     api.get(`/api/calendario?mes=${mes}&anio=${anio}`)
-      .then(r => setEventos(r.data))
+      .then(r => {
+        // Si es empleado, solo mostrar sus propias vacaciones
+        const data = esEmpleado && usuario?.empleado_id
+          ? r.data.filter(e => e.empleado_id === usuario.empleado_id)
+          : r.data;
+        setEventos(data);
+      })
       .catch(console.error)
       .finally(() => setCargando(false));
-  }, [mes, anio]);
+  }, [mes, anio, esEmpleado]);
 
   const cambiarMes = (delta) => {
     let m = mes + delta;
