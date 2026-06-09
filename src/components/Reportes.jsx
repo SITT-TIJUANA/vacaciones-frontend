@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import api from '../services/api';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler);
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 // ── Colores institucionales ──────────────────────────────
@@ -158,7 +158,7 @@ export default function Reportes() {
         doc.setDrawColor(...GUINDA);
         doc.setLineWidth(0.5);
         doc.line(cx, cy, cx, cy + 12);
-        doc.setTextColor(...GRIS_MID[0], ...GRIS_MID.slice(1));
+        doc.setTextColor(107, 15, 43);
         doc.setFontSize(7); doc.setFont('helvetica', 'normal');
         doc.setTextColor(107, 15, 43);
         doc.text(label.toUpperCase(), cx + 4, cy + 4.5);
