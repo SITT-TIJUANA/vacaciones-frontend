@@ -79,6 +79,21 @@ async function getLogoBase64() {
   } catch(e) { return null; }
 }
 
+async function getFotoBase64(url) {
+  if (!url) return null;
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url + '?t=' + Date.now();
+    await new Promise((res) => { img.onload = res; img.onerror = res; setTimeout(res, 3000); });
+    if (!img.complete || img.naturalWidth === 0) return null;
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    return c.toDataURL('image/png');
+  } catch(e) { return null; }
+}
+
 export default function Reportes() {
   const [resumen, setResumen] = useState(null);
   const [detalle, setDetalle] = useState([]);
@@ -113,6 +128,9 @@ export default function Reportes() {
     try {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const logo = await getLogoBase64();
+      const fotoEmp = (cfg.incluirFoto && empSeleccionado?.foto_url)
+        ? await getFotoBase64(empSeleccionado.foto_url)
+        : null;
       const tot = resumen?.totales || {};
       const fecha = new Date().toLocaleDateString('es-MX', { dateStyle: 'full' });
       const tituloDoc = empSeleccionado
@@ -131,6 +149,30 @@ export default function Reportes() {
       addHeaderPDF(doc, cfg.titulo || tituloDoc, cfg.subtitulo || cfg.institucion || fecha, logo);
 
       let y = 54;
+
+      // ── Foto empleado en encabezado ──────────────────
+      if (fotoEmp && empSeleccionado) {
+        try {
+          // Foto circular (recortamos en canvas)
+          const size = 30;
+          const fc = document.createElement('canvas');
+          fc.width = size * 2; fc.height = size * 2;
+          const fctx = fc.getContext('2d');
+          fctx.beginPath();
+          fctx.arc(size, size, size, 0, Math.PI * 2);
+          fctx.clip();
+          const fimg = new Image();
+          fimg.src = fotoEmp;
+          await new Promise(r => { fimg.onload = r; fimg.onerror = r; });
+          fctx.drawImage(fimg, 0, 0, size * 2, size * 2);
+          const fotoCircular = fc.toDataURL('image/png');
+          doc.addImage(fotoCircular, 'PNG', 152, 6, 30, 30);
+          // Borde dorado alrededor
+          doc.setDrawColor(...CS);
+          doc.setLineWidth(1);
+          doc.circle(167, 21, 15.5);
+        } catch(e) {}
+      }
 
       // ── KPIs ────────────────────────────────────────
       const kpis = empSeleccionado ? [
