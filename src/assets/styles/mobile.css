@@ -236,10 +236,15 @@
 
   /* ── NOTIF PANEL ── */
   .notif-panel {
-    position: fixed; top: auto; bottom: 90px;
-    right: 8px; left: 8px; width: auto;
+    position: fixed !important;
+    top: 70px !important;
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
     border-radius: 16px;
-    max-height: 60dvh; overflow-y: auto;
+    max-height: 65dvh;
+    overflow-y: auto;
+    z-index: 500 !important;
   }
 
   /* ── BAJAS ── */
