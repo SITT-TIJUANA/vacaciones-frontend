@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+  import { useState, useEffect } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import jsPDF from 'jspdf';
@@ -136,9 +136,7 @@ export default function Reportes() {
       const fotoEmp = (cfg.incluirFoto && empSeleccionado?.foto_url)
         ? await getFotoBase64(empSeleccionado.foto_url)
         : null;
-      console.log('🖼️ Foto URL:', empSeleccionado?.foto_url);
-      console.log('🖼️ Foto base64 length:', fotoEmp?.length || 0);
-      const tot = resumen?.totales || {};
+          const tot = resumen?.totales || {};
       const fecha = new Date().toLocaleDateString('es-MX', { dateStyle: 'full' });
       const tituloDoc = empSeleccionado
         ? `Reporte Individual: ${empSeleccionado.apellido_paterno} ${empSeleccionado.nombre}`
