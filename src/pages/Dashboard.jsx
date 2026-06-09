@@ -10,6 +10,7 @@ import DiasAdeudados from '../components/DiasAdeudados';
 import Calendario from '../components/Calendario';
 import VincularCuenta from '../components/VincularCuenta';
 import InstalarApp from '../components/InstalarApp';
+import Historial from '../components/Historial';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { id:'adeudados',    icon:'💰', label:'Adeudados',   roles:['admin','rrhh'] },
   { id:'alta',         icon:'➕', label:'Alta',         roles:['admin','rrhh'] },
   { id:'bajas',        icon:'🚫', label:'Bajas',        roles:['admin','rrhh'] },
+  { id:'historial',    icon:'📋', label:'Historial',   roles:['admin','rrhh'] },
   { id:'usuarios',     icon:'🔐', label:'Usuarios',    roles:['admin'] },
 ];
 
@@ -166,6 +168,7 @@ export default function Dashboard() {
           {seccion==='alta'        && <AltaPersonal onCreado={()=>setSeccion('inicio')} />}
           {seccion==='bajas'       && <Bajas />}
           {seccion==='usuarios'    && <Usuarios />}
+          {seccion==='historial'   && <Historial />}
         </div>
       </main>
 
