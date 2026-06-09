@@ -444,3 +444,5 @@ tbody tr:last-child{border-bottom:none;}
   body { background-color: var(--w) !important; }
   .dash-layout { background-color: var(--w) !important; }
 }
+
+/* mobile.css se importa por separado */
