@@ -9,6 +9,9 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
   const [fotoExpandida, setFotoExpandida] = useState(false);
   const [tab, setTab] = useState('info');
   const [editandoPeriodo, setEditandoPeriodo] = useState(null);
+  const [registrarVacs, setRegistrarVacs] = useState(false);
+  const [formVacs, setFormVacs] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
+  const [guardandoVacs, setGuardandoVacs] = useState(false);
   const [formPeriodo, setFormPeriodo] = useState({});
 
   useEffect(() => {
@@ -40,6 +43,20 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
     } catch (e) {
       alert(e.response?.data?.error || 'Error al guardar');
     }
+  };
+
+  const guardarVacaciones = async () => {
+    if (!formVacs.fecha_inicio || !formVacs.fecha_fin) return;
+    setGuardandoVacs(true);
+    try {
+      await api.post('/api/solicitudes/manual', { empleado_id: empleadoId, ...formVacs });
+      const r = await api.get('/api/empleados/' + empleadoId);
+      setDatos(r.data);
+      setRegistrarVacs(false);
+      setFormVacs({ fecha_inicio:'', fecha_fin:'', motivo:'' });
+      onActualizar?.();
+    } catch(e) { alert(e.response?.data?.error || 'Error al registrar'); }
+    finally { setGuardandoVacs(false); }
   };
 
   if (cargando) return (
@@ -193,10 +210,16 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
                     <p style={{ fontSize:12, color:'var(--g60)', marginTop:3 }}>Cada 6 meses = 10 días. Editable manualmente.</p>
                   </div>
                   {esAdminRRHH && (
-                    <button className="btn-institucional filled btn-sm"
-                      onClick={() => { setEditandoPeriodo('nuevo'); setFormPeriodo({ anio: anioActual, dias_correspondientes: 10, observaciones: '' }); }}>
-                      ➕ Agregar
-                    </button>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button className="btn-institucional dorado btn-sm"
+                        onClick={() => setRegistrarVacs(true)}>
+                        📅 Registrar Vacaciones
+                      </button>
+                      <button className="btn-institucional filled btn-sm"
+                        onClick={() => { setEditandoPeriodo('nuevo'); setFormPeriodo({ anio: anioActual, dias_correspondientes: 10, observaciones: '' }); }}>
+                        ➕ Periodo
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -232,6 +255,25 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
                     <div style={{ display:'flex', gap:8, marginTop:12, justifyContent:'flex-end' }}>
                       <button className="btn-institucional btn-sm" onClick={()=>setEditandoPeriodo(null)}>Cancelar</button>
                       <button className="btn-institucional filled btn-sm" onClick={guardarPeriodo}>💾 Guardar</button>
+                    </div>
+                  </div>
+                )}
+
+                {registrarVacs && esAdminRRHH && (
+                  <div style={{ background:'#E3F2FD', borderRadius:12, padding:16, marginBottom:14, border:'2px solid #1565C0' }}>
+                    <h4 style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, color:'#1565C0', marginBottom:12, fontSize:12 }}>
+                      📅 Registrar Vacaciones Manualmente
+                    </h4>
+                    <div className="form-grid" style={{ gap:10 }}>
+                      <div className="form-group"><label>Fecha inicio</label><input type="date" className="form-control" value={formVacs.fecha_inicio} onChange={e=>setFormVacs({...formVacs,fecha_inicio:e.target.value})} /></div>
+                      <div className="form-group"><label>Fecha fin</label><input type="date" className="form-control" value={formVacs.fecha_fin} onChange={e=>setFormVacs({...formVacs,fecha_fin:e.target.value})} /></div>
+                      <div className="form-group" style={{ gridColumn:'1/-1' }}><label>Motivo</label><input className="form-control" value={formVacs.motivo} onChange={e=>setFormVacs({...formVacs,motivo:e.target.value})} placeholder="Ej: Vacaciones periodo 2026..." /></div>
+                    </div>
+                    <div style={{ display:'flex', gap:8, marginTop:12, justifyContent:'flex-end' }}>
+                      <button className="btn-institucional btn-sm" onClick={()=>setRegistrarVacs(false)}>Cancelar</button>
+                      <button className="btn-institucional filled btn-sm" style={{ background:'#1565C0', borderColor:'#1565C0' }} onClick={guardarVacaciones} disabled={guardandoVacs}>
+                        {guardandoVacs ? '⏳...' : '💾 Registrar'}
+                      </button>
                     </div>
                   </div>
                 )}
