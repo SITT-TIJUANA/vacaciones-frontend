@@ -82,8 +82,12 @@ async function getLogoBase64() {
 async function getFotoBase64(url) {
   if (!url) return null;
   try {
-    // Usar fetch para evitar problemas CORS con Cloudinary
-    const res = await fetch(url, { mode: 'cors' });
+    // Usar proxy del backend para evitar CORS con Cloudinary
+    const token = localStorage.getItem('token');
+    const API = 'https://vacaciones-backend-7ota.onrender.com';
+    const res = await fetch(`${API}/api/proxy-imagen?url=${encodeURIComponent(url)}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     if (!res.ok) return null;
     const blob = await res.blob();
     return new Promise((resolve) => {
