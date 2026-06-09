@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import escudoSitt from '../assets/escudo-sitt.png';
@@ -10,6 +10,44 @@ export default function Login() {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 3 + 0.5,
+      speed: Math.random() * 0.7 + 0.2,
+      swing: Math.random() * 2 - 1,
+      swingSpeed: Math.random() * 0.02 + 0.005,
+      t: Math.random() * Math.PI * 2,
+      opacity: Math.random() * 0.4 + 0.08,
+    }));
+    let raf;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.t += p.swingSpeed;
+        p.x += Math.sin(p.t) * p.swing;
+        p.y += p.speed;
+        if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(201,168,76,${p.opacity})`;
+        ctx.fill();
+      });
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+    const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,31 +57,33 @@ export default function Login() {
       await login(form.username, form.password);
       window.location.href = '/vacaciones-frontend/#/dashboard';
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al iniciar sesión');
-    } finally {
-      setCargando(false);
-    }
+      setError(err.response?.data?.error || 'Credenciales incorrectas');
+    } finally { setCargando(false); }
   };
+
   return (
     <div className="login-page">
-      <div className="escudo-bg" />
+      <canvas ref={canvasRef} className="particles-canvas" />
+
       <div className="login-container">
         <div className="login-header">
-          <img src={escudoSitt} alt="Escudo SITT" className="login-escudo" />
+          <img src={escudoSitt} alt="SITT" className="login-escudo" />
           <div>
-            <h1 className="login-title">H. XXV Ayuntamiento de Tijuana</h1>
-            <p className="login-subtitle">SITT — Control de Vacaciones</p>
+            <div className="login-title-main">
+              H. XXV Ayuntamiento de <em>Tijuana</em>
+            </div>
+            <div className="login-subtitle">SITT — Control de Vacaciones</div>
           </div>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          <h2 className="login-form-title">Iniciar Sesión</h2>
-          <p className="login-form-sub">Ingresa tus credenciales institucionales</p>
+          <div>
+            <div className="login-form-title">Iniciar Sesión</div>
+            <div className="login-form-sub">Ingresa tus credenciales institucionales</div>
+          </div>
 
           {error && (
-            <div className="login-error">
-              <span>⚠️</span> {error}
-            </div>
+            <div className="login-error"><span>⚠️</span> {error}</div>
           )}
 
           <div className="flex-column">
@@ -68,19 +108,20 @@ export default function Login() {
                 value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
                 autoComplete="current-password" />
               <button type="button" onClick={() => setShowPass(s => !s)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px', color: 'var(--gris-texto)' }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px', color: 'var(--g60)', fontSize: 18 }}>
                 {showPass ? '🙈' : '👁️'}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="btn-institucional filled btn-lg"
-            style={{ width: '100%', marginTop: '8px' }} disabled={cargando}>
-            {cargando ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className="spin">⏳</span> Verificando...
-              </span>
-            ) : <>🔐 Entrar al Sistema</>}
+          <button type="submit" className="btn-institucional filled btn-xl"
+            style={{ width: '100%', marginTop: '6px' }} disabled={cargando}>
+            {cargando
+              ? <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span> Verificando...
+                </span>
+              : <>🔐 Entrar al Sistema</>
+            }
           </button>
         </form>
 
@@ -89,92 +130,6 @@ export default function Login() {
           <span>Uso exclusivo del personal autorizado</span>
         </p>
       </div>
-
-      <style>{`
-        .login-page {
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, var(--guinda-dark) 0%, var(--guinda) 50%, var(--guinda-light) 100%);
-          padding: 20px;
-          position: relative;
-        }
-        .login-page .escudo-bg::after { opacity: 0.06; filter: none; }
-        .login-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 20px;
-          width: 100%;
-          max-width: 460px;
-          position: relative;
-          z-index: 2;
-        }
-        .login-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          color: #fff;
-          text-align: left;
-        }
-        .login-escudo {
-          width: 70px;
-          height: 70px;
-          object-fit: contain;
-          filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
-          border-radius: 50%;
-        }
-        .login-title {
-          font-family: 'Montserrat', sans-serif;
-          font-weight: 800;
-          font-size: 16px;
-          color: #fff;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .login-subtitle {
-          font-size: 13px;
-          color: var(--dorado);
-          font-weight: 600;
-          font-family: 'Montserrat', sans-serif;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-        .login-form-title {
-          font-family: 'Montserrat', sans-serif;
-          font-weight: 800;
-          font-size: 22px;
-          color: var(--guinda);
-          margin-bottom: 4px;
-        }
-        .login-form-sub {
-          font-size: 13px;
-          color: var(--gris-texto);
-          margin-bottom: 8px;
-        }
-        .login-error {
-          background: #FFF3CD;
-          border: 1px solid #FFEEBA;
-          border-left: 4px solid #856404;
-          padding: 10px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          color: #856404;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .login-footer {
-          color: rgba(255,255,255,0.7);
-          font-size: 12px;
-          text-align: center;
-          line-height: 1.6;
-        }
-        .login-footer span { color: var(--dorado); font-weight: 600; }
-        .spin { animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

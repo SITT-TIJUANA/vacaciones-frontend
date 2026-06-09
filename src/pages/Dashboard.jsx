@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
+import { useState, useEffect, useRef } from 'react';
 import Tablero from '../components/Tablero';
 import Solicitudes from '../components/Solicitudes';
 import Reportes from '../components/Reportes';
@@ -9,115 +8,163 @@ import MiPerfil from '../components/MiPerfil';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
-const TITULOS = {
-  inicio:      '🏠 Personal SITT',
-  solicitudes: '📋 Solicitudes de Vacaciones',
-  reportes:    '📊 Reportes y Estadísticas',
-  alta:        '➕ Alta de Personal',
-  usuarios:    '🔐 Gestión de Usuarios',
-  miperfil:    '👤 Mi Perfil',
-};
+const NAV_ITEMS_ADMIN = [
+  { id: 'inicio',      icon: '🏠', label: 'Inicio',     roles: ['admin','rrhh'] },
+  { id: 'miperfil',    icon: '👤', label: 'Mi Perfil',  roles: ['admin','rrhh','empleado'] },
+  { id: 'solicitudes', icon: '📋', label: 'Solicitudes',roles: ['admin','rrhh','empleado'] },
+  { id: 'reportes',    icon: '📊', label: 'Reportes',   roles: ['admin','rrhh'] },
+  { id: 'alta',        icon: '➕', label: 'Alta',        roles: ['admin','rrhh'] },
+  { id: 'usuarios',    icon: '🔐', label: 'Usuarios',   roles: ['admin'] },
+];
 
 export default function Dashboard() {
-  const { usuario } = useAuth();
+  const { usuario, logout } = useAuth();
   const [seccion, setSeccion] = useState(() => {
-    // Si es empleado, va directo a su perfil
     const u = JSON.parse(localStorage.getItem('usuario') || '{}');
     return u.rol === 'empleado' ? 'miperfil' : 'inicio';
   });
-  const [collapsed, setCollapsed] = useState(false);
   const [notificaciones, setNotificaciones] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
+  const canvasRef = useRef(null);
 
-  const cargarNotificaciones = () => {
-    api.get('/api/notificaciones').then(r => setNotificaciones(r.data)).catch(() => {});
-  };
+  const navItems = NAV_ITEMS_ADMIN.filter(i => i.roles.includes(usuario?.rol));
+
+  // Partículas de fondo
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = Array.from({ length: 60 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 3 + 1,
+      speed: Math.random() * 0.6 + 0.2,
+      swing: Math.random() * 2 - 1,
+      swingSpeed: Math.random() * 0.02 + 0.005,
+      t: Math.random() * Math.PI * 2,
+      opacity: Math.random() * 0.3 + 0.05,
+    }));
+
+    let raf;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.t += p.swingSpeed;
+        p.x += Math.sin(p.t) * p.swing;
+        p.y += p.speed;
+        if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(201,168,76,${p.opacity})`;
+        ctx.fill();
+      });
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+
+    const onResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+  }, []);
 
   useEffect(() => {
-    cargarNotificaciones();
-    const timer = setInterval(cargarNotificaciones, 60000);
-    // Keep-alive
-    const ping = setInterval(() => {
-      fetch('https://vacaciones-backend-7ota.onrender.com/ping').catch(() => {});
-    }, 840000);
-    return () => { clearInterval(timer); clearInterval(ping); };
+    api.get('/api/notificaciones').then(r => setNotificaciones(r.data)).catch(() => {});
+    const t = setInterval(() => api.get('/api/notificaciones').then(r => setNotificaciones(r.data)).catch(() => {}), 60000);
+    const ping = setInterval(() => fetch('https://vacaciones-backend-7ota.onrender.com/ping').catch(() => {}), 840000);
+    return () => { clearInterval(t); clearInterval(ping); };
   }, []);
 
   const noLeidas = notificaciones.filter(n => !n.leida).length;
 
-  const marcarLeidas = () => {
-    api.put('/api/notificaciones/leer-todas').then(() => cargarNotificaciones()).catch(() => {});
-  };
-
-  const cambiarSeccion = (id) => {
-    setSeccion(id);
-    setShowNotif(false);
-    if (window.innerWidth < 768) setCollapsed(true);
-  };
-
   return (
-    <div className="app-layout">
-      <div className="escudo-bg" />
-      <Sidebar
-        seccion={seccion}
-        setSeccion={cambiarSeccion}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        notifCount={['admin','rrhh'].includes(usuario?.rol) ? noLeidas : 0}
-      />
+    <div className="dash-layout">
+      {/* Canvas partículas */}
+      <canvas ref={canvasRef} className="particles-canvas" />
 
-      <main className={`main-content${collapsed ? ' full' : ''}`}>
-        <div className="topbar">
-          <div className="topbar-left">
-            <button className="hamburger" onClick={() => setCollapsed(c => !c)}>
-              {collapsed ? '☰' : '✕'}
-            </button>
-            <span className="topbar-title">{TITULOS[seccion]}</span>
-          </div>
-          <div className="topbar-right">
-            <div style={{ position: 'relative' }}>
-              <button className="notif-btn"
-                onClick={() => { setShowNotif(s => !s); if (!showNotif && noLeidas > 0) marcarLeidas(); }}>
-                🔔
-                {noLeidas > 0 && <span className="notif-dot">{noLeidas > 9 ? '9+' : noLeidas}</span>}
-              </button>
-              {showNotif && (
-                <div className="notif-panel">
-                  <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--gris-claro)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: 14, color: 'var(--guinda)' }}>Notificaciones</span>
-                    <button onClick={() => setShowNotif(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--gris-texto)' }}>✕</button>
-                  </div>
-                  {notificaciones.length === 0 ? (
-                    <div style={{ padding: 28, textAlign: 'center', color: 'var(--gris-texto)', fontSize: 13 }}>
-                      <div style={{ fontSize: 36, marginBottom: 8 }}>🔔</div>
-                      Sin notificaciones
-                    </div>
-                  ) : notificaciones.slice(0, 10).map(n => (
-                    <div key={n.id} className={`notif-item${!n.leida ? ' no-leida' : ''}`}>
-                      <h4>{n.titulo}</h4>
-                      <p>{n.mensaje}</p>
-                      <time>{new Date(n.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</time>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {usuario?.foto_url
-              ? <img src={usuario.foto_url} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--guinda)', cursor: 'pointer' }} onClick={() => cambiarSeccion('miperfil')} />
-              : <div style={{ fontSize: 28, cursor: 'pointer' }} onClick={() => cambiarSeccion('miperfil')}>👤</div>
-            }
+      {/* Escudo fondo */}
+      <div className="escudo-bg-dash" />
+
+      {/* Header top */}
+      <header className="dash-header">
+        <div className="dash-header-left">
+          <img src="/vacaciones-frontend/escudo-sitt.png" alt="SITT" className="dash-logo" />
+          <div>
+            <div className="dash-title">Control de <em>Vacaciones</em></div>
+            <div className="dash-subtitle">SITT · Ayto. Tijuana</div>
           </div>
         </div>
+        <div className="dash-header-right">
+          <div style={{ position: 'relative' }}>
+            <button className="icon-btn" onClick={() => { setShowNotif(s => !s); if (noLeidas > 0) api.put('/api/notificaciones/leer-todas').then(() => api.get('/api/notificaciones').then(r => setNotificaciones(r.data))); }}>
+              🔔
+              {noLeidas > 0 && <span className="notif-dot">{noLeidas > 9 ? '9+' : noLeidas}</span>}
+            </button>
+            {showNotif && (
+              <div className="notif-panel">
+                <div className="notif-panel-header">
+                  <span>Notificaciones</span>
+                  <button onClick={() => setShowNotif(false)}>✕</button>
+                </div>
+                {notificaciones.length === 0
+                  ? <div className="notif-empty">🔔 Sin notificaciones</div>
+                  : notificaciones.slice(0,8).map(n => (
+                    <div key={n.id} className={`notif-item${!n.leida ? ' unread' : ''}`}>
+                      <div className="notif-title">{n.titulo}</div>
+                      <div className="notif-msg">{n.mensaje}</div>
+                    </div>
+                  ))
+                }
+              </div>
+            )}
+          </div>
+          <div className="dash-user" onClick={() => setSeccion('miperfil')}>
+            {usuario?.foto_url
+              ? <img src={usuario.foto_url} alt="" className="dash-avatar" />
+              : <div className="dash-avatar-placeholder">👤</div>
+            }
+            <div>
+              <div className="dash-user-name">{usuario?.nombre || usuario?.username}</div>
+              <div className="dash-user-rol">{usuario?.rol}</div>
+            </div>
+          </div>
+          <button className="icon-btn logout-btn" onClick={logout} title="Cerrar sesión">🚪</button>
+        </div>
+      </header>
 
-        <div className="page-content">
-          {seccion === 'inicio'     && <Tablero />}
-          {seccion === 'solicitudes' && <Solicitudes onActualizarNotif={cargarNotificaciones} />}
-          {seccion === 'reportes'   && <Reportes />}
-          {seccion === 'alta'       && <AltaPersonal onCreado={() => cambiarSeccion('inicio')} />}
-          {seccion === 'usuarios'   && <Usuarios />}
-          {seccion === 'miperfil'   && <MiPerfil />}
+      {/* Contenido */}
+      <main className="dash-main">
+        <div className="dash-content fade-in" key={seccion}>
+          {seccion === 'inicio'      && <Tablero />}
+          {seccion === 'miperfil'    && <MiPerfil />}
+          {seccion === 'solicitudes' && <Solicitudes onActualizarNotif={() => api.get('/api/notificaciones').then(r => setNotificaciones(r.data))} />}
+          {seccion === 'reportes'    && <Reportes />}
+          {seccion === 'alta'        && <AltaPersonal onCreado={() => setSeccion('inicio')} />}
+          {seccion === 'usuarios'    && <Usuarios />}
         </div>
       </main>
+
+      {/* Bottom Nav */}
+      <nav className="bottom-nav">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            className={`bottom-nav-item${seccion === item.id ? ' active' : ''}`}
+            onClick={() => setSeccion(item.id)}
+          >
+            <span className="bottom-nav-icon">{item.icon}</span>
+            <span className="bottom-nav-label">{item.label}</span>
+            {item.id === 'solicitudes' && noLeidas > 0 && (
+              <span className="bottom-nav-badge">{noLeidas}</span>
+            )}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
