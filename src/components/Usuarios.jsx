@@ -1,6 +1,54 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
+const ROLES_INFO = [
+  {
+    rol: 'admin',
+    emoji: '👑',
+    color: 'var(--guinda)',
+    bg: 'rgba(107,15,43,0.06)',
+    border: 'var(--guinda)',
+    permisos: [
+      'Acceso completo al sistema',
+      'Alta, baja y edición de empleados',
+      'Gestión de usuarios y roles',
+      'Aprobar y rechazar solicitudes',
+      'Ver todos los reportes',
+      'Configurar periodos de vacaciones',
+    ]
+  },
+  {
+    rol: 'rrhh',
+    emoji: '📋',
+    color: 'var(--dorado-dark)',
+    bg: 'rgba(201,168,76,0.06)',
+    border: 'var(--dorado-dark)',
+    permisos: [
+      'Ver todos los empleados',
+      'Dar de alta empleados',
+      'Aprobar y rechazar solicitudes',
+      'Ver y exportar reportes',
+      'Configurar periodos de vacaciones',
+      'NO puede gestionar usuarios',
+    ]
+  },
+  {
+    rol: 'empleado',
+    emoji: '👤',
+    color: '#27ae60',
+    bg: 'rgba(39,174,96,0.06)',
+    border: '#27ae60',
+    permisos: [
+      'Ver su propio perfil',
+      'Solicitar vacaciones',
+      'Ver historial de sus solicitudes',
+      'Ver sus días disponibles',
+      'NO puede ver otros empleados',
+      'NO puede aprobar solicitudes',
+    ]
+  }
+];
+
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [empleados, setEmpleados] = useState([]);
@@ -29,16 +77,12 @@ export default function Usuarios() {
       setForm({ username: '', password: '', rol: 'empleado', empleado_id: '' });
     } catch (e) {
       setError(e.response?.data?.error || 'Error al crear usuario');
-    } finally {
-      setEnviando(false);
-    }
+    } finally { setEnviando(false); }
   };
 
   const toggleActivo = async (id, activo) => {
-    try {
-      await api.put(`/api/usuarios/${id}`, { activo: !activo });
-      cargar();
-    } catch (e) { alert('Error al actualizar'); }
+    try { await api.put(`/api/usuarios/${id}`, { activo: !activo }); cargar(); }
+    catch (e) { alert('Error al actualizar'); }
   };
 
   const eliminar = async (id) => {
@@ -47,17 +91,39 @@ export default function Usuarios() {
     catch (e) { alert(e.response?.data?.error || 'Error al eliminar'); }
   };
 
-  const ROL_BADGE = { admin: '#e74c3c', rrhh: '#3498db', empleado: '#27ae60' };
-
   return (
     <div className="fade-in">
       <div className="section-header">
         <h2 className="section-title">Gestión de Usuarios</h2>
-        <button className="btn-institucional filled" onClick={() => setModal(true)}>
-          ➕ Nuevo Usuario
-        </button>
+        <button className="btn-institucional filled" onClick={() => setModal(true)}>➕ Nuevo Usuario</button>
       </div>
 
+      {/* Descripción de roles */}
+      <div style={{ marginBottom: 32 }}>
+        <h3 style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: 15, color: 'var(--guinda)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          🔐 ¿Qué puede hacer cada rol?
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: 16 }}>
+          {ROLES_INFO.map(r => (
+            <div key={r.rol} className="rol-card" style={{ borderColor: r.border, background: r.bg }}>
+              <h3 style={{ color: r.color, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                {r.rol.toUpperCase()}
+              </h3>
+              <ul style={{ color: r.color }}>
+                {r.permisos.map(p => (
+                  <li key={p} style={{ color: p.startsWith('NO') ? '#e74c3c' : 'var(--gris-texto)' }}>
+                    <span style={{ color: p.startsWith('NO') ? '#e74c3c' : r.color }}>{p.startsWith('NO') ? '✗' : '✓'}</span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabla usuarios */}
       {cargando ? (
         <div className="loader-wrapper"><div className="loader" /></div>
       ) : (
@@ -67,38 +133,34 @@ export default function Usuarios() {
               <tr><th>Usuario</th><th>Rol</th><th>Empleado vinculado</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr>
             </thead>
             <tbody>
-              {usuarios.map(u => (
-                <tr key={u.id}>
-                  <td><strong>{u.username}</strong></td>
-                  <td>
-                    <span style={{ background: ROL_BADGE[u.rol] + '22', color: ROL_BADGE[u.rol], padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat', textTransform: 'uppercase' }}>
-                      {u.rol}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: 13 }}>{u.nombre ? `${u.nombre} ${u.apellido_paterno}` : '—'}</td>
-                  <td>
-                    <span style={{ background: u.activo ? '#D4EDDA' : '#F8D7DA', color: u.activo ? '#155724' : '#721C24', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat' }}>
-                      {u.activo ? '✅ Activo' : '❌ Inactivo'}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: 12, color: 'var(--gris-texto)' }}>
-                    {new Date(u.created_at).toLocaleDateString('es-MX')}
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button
-                        className={`btn-institucional btn-sm ${u.activo ? 'peligro' : 'dorado'}`}
-                        onClick={() => toggleActivo(u.id, u.activo)}
-                      >
-                        {u.activo ? '🔒 Desactivar' : '🔓 Activar'}
-                      </button>
-                      <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(u.id)}>
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {usuarios.map(u => {
+                const rolInfo = ROLES_INFO.find(r => r.rol === u.rol);
+                return (
+                  <tr key={u.id}>
+                    <td><strong style={{ fontFamily: 'Montserrat' }}>{u.username}</strong></td>
+                    <td>
+                      <span style={{ background: rolInfo?.bg, color: rolInfo?.color, padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 800, fontFamily: 'Montserrat', textTransform: 'uppercase', border: `1px solid ${rolInfo?.border}` }}>
+                        {rolInfo?.emoji} {u.rol}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: 13 }}>{u.nombre ? `${u.nombre} ${u.apellido_paterno}` : '—'}</td>
+                    <td>
+                      <span style={{ background: u.activo ? '#D4EDDA' : '#F8D7DA', color: u.activo ? '#155724' : '#721C24', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat' }}>
+                        {u.activo ? '✅ Activo' : '❌ Inactivo'}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--gris-texto)' }}>{new Date(u.created_at).toLocaleDateString('es-MX')}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className={`btn-institucional btn-sm ${u.activo ? 'peligro' : 'dorado'}`} onClick={() => toggleActivo(u.id, u.activo)}>
+                          {u.activo ? '🔒' : '🔓'}
+                        </button>
+                        <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(u.id)}>🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -124,18 +186,21 @@ export default function Usuarios() {
               <div className="form-group">
                 <label>Rol</label>
                 <select className="form-control" value={form.rol} onChange={e => setForm({ ...form, rol: e.target.value })}>
-                  <option value="empleado">Empleado</option>
-                  <option value="rrhh">RRHH</option>
-                  <option value="admin">Admin</option>
+                  <option value="empleado">👤 Empleado</option>
+                  <option value="rrhh">📋 RRHH</option>
+                  <option value="admin">👑 Admin</option>
                 </select>
+                {form.rol && (
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: ROLES_INFO.find(r => r.rol === form.rol)?.bg, fontSize: 12, color: 'var(--gris-texto)' }}>
+                    {ROLES_INFO.find(r => r.rol === form.rol)?.permisos.slice(0,3).map(p => <div key={p}>• {p}</div>)}
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label>Vincular con empleado (opcional)</label>
                 <select className="form-control" value={form.empleado_id} onChange={e => setForm({ ...form, empleado_id: e.target.value })}>
                   <option value="">— Sin vincular —</option>
-                  {empleados.map(e => (
-                    <option key={e.id} value={e.id}>{e.nombre} {e.apellido_paterno}</option>
-                  ))}
+                  {empleados.map(e => <option key={e.id} value={e.id}>{e.nombre} {e.apellido_paterno}</option>)}
                 </select>
               </div>
             </div>
