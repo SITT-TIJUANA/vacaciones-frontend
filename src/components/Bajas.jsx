@@ -22,9 +22,25 @@ export default function Bajas() {
     finally { setEnviando(false); }
   };
 
-  const eliminar = async (id) => {
+  const [opcionesEliminar, setOpcionesEliminar] = useState({
+    empleado: true,
+    solicitudes: false,
+    historial: false,
+    bajas: false,
+    vacaciones_calendario: false,
+    usuario: false,
+  });
+
+  const eliminar = async (emp) => {
     setEnviando(true);
-    try { await api.delete(`/api/empleados/${id}/permanente`); cargar(); setModalEliminar(null); }
+    try {
+      await api.delete(`/api/empleados/${emp.id}/permanente`, {
+        data: opcionesEliminar
+      });
+      cargar();
+      setModalEliminar(null);
+      setOpcionesEliminar({ empleado:true, solicitudes:false, historial:false, bajas:false, vacaciones_calendario:false, usuario:false });
+    }
     catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
     finally { setEnviando(false); }
   };
@@ -151,6 +167,7 @@ export default function Bajas() {
               <button className="modal-close" onClick={() => setModalEliminar(null)}>✕</button>
             </div>
             <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              {/* Info empleado */}
               <div style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 14px', background:'rgba(183,28,28,0.06)', borderRadius:12, border:'1px solid rgba(183,28,28,0.15)' }}>
                 {modalEliminar.foto_url
                   ? <img src={modalEliminar.foto_url} alt="" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:'3px solid #E53935' }} />
@@ -161,13 +178,52 @@ export default function Bajas() {
                   <div style={{ fontSize:12, color:'var(--g60)' }}>{modalEliminar.puesto || '—'}</div>
                 </div>
               </div>
-              <div style={{ padding:'12px 14px', background:'rgba(183,28,28,0.08)', borderRadius:10, border:'1px solid rgba(183,28,28,0.2)', fontSize:13, color:'#B71C1C', fontFamily:'Montserrat,sans-serif', fontWeight:600, lineHeight:1.6 }}>
-                ⚠️ <strong>Esta acción es irreversible.</strong> Se eliminarán todos los datos del empleado, su foto, historial de vacaciones y solicitudes. No se puede deshacer.
+
+              {/* Opciones de qué eliminar */}
+              <div>
+                <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, color:'var(--g)', marginBottom:10, textTransform:'uppercase', letterSpacing:'0.5px' }}>
+                  ¿Qué deseas eliminar?
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {[
+                    { key:'empleado',             label:'👤 Datos del empleado y foto', desc:'Nombre, puesto, departamento, foto', obligatorio: true },
+                    { key:'solicitudes',           label:'📋 Solicitudes de vacaciones', desc:'Historial de solicitudes enviadas' },
+                    { key:'vacaciones_calendario', label:'📅 Vacaciones del calendario', desc:'Registros aprobados en el calendario' },
+                    { key:'bajas',                 label:'🚫 Registro de baja', desc:'Información de fecha y motivo de baja' },
+                    { key:'historial',             label:'📖 Historial de actividad', desc:'Log de acciones relacionadas' },
+                    { key:'usuario',               label:'🔐 Usuario de acceso', desc:'Cuenta para iniciar sesión' },
+                  ].map(({ key, label, desc, obligatorio }) => (
+                    <label key={key} style={{
+                      display:'flex', alignItems:'flex-start', gap:12, padding:'10px 12px',
+                      borderRadius:10, cursor: obligatorio ? 'not-allowed' : 'pointer',
+                      background: opcionesEliminar[key] ? 'rgba(183,28,28,0.07)' : 'var(--g10)',
+                      border: `1.5px solid ${opcionesEliminar[key] ? 'rgba(183,28,28,0.3)' : 'var(--g20)'}`,
+                      transition: 'all 0.2s',
+                    }}>
+                      <input type="checkbox"
+                        checked={opcionesEliminar[key]}
+                        disabled={obligatorio}
+                        onChange={e => setOpcionesEliminar(o => ({ ...o, [key]: e.target.checked }))}
+                        style={{ width:16, height:16, marginTop:2, accentColor:'#B71C1C', flexShrink:0 }}
+                      />
+                      <div>
+                        <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:13, color: opcionesEliminar[key] ? '#B71C1C' : 'var(--txt)' }}>
+                          {label} {obligatorio && <span style={{ fontSize:10, color:'#B71C1C', fontWeight:500 }}>(requerido)</span>}
+                        </div>
+                        <div style={{ fontSize:11, color:'var(--g60)', marginTop:2 }}>{desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ padding:'10px 12px', background:'rgba(183,28,28,0.08)', borderRadius:10, border:'1px solid rgba(183,28,28,0.2)', fontSize:12, color:'#B71C1C', fontFamily:'Montserrat,sans-serif', fontWeight:600 }}>
+                ⚠️ Lo que marques se eliminará permanentemente. No se puede deshacer.
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn-institucional btn-sm" onClick={() => setModalEliminar(null)}>Cancelar</button>
-              <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(modalEliminar.id)} disabled={enviando}>
+              <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(modalEliminar)} disabled={enviando}>
                 {enviando ? '⏳...' : '🗑️ Eliminar para siempre'}
               </button>
             </div>
