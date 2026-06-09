@@ -136,6 +136,8 @@ export default function Reportes() {
       const fotoEmp = (cfg.incluirFoto && empSeleccionado?.foto_url)
         ? await getFotoBase64(empSeleccionado.foto_url)
         : null;
+      console.log('🖼️ Foto URL:', empSeleccionado?.foto_url);
+      console.log('🖼️ Foto base64 length:', fotoEmp?.length || 0);
       const tot = resumen?.totales || {};
       const fecha = new Date().toLocaleDateString('es-MX', { dateStyle: 'full' });
       const tituloDoc = empSeleccionado
@@ -158,25 +160,16 @@ export default function Reportes() {
       // ── Foto empleado en encabezado ──────────────────
       if (fotoEmp && empSeleccionado) {
         try {
-          // Foto circular (recortamos en canvas)
-          const size = 30;
-          const fc = document.createElement('canvas');
-          fc.width = size * 2; fc.height = size * 2;
-          const fctx = fc.getContext('2d');
-          fctx.beginPath();
-          fctx.arc(size, size, size, 0, Math.PI * 2);
-          fctx.clip();
-          const fimg = new Image();
-          fimg.src = fotoEmp;
-          await new Promise(r => { fimg.onload = r; fimg.onerror = r; });
-          fctx.drawImage(fimg, 0, 0, size * 2, size * 2);
-          const fotoCircular = fc.toDataURL('image/png');
-          doc.addImage(fotoCircular, 'PNG', 152, 6, 30, 30);
-          // Borde dorado alrededor
+          doc.addImage(fotoEmp, 'JPEG', 152, 5, 32, 32);
+          // Borde dorado encima
           doc.setDrawColor(...CS);
-          doc.setLineWidth(1);
-          doc.circle(167, 21, 15.5);
-        } catch(e) {}
+          doc.setLineWidth(1.2);
+          doc.rect(152, 5, 32, 32);
+        } catch(e) {
+          try {
+            doc.addImage(fotoEmp, 'PNG', 152, 5, 32, 32);
+          } catch(e2) {}
+        }
       }
 
       // ── KPIs ────────────────────────────────────────
