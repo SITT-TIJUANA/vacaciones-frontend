@@ -85,6 +85,14 @@ export default function SeccionPeriodos({ empleadoInicial }) {
       .finally(() => setCargando(false));
   };
 
+  const eliminarVacacion = async (id) => {
+    if (!window.confirm('¿Eliminar este registro de vacaciones?')) return;
+    try {
+      await api.delete(`/api/solicitudes/${id}`);
+      recargar();
+    } catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
+  };
+
   const recargar = () => {
     if (!empleadoSel) return;
     setCargando(true);
@@ -159,6 +167,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
               setExpandido={setExpandido}
               onRegistrarHistorico={()=>setModalHistorico(true)}
               onEditarSolicitud={s=>setModalEditSol(s)}
+              onEliminarSolicitud={eliminarVacacion}
             />
           ) : null}
         </div>
@@ -174,7 +183,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
   );
 }
 
-function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, onRegistrarHistorico, onEditarSolicitud }) {
+function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, onRegistrarHistorico, onEditarSolicitud, onEliminarSolicitud }) {
   const periodosTeoricos = calcularPeriodos(empleado.fecha_ingreso);
   const periodosCompletados = periodosTeoricos.filter(p => p.completado);
   const periodoEnCurso = periodosTeoricos.find(p => p.en_curso);
@@ -368,8 +377,12 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                                 {s.motivo && <div style={{ fontSize:11,color:'var(--g60)',marginTop:3 }}>💬 {s.motivo}</div>}
                               </div>
                               {esAdmin && (
-                                <button className="btn-institucional dorado btn-sm" style={{ fontSize:10,flexShrink:0 }}
-                                  onClick={()=>onEditarSolicitud(s)}>✏️ Editar</button>
+                                <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                                  <button className="btn-institucional dorado btn-sm" style={{ fontSize:10 }}
+                                    onClick={()=>onEditarSolicitud(s)}>✏️ Editar</button>
+                                  <button className="btn-institucional peligro btn-sm" style={{ fontSize:10 }}
+                                    onClick={()=>onEliminarSolicitud(s.id)}>🗑️</button>
+                                </div>
                               )}
                             </div>
                           ))}
