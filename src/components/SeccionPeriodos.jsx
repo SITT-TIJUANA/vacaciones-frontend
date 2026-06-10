@@ -419,12 +419,15 @@ function calcularPeriodosReales(fechaIngreso) {
     const fin = new Date(inicio);
     fin.setMonth(fin.getMonth() + 6);
     fin.setDate(fin.getDate() - 1);
-    periodos.push({
-      numero: num,
-      inicio: new Date(inicio),
-      fin: new Date(fin),
-      label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
-    });
+    // Solo agregar periodos COMPLETADOS (no el que está en curso)
+    if (fin < hoy) {
+      periodos.push({
+        numero: num,
+        inicio: new Date(inicio),
+        fin: new Date(fin),
+        label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
+      });
+    }
     inicio = new Date(fin);
     inicio.setDate(inicio.getDate() + 1);
     num++;
