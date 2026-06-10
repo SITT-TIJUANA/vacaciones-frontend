@@ -1,4 +1,4 @@
-  import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
 import jsPDF from 'jspdf';
@@ -136,7 +136,9 @@ export default function Reportes() {
       const fotoEmp = (cfg.incluirFoto && empSeleccionado?.foto_url)
         ? await getFotoBase64(empSeleccionado.foto_url)
         : null;
-          const tot = resumen?.totales || {};
+      console.log('🖼️ Foto URL:', empSeleccionado?.foto_url);
+      console.log('🖼️ Foto base64 length:', fotoEmp?.length || 0);
+      const tot = resumen?.totales || {};
       const fecha = new Date().toLocaleDateString('es-MX', { dateStyle: 'full' });
       const tituloDoc = empSeleccionado
         ? `Reporte Individual: ${empSeleccionado.apellido_paterno} ${empSeleccionado.nombre}`
@@ -238,6 +240,69 @@ export default function Reportes() {
           margin: { left: 14, right: 14 },
         });
         y = doc.lastAutoTable.finalY + 10;
+      }
+
+      // ── Periodos detallados cuando es reporte individual ────
+      if (empSeleccionado) {
+        try {
+          const { data: periodosData } = await api.get(`/api/solicitudes/periodos-detalle/${empSeleccionado.id}`);
+          if (periodosData?.periodos?.length) {
+            doc.setFillColor(...GUINDA);
+            doc.rect(14, y, 182, 7, 'F');
+            doc.setTextColor(...BLANCO);
+            doc.setFontSize(9); doc.setFont('helvetica','bold');
+            doc.text('DETALLE DE PERIODOS Y VACACIONES', 18, y + 4.8);
+            y += 10;
+
+            for (const p of periodosData.periodos) {
+              // Header del periodo
+              doc.setFillColor(248, 245, 245);
+              doc.rect(14, y, 182, 8, 'F');
+              doc.setDrawColor(...GUINDA);
+              doc.setLineWidth(0.3);
+              doc.rect(14, y, 182, 8);
+              doc.setTextColor(...GUINDA);
+              doc.setFontSize(9); doc.setFont('helvetica','bold');
+              doc.text(`${p.anio} — Periodo ${p.periodo_semestre} (${p.periodo_semestre===1?'Enero–Junio':'Julio–Diciembre'})`, 18, y + 5.5);
+              doc.setFont('helvetica','normal');
+              doc.text(`${p.dias_correspondientes} corresp. | ${p.dias_tomados} tomados | ${p.dias_disponibles} disponibles`, 120, y + 5.5);
+              y += 10;
+
+              // Vacaciones de este periodo
+              if (p.solicitudes?.length) {
+                const rows = p.solicitudes.map(s => [
+                  s.es_historico ? '📂 HISTÓRICO' : '✅',
+                  new Date(s.fecha_inicio).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}),
+                  new Date(s.fecha_fin).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}),
+                  `${s.dias_solicitados} días`,
+                  s.motivo || '—',
+                ]);
+                doc.autoTable({
+                  startY: y,
+                  head: [['Tipo','Fecha inicio','Fecha fin','Días','Notas']],
+                  body: rows,
+                  headStyles: { fillColor: [74,10,30], fontSize:8 },
+                  bodyStyles: { fontSize:8 },
+                  margin: { left:18, right:14 },
+                  tableWidth: 178,
+                });
+                y = doc.lastAutoTable.finalY + 6;
+              } else {
+                doc.setTextColor(130,120,120); doc.setFontSize(8);
+                doc.text('Sin vacaciones registradas en este periodo', 22, y + 4);
+                y += 10;
+              }
+            }
+
+            // Próximo periodo
+            if (periodosData.proximo_periodo) {
+              doc.setTextColor(...GUINDA);
+              doc.setFontSize(8); doc.setFont('helvetica','italic');
+              doc.text(`⏳ Próximo periodo en ${periodosData.proximo_periodo.meses_faltantes} mes(es)`, 14, y + 4);
+              y += 10;
+            }
+          }
+        } catch(e) {}
       }
 
       // ── Detalle empleados ────────────────────────────
