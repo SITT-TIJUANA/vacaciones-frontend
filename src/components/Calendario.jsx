@@ -5,6 +5,11 @@ import { useAuth } from '../context/AuthContext';
 const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+function fmtFecha(f) {
+  if (!f) return '—';
+  return new Date(f).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+}
+
 export default function Calendario() {
   const { usuario, rolEfectivo } = useAuth();
   const esEmpleado = rolEfectivo === 'empleado';
@@ -19,7 +24,6 @@ export default function Calendario() {
     setCargando(true);
     api.get(`/api/calendario?mes=${mes}&anio=${anio}`)
       .then(r => {
-        // Si es empleado, solo mostrar sus propias vacaciones
         const data = esEmpleado && usuario?.empleado_id
           ? r.data.filter(e => e.empleado_id === usuario.empleado_id)
           : r.data;
@@ -37,16 +41,12 @@ export default function Calendario() {
     setMes(m); setAnio(a);
   };
 
-  // Construir días del mes
   const primerDia = new Date(anio, mes - 1, 1).getDay();
   const diasEnMes = new Date(anio, mes, 0).getDate();
   const celdas = Array(primerDia).fill(null).concat(
     Array.from({ length: diasEnMes }, (_, i) => i + 1)
   );
   while (celdas.length % 7 !== 0) celdas.push(null);
-
-  // Mapear eventos a fechas
-  const getFechaStr = (d) => `${anio}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
   const getEventosDia = (dia) => {
     if (!dia) return [];
@@ -65,10 +65,14 @@ export default function Calendario() {
   };
 
   const estaDeVacaciones = (evento) => {
-    const hoyMs = hoy.getTime();
     const ini = new Date(evento.fecha_inicio); ini.setHours(0,0,0,0);
     const fin = new Date(evento.fecha_fin); fin.setHours(23,59,59,999);
     return hoy >= ini && hoy <= fin;
+  };
+
+  // Iniciales del nombre
+  const getIniciales = (nombre, apellido) => {
+    return `${(nombre||'?')[0]}${(apellido||'?')[0]}`.toUpperCase();
   };
 
   return (
@@ -77,40 +81,41 @@ export default function Calendario() {
         <h2 className="section-title">Calendario de Vacaciones</h2>
       </div>
 
-      {/* Navegación del mes */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div className="calendario-nav" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-          <div style={{ textAlign:'center', flex:1 }}>
-            <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:28, color:'var(--g)' }}>
+      <div className="card" style={{ marginBottom:24, padding:'20px 20px 16px' }}>
+
+        {/* Navegación mes */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <button className="btn-institucional btn-sm" onClick={() => cambiarMes(-1)}>← Anterior</button>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:26, color:'var(--g)', lineHeight:1 }}>
               {MESES[mes-1]}
             </div>
-            <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:14, color:'var(--g60)' }}>{anio}</div>
+            <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:13, color:'var(--g60)', marginTop:2 }}>{anio}</div>
           </div>
-          <div className="calendario-nav-btns" style={{ display:'flex', justifyContent:'space-between', gap:8 }}>
-            <button className="btn-institucional btn-sm" onClick={() => cambiarMes(-1)}>← Anterior</button>
-            <button className="btn-institucional btn-sm" onClick={() => cambiarMes(1)}>Siguiente →</button>
-          </div>
+          <button className="btn-institucional btn-sm" onClick={() => cambiarMes(1)}>Siguiente →</button>
         </div>
 
-        {/* Leyenda */}
-        <div className="cal-leyenda" style={{ display:'flex', gap:16, marginBottom:16, flexWrap:'wrap' }}>
-          {[
-            { color:'rgba(201,168,76,0.3)', border:'2px solid #C9A84C', label:'Aprobado (próximo)' },
-            { color:'rgba(39,174,96,0.3)', border:'2px solid #27ae60', label:'De vacaciones (hoy)' },
-            { color:'rgba(107,15,43,0.08)', border:'2px solid var(--g)', label:'Hoy' },
-          ].map(({ color, border, label }) => (
-            <div key={label} style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:20, height:20, background:color, border, borderRadius:4 }} />
-              <span style={{ fontSize:12, fontFamily:'Montserrat,sans-serif', fontWeight:600, color:'var(--g60)' }}>{label}</span>
-            </div>
-          ))}
+        {/* Leyenda visual */}
+        <div className="cal-leyenda" style={{ display:'flex', gap:16, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#C9A84C,#E0C46A)', border:'2px solid #A8883A', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>✈️</div>
+            <span style={{ fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)' }}>Próximo (aprobado)</span>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#27ae60,#2ecc71)', border:'2px solid #1a9950', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>🏖️</div>
+            <span style={{ fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)' }}>De vacaciones hoy</span>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,var(--g),var(--g-dk))', border:'2px solid var(--d)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#fff', fontFamily:'Montserrat,sans-serif', fontWeight:900 }}>Hoy</div>
+            <span style={{ fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)' }}>Día actual</span>
+          </div>
         </div>
 
         {cargando ? (
           <div className="loader-wrapper" style={{ minHeight:200 }}><div className="loader" /></div>
         ) : (
           <>
-            {/* Encabezados días */}
+            {/* Headers días */}
             <div className="cal-grid" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3, marginBottom:3 }}>
               {DIAS_SEMANA.map(d => (
                 <div key={d} className="cal-header-dia" style={{ textAlign:'center', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:11, color:'var(--g)', padding:'7px 2px', textTransform:'uppercase', letterSpacing:'0.3px' }}>
@@ -119,21 +124,34 @@ export default function Calendario() {
               ))}
             </div>
 
-            {/* Celdas del calendario */}
+            {/* Celdas */}
             <div className="cal-grid" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
               {celdas.map((dia, i) => {
                 const eventosHoy = getEventosDia(dia);
                 const esHoyDia = esHoy(dia);
+                const tieneActivos = eventosHoy.some(e => estaDeVacaciones(e));
+                const tieneProximos = eventosHoy.some(e => !estaDeVacaciones(e));
+
                 return (
                   <div key={i}
                     className="cal-celda"
                     onClick={() => dia && eventosHoy.length > 0 && setSeleccionado({ dia, eventos: eventosHoy })}
                     style={{
-                      minHeight: 80,
+                      minHeight: 76,
                       borderRadius: 10,
-                      padding: '6px 8px',
-                      background: dia ? (esHoyDia ? 'rgba(107,15,43,0.06)' : 'var(--w-off)') : 'transparent',
-                      border: dia ? (esHoyDia ? '2px solid var(--g)' : '1px solid var(--g20)') : 'none',
+                      padding: '5px 4px 4px',
+                      background: dia
+                        ? tieneActivos ? 'rgba(39,174,96,0.08)'
+                        : tieneProximos ? 'rgba(201,168,76,0.08)'
+                        : esHoyDia ? 'rgba(107,15,43,0.06)'
+                        : 'var(--w-off)'
+                        : 'transparent',
+                      border: dia
+                        ? tieneActivos ? '1.5px solid rgba(39,174,96,0.4)'
+                        : tieneProximos ? '1.5px solid rgba(201,168,76,0.4)'
+                        : esHoyDia ? '2px solid var(--g)'
+                        : '1px solid var(--g20)'
+                        : 'none',
                       cursor: eventosHoy.length > 0 ? 'pointer' : 'default',
                       transition: 'all 0.2s',
                       position: 'relative',
@@ -141,32 +159,60 @@ export default function Calendario() {
                   >
                     {dia && (
                       <>
-                        <div className="cal-dia-num" style={{ fontFamily:'Montserrat,sans-serif', fontWeight: esHoyDia ? 900 : 600, fontSize:13, color: esHoyDia ? 'var(--g)' : 'var(--txt)', marginBottom:4 }}>
-                          {dia}
-                          {esHoyDia && <span style={{ marginLeft:4, fontSize:9, background:'var(--g)', color:'#fff', padding:'1px 5px', borderRadius:8, fontWeight:800 }}>HOY</span>}
+                        {/* Número del día */}
+                        <div className="cal-dia-num" style={{
+                          fontFamily:'Montserrat,sans-serif',
+                          fontWeight: esHoyDia ? 900 : 600,
+                          fontSize: 12,
+                          color: esHoyDia ? '#fff' : 'var(--txt)',
+                          marginBottom: 3,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}>
+                          {esHoyDia ? (
+                            <span style={{ background:'var(--g)', color:'#fff', width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900 }}>{dia}</span>
+                          ) : (
+                            <span style={{ color: tieneActivos?'#155724':tieneProximos?'#856404':'var(--txt)' }}>{dia}</span>
+                          )}
                         </div>
+
+                        {/* Fotos/avatares de empleados */}
                         <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                          {eventosHoy.slice(0,3).map((ev, j) => {
+                          {eventosHoy.slice(0,2).map((ev, j) => {
                             const activo = estaDeVacaciones(ev);
                             return (
-                              <div key={j} className="cal-evento" style={{
-                                display:'flex', alignItems:'center', gap:4,
-                                background: activo ? 'rgba(39,174,96,0.2)' : 'rgba(201,168,76,0.2)',
-                                border: `1px solid ${activo ? '#27ae60' : '#C9A84C'}`,
-                                borderRadius:6, padding:'2px 5px',
+                              <div key={j} style={{
+                                display:'flex', alignItems:'center', gap:3,
+                                background: activo ? 'rgba(39,174,96,0.15)' : 'rgba(201,168,76,0.15)',
+                                borderRadius:20,
+                                padding:'2px 4px 2px 2px',
                               }}>
-                                {ev.foto_url
-                                  ? <img src={ev.foto_url} alt="" style={{ width:18, height:18, borderRadius:'50%', objectFit:'cover', border:`1px solid ${activo?'#27ae60':'#C9A84C'}`, flexShrink:0 }} />
-                                  : <span style={{ fontSize:12 }}>👤</span>
-                                }
-                                <span style={{ fontSize:9, fontFamily:'Montserrat,sans-serif', fontWeight:700, color: activo ? '#155724' : '#856404', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:55 }}>
-                                  {ev.nombre}
-                                </span>
+                                {/* Foto o iniciales — animación 3D */}
+                                {ev.foto_url ? (
+                                  <img src={ev.foto_url} alt=""
+                                    className={activo ? 'cal-foto-activo' : 'cal-foto-proximo'}
+                                    style={{ width:18, height:18, borderRadius:'50%', objectFit:'cover',
+                                      border:`1.5px solid ${activo?'#27ae60':'#C9A84C'}`, flexShrink:0 }} />
+                                ) : (
+                                  <div
+                                    className={activo ? 'cal-foto-activo' : 'cal-foto-proximo'}
+                                    style={{ width:18, height:18, borderRadius:'50%', flexShrink:0,
+                                      background: activo?'#27ae60':'#C9A84C',
+                                      display:'flex', alignItems:'center', justifyContent:'center',
+                                      fontSize:7, fontWeight:900, color:'#fff', fontFamily:'Montserrat,sans-serif' }}>
+                                    {getIniciales(ev.nombre, ev.apellido_paterno)}
+                                  </div>
+                                )}
+                                {/* Icono estado */}
+                                <span style={{ fontSize:9 }}>{activo ? '🏖️' : '✈️'}</span>
                               </div>
                             );
                           })}
-                          {eventosHoy.length > 3 && (
-                            <div style={{ fontSize:9, color:'var(--g60)', fontFamily:'Montserrat,sans-serif', fontWeight:700 }}>+{eventosHoy.length-3} más</div>
+                          {eventosHoy.length > 2 && (
+                            <div style={{ fontSize:9, color:'var(--g60)', fontFamily:'Montserrat,sans-serif', fontWeight:700, textAlign:'center' }}>
+                              +{eventosHoy.length-2} más
+                            </div>
                           )}
                         </div>
                       </>
@@ -179,44 +225,60 @@ export default function Calendario() {
         )}
       </div>
 
-      {/* Lista de vacaciones del mes */}
+      {/* Lista visual de vacaciones del mes */}
       {eventos.length > 0 && (
         <div className="card">
-          <h3 style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:14, color:'var(--g)', marginBottom:18 }}>
+          <h3 style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:14, color:'var(--g)', marginBottom:16 }}>
             📋 Vacaciones en {MESES[mes-1]} {anio}
           </h3>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {eventos.map(ev => {
               const activo = estaDeVacaciones(ev);
               return (
                 <div key={ev.id} style={{
-                  display:'flex', alignItems:'center', gap:16, padding:'14px 16px',
-                  borderRadius:12, border:`1.5px solid ${activo?'#27ae60':'#C9A84C'}`,
+                  display:'flex', alignItems:'center', gap:14,
+                  padding:'12px 16px', borderRadius:14,
                   background: activo ? 'rgba(39,174,96,0.06)' : 'rgba(201,168,76,0.06)',
+                  border:`1.5px solid ${activo?'rgba(39,174,96,0.3)':'rgba(201,168,76,0.3)'}`,
                 }}>
-                  {ev.foto_url
-                    ? <img src={ev.foto_url} alt="" style={{ width:48, height:48, borderRadius:'50%', objectFit:'cover', border:`3px solid ${activo?'#27ae60':'#C9A84C'}`, flexShrink:0 }} />
-                    : <div style={{ width:48, height:48, borderRadius:'50%', background:'var(--g10)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, flexShrink:0 }}>👤</div>
-                  }
+                  {/* Foto grande */}
+                  <div style={{ position:'relative', flexShrink:0 }}>
+                    {ev.foto_url
+                      ? <img src={ev.foto_url} alt=""
+                          className={activo ? 'cal-foto-activo' : 'cal-foto-proximo'}
+                          style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:`3px solid ${activo?'#27ae60':'#C9A84C'}` }} />
+                      : <div
+                          className={activo ? 'cal-foto-activo' : 'cal-foto-proximo'}
+                          style={{ width:52, height:52, borderRadius:'50%', background: activo?'rgba(39,174,96,0.2)':'rgba(201,168,76,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontFamily:'Montserrat,sans-serif', fontWeight:900, color: activo?'#155724':'#856404', border:`3px solid ${activo?'#27ae60':'#C9A84C'}` }}>
+                          {getIniciales(ev.nombre, ev.apellido_paterno)}
+                        </div>
+                    }
+                    {/* Icono estado sobre foto */}
+                    <div style={{ position:'absolute', bottom:-2, right:-2, width:20, height:20, borderRadius:'50%', background: activo?'#27ae60':'#C9A84C', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, border:'2px solid white' }}>
+                      {activo ? '🏖️' : '✈️'}
+                    </div>
+                  </div>
+
+                  {/* Info */}
                   <div style={{ flex:1 }}>
                     <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:16, color:'var(--g)' }}>
                       {ev.nombre} {ev.apellido_paterno}
                     </div>
-                    <div style={{ fontSize:12, color:'var(--g60)', marginTop:2 }}>{ev.departamento || '—'}</div>
+                    <div style={{ fontSize:12, color:'var(--g60)', marginTop:2 }}>{ev.departamento||'—'}</div>
                     <div style={{ fontSize:12, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)', marginTop:4 }}>
-                      📅 {fmtFecha(ev.fecha_inicio)} → {fmtFecha(ev.fecha_fin)} · {ev.dias_solicitados} días
+                      📅 {fmtFecha(ev.fecha_inicio)} → {fmtFecha(ev.fecha_fin)} · <strong style={{ color:'var(--g)' }}>{ev.dias_solicitados} días</strong>
                     </div>
                   </div>
-                  <span style={{
-                    padding:'6px 14px', borderRadius:20, fontSize:11,
-                    fontFamily:'Montserrat,sans-serif', fontWeight:800,
-                    background: activo ? '#D4EDDA' : '#FFF3CD',
-                    color: activo ? '#155724' : '#856404',
-                    border: `1px solid ${activo?'#C3E6CB':'#FFEEBA'}`,
-                    textTransform:'uppercase', letterSpacing:'0.5px',
-                  }}>
-                    {activo ? '🏖️ De Vacaciones' : '⏳ Próximo'}
-                  </span>
+
+                  {/* Badge estado */}
+                  <div style={{ textAlign:'center', flexShrink:0 }}>
+                    <div style={{ padding:'6px 12px', borderRadius:20, fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:800,
+                      background: activo?'#D4EDDA':'#FFF3CD',
+                      color: activo?'#155724':'#856404',
+                      border:`1px solid ${activo?'#C3E6CB':'#FFEEBA'}` }}>
+                      {activo ? '🏖️ De Vacaciones' : '✈️ Próximo'}
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -224,18 +286,10 @@ export default function Calendario() {
         </div>
       )}
 
-      {eventos.length === 0 && !cargando && (
-        <div style={{ textAlign:'center', padding:'60px 20px', color:'var(--g60)' }}>
-          <div style={{ fontSize:64, marginBottom:16 }} className="float-anim">📅</div>
-          <p style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:20, color:'var(--g)' }}>Sin vacaciones este mes</p>
-          <p style={{ marginTop:8, fontSize:14 }}>No hay vacaciones aprobadas para {MESES[mes-1]} {anio}</p>
-        </div>
-      )}
-
-      {/* Modal detalle día */}
+      {/* Popup detalle del día */}
       {seleccionado && (
         <div className="modal-overlay" onClick={() => setSeleccionado(null)}>
-          <div className="modal" style={{ maxWidth:460 }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth:420 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>📅 {seleccionado.dia} de {MESES[mes-1]}</h2>
               <button className="modal-close" onClick={() => setSeleccionado(null)}>✕</button>
@@ -244,17 +298,29 @@ export default function Calendario() {
               {seleccionado.eventos.map(ev => {
                 const activo = estaDeVacaciones(ev);
                 return (
-                  <div key={ev.id} style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 14px', borderRadius:12, background: activo?'rgba(39,174,96,0.08)':'var(--g-soft)', border:`1px solid ${activo?'#27ae60':'rgba(107,15,43,0.15)'}` }}>
-                    {ev.foto_url
-                      ? <img src={ev.foto_url} alt="" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:`3px solid ${activo?'#27ae60':'var(--d)'}` }} />
-                      : <div style={{ width:52, height:52, borderRadius:'50%', background:'var(--g20)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>👤</div>
-                    }
+                  <div key={ev.id} style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 14px', borderRadius:12,
+                    background: activo?'rgba(39,174,96,0.08)':'var(--g-soft)',
+                    border:`1px solid ${activo?'#27ae60':'rgba(107,15,43,0.15)'}` }}>
+                    <div style={{ position:'relative', flexShrink:0 }}>
+                      {ev.foto_url
+                        ? <img src={ev.foto_url} alt="" style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', border:`3px solid ${activo?'#27ae60':'var(--d)'}` }} />
+                        : <div style={{ width:56, height:56, borderRadius:'50%', background:'var(--g20)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:900, fontFamily:'Montserrat,sans-serif', color:'var(--g)' }}>
+                            {getIniciales(ev.nombre, ev.apellido_paterno)}
+                          </div>
+                      }
+                      <div style={{ position:'absolute', bottom:-2, right:-2, width:22, height:22, borderRadius:'50%', background:activo?'#27ae60':'#C9A84C', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, border:'2px solid white' }}>
+                        {activo?'🏖️':'✈️'}
+                      </div>
+                    </div>
                     <div>
-                      <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:16, color:'var(--g)' }}>{ev.nombre} {ev.apellido_paterno}</div>
-                      <div style={{ fontSize:12, color:'var(--g60)', marginTop:2 }}>{fmtFecha(ev.fecha_inicio)} → {fmtFecha(ev.fecha_fin)}</div>
-                      <span style={{ fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:800, color: activo?'#155724':'#856404' }}>
-                        {activo ? '🏖️ De vacaciones hoy' : '⏳ Aprobado'}
-                      </span>
+                      <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:17, color:'var(--g)' }}>{ev.nombre} {ev.apellido_paterno}</div>
+                      <div style={{ fontSize:12, color:'var(--g60)', marginTop:2 }}>{ev.departamento||'—'}</div>
+                      <div style={{ fontSize:12, marginTop:4, fontFamily:'Montserrat,sans-serif', fontWeight:700, color: activo?'#155724':'#856404' }}>
+                        {fmtFecha(ev.fecha_inicio)} → {fmtFecha(ev.fecha_fin)} · {ev.dias_solicitados} días
+                      </div>
+                      <div style={{ marginTop:6, display:'inline-flex', alignItems:'center', gap:5, padding:'4px 10px', borderRadius:20, background:activo?'#D4EDDA':'#FFF3CD', color:activo?'#155724':'#856404', fontSize:11, fontWeight:800, fontFamily:'Montserrat,sans-serif' }}>
+                        {activo ? '🏖️ De Vacaciones ahora' : '✈️ Próximamente'}
+                      </div>
                     </div>
                   </div>
                 );
@@ -265,9 +331,4 @@ export default function Calendario() {
       )}
     </div>
   );
-}
-
-function fmtFecha(f) {
-  if (!f) return '—';
-  return new Date(f).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
 }
