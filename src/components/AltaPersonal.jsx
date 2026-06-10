@@ -17,7 +17,7 @@ export default function AltaPersonal({ onCreado }) {
     nombre: '', apellido_paterno: '', apellido_materno: '',
     numero_empleado: '', puesto: '', departamento: '',
     fecha_ingreso: '', email: '', telefono: '',
-    dias_vacaciones: '0', dias_tomados: '0',
+    dias_vacaciones: '0',
     username: '', password: '',
   });
   const [diasAuto, setDiasAuto] = useState(0);
@@ -59,7 +59,7 @@ export default function AltaPersonal({ onCreado }) {
       setExito(true);
       setTimeout(() => {
         setExito(false);
-        setForm({ nombre:'',apellido_paterno:'',apellido_materno:'',numero_empleado:'',puesto:'',departamento:'',fecha_ingreso:'',email:'',telefono:'',dias_vacaciones:'0',dias_tomados:'0',username:'',password:'' });
+        setForm({ nombre:'',apellido_paterno:'',apellido_materno:'',numero_empleado:'',puesto:'',departamento:'',fecha_ingreso:'',email:'',telefono:'',dias_vacaciones:'0',username:'',password:'' });
         setFoto(null); setPreview(null); setDiasAuto(0); setDiasManual(false);
         onCreado?.();
       }, 2200);
@@ -178,20 +178,7 @@ export default function AltaPersonal({ onCreado }) {
                         </span>
                       )}
                     </div>
-                    <div className="form-group">
-                      <label>Días tomados (manual)</label>
-                      <input
-                        type="number" className="form-control"
-                        value={form.dias_tomados}
-                        onChange={e=>setForm({...form,dias_tomados:e.target.value})}
-                        min="0" max="999"
-                        placeholder="0"
-                        style={{ fontWeight:800, color:'var(--d-dk)', fontSize:16 }}
-                      />
-                      <span style={{ fontSize:11,color:'var(--g60)',fontStyle:'italic' }}>
-                        Días que ya tomó antes de este registro
-                      </span>
-                    </div>
+
                   </div>
                 </div>
               </div>
