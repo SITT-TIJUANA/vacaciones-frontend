@@ -3,7 +3,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PerfilModal from './PerfilModal';
 
-export default function MiPerfil() {
+export default function MiPerfil({ onVerPeriodos }) {
   const { usuario } = useAuth();
   const [perfil, setPerfil] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -163,7 +163,7 @@ export default function MiPerfil() {
       )}
 
       {verPerfil && usuario?.empleado_id && (
-        <PerfilModal empleadoId={usuario.empleado_id} onClose={() => setVerPerfil(false)} onActualizar={() => {}} />
+        <PerfilModal empleadoId={usuario.empleado_id} onClose={() => setVerPerfil(false)} onActualizar={() => {}} onVerPeriodos={onVerPeriodos} />
       )}
     </div>
   );
