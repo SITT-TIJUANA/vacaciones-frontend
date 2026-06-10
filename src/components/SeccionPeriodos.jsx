@@ -464,6 +464,8 @@ function ModalHistorico({ empleadoId, fechaIngreso, onClose, onGuardado }) {
         dias:diasCalc,
         anio: periodoSel ? periodoSel.inicio.getFullYear() : new Date().getFullYear(),
         periodo_semestre: periodoSel ? ((periodoSel.numero % 2 === 1) ? 1 : 2) : 1,
+        periodo_inicio: periodoSel ? periodoSel.inicio.toISOString().split('T')[0] : null,
+        periodo_fin: periodoSel ? periodoSel.fin.toISOString().split('T')[0] : null,
         notas:form.notas,
       });
       onGuardado();
