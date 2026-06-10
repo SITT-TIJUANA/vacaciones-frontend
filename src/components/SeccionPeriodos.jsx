@@ -85,6 +85,14 @@ export default function SeccionPeriodos({ empleadoInicial }) {
       .finally(() => setCargando(false));
   };
 
+  const eliminarHistorico = async (id) => {
+    if (!window.confirm('¿Eliminar este registro histórico?')) return;
+    try {
+      await api.delete(`/api/solicitudes/historicos/${id}`);
+      recargar();
+    } catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
+  };
+
   const eliminarVacacion = async (id) => {
     if (!window.confirm('¿Eliminar este registro de vacaciones?')) return;
     try {
@@ -168,6 +176,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
               onRegistrarHistorico={()=>setModalHistorico(true)}
               onEditarSolicitud={s=>setModalEditSol(s)}
               onEliminarSolicitud={eliminarVacacion}
+              onEliminarHistorico={eliminarHistorico}
             />
           ) : null}
         </div>
@@ -183,7 +192,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
   );
 }
 
-function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, onRegistrarHistorico, onEditarSolicitud, onEliminarSolicitud }) {
+function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, onRegistrarHistorico, onEditarSolicitud, onEliminarSolicitud, onEliminarHistorico }) {
   const periodosTeoricos = calcularPeriodos(empleado.fecha_ingreso);
   const periodosCompletados = periodosTeoricos.filter(p => p.completado);
   const periodoEnCurso = periodosTeoricos.find(p => p.en_curso);
