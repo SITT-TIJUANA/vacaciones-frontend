@@ -52,7 +52,7 @@ function calcularPeriodos(fechaIngreso) {
 }
 
 export default function SeccionPeriodos({ empleadoInicial }) {
-  const { usuario } = useAuth();
+  const { usuario, rolEfectivo } = useAuth();
   const [empleados, setEmpleados] = useState([]);
   const [empleadoSel, setEmpleadoSel] = useState(null);
   const [datos, setDatos] = useState(null);
@@ -66,13 +66,14 @@ export default function SeccionPeriodos({ empleadoInicial }) {
   useEffect(() => {
     api.get('/api/empleados').then(r => {
       setEmpleados(r.data);
-      // Si viene un empleado preseleccionado (desde perfil)
-      if (empleadoInicial) {
-        const emp = r.data.find(e => e.id === empleadoInicial);
+      // Si viene empleado preseleccionado desde botón
+      const idBuscar = empleadoInicial || (rolEfectivo === 'empleado' ? usuario?.empleado_id : null);
+      if (idBuscar) {
+        const emp = r.data.find(e => e.id === idBuscar);
         if (emp) seleccionarEmpleado(emp);
       }
     }).catch(console.error);
-  }, []);
+  }, [empleadoInicial]);
 
   const seleccionarEmpleado = (emp) => {
     setEmpleadoSel(emp);
@@ -105,10 +106,10 @@ export default function SeccionPeriodos({ empleadoInicial }) {
         <h2 className="section-title">Periodos de Vacaciones</h2>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'280px 1fr', gap:20, alignItems:'start' }}>
+      <div style={{ display:'grid', gridTemplateColumns: rolEfectivo==='empleado' ? '1fr' : '280px 1fr', gap:20, alignItems:'start' }}>
 
-        {/* Lista empleados */}
-        <div className="card" style={{ padding:0, overflow:'hidden', position:'sticky', top:80 }}>
+        {/* Lista empleados — oculta para empleado */}
+        {rolEfectivo !== 'empleado' && <div className="card" style={{ padding:0, overflow:'hidden', position:'sticky', top:80 }}>
           <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--g20)', background:'var(--g-soft)' }}>
             <input className="form-control" placeholder="🔍 Buscar empleado..." value={busqueda}
               onChange={e=>setBusqueda(e.target.value)} style={{ fontSize:13 }} />
@@ -137,7 +138,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
 
         {/* Panel detalle */}
         <div>
