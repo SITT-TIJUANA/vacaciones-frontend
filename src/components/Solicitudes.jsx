@@ -9,7 +9,6 @@ export default function Solicitudes({ onActualizarNotif }) {
   const [modalNueva, setModalNueva] = useState(false);
   const [filtroEstatus, setFiltroEstatus] = useState('');
   const [resolviendo, setResolviendo] = useState(null);
-  const [modalPeriodo, setModalPeriodo] = useState(null); // { id, empleado_id }
 
   const esAdmin = ['admin', 'rrhh'].includes(rolEfectivo);
 
@@ -128,15 +127,6 @@ export default function Solicitudes({ onActualizarNotif }) {
         <FormNuevaSolicitud
           onClose={() => setModalNueva(false)}
           onCreada={() => { cargar(); setModalNueva(false); onActualizarNotif?.(); }}
-        />
-      )}
-
-      {modalPeriodo && (
-        <ModalAsignarPeriodo
-          solicitudId={modalPeriodo.id}
-          empleadoId={modalPeriodo.empleado_id}
-          onClose={() => setModalPeriodo(null)}
-          onConfirmado={() => { cargar(); setModalPeriodo(null); onActualizarNotif?.(); }}
         />
       )}
 
