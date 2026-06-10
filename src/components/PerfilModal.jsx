@@ -31,8 +31,8 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
   const anioActual = new Date().getFullYear();
 
   useEffect(() => {
-    api.get(`/api/empleados/${empleadoId}`)
-      .then(r => setDatos(r.data))
+    api.get(`/api/solicitudes/periodos-detalle/${empleadoId}`)
+      .then(r => setDatos({ empleado: r.data.empleado, periodos: r.data.periodos, solicitudes: r.data.periodos.flatMap(p=>p.solicitudes||[]), total_disponible: r.data.total_disponible }))
       .catch(console.error)
       .finally(() => setCargando(false));
     cargarContactos();
@@ -75,8 +75,8 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
       if (nuevaFoto) fd.append('foto', nuevaFoto);
       if (previewFoto === 'BORRAR') fd.append('borrar_foto', 'true');
       await api.put(`/api/empleados/${empleadoId}`, fd, { headers:{ 'Content-Type':'multipart/form-data' } });
-      const r = await api.get(`/api/empleados/${empleadoId}`);
-      setDatos(r.data);
+      const r = await api.get(`/api/solicitudes/periodos-detalle/${empleadoId}`);
+      setDatos({ empleado: r.data.empleado, periodos: r.data.periodos, solicitudes: r.data.periodos.flatMap(p=>p.solicitudes||[]), total_disponible: r.data.total_disponible });
       setEditandoPerfil(false);
       onActualizar?.();
     } catch(e) { alert(e.response?.data?.error || 'Error al guardar'); }
@@ -170,7 +170,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
               {info && <div style={{ marginTop:8,fontSize:11,opacity:.8 }}>⏳ {info.mesesFaltantes} meses para el siguiente periodo</div>}
             </div>
             <div className="dias-ring" style={{ flexShrink:0, marginLeft:'auto' }}>
-              <div className="numero">{periodoActual.dias_disponibles ?? '—'}</div>
+              <div className="numero">{datos.total_disponible ?? periodoActual.dias_disponibles ?? '—'}</div>
               <div className="etiqueta">días disp.</div>
               <div style={{ fontSize:10,opacity:.7,marginTop:3 }}>{anioActual}</div>
             </div>
