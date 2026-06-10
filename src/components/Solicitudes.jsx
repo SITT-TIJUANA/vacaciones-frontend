@@ -284,109 +284,88 @@ function FormNuevaSolicitud({ onClose, onCreada }) {
 }
 
 
-// Calcular periodos reales desde fecha ingreso
-function calcularPeriodosReales(fechaIngreso) {
-  if (!fechaIngreso) return [];
-  const ingreso = new Date(fechaIngreso);
-  const hoy = new Date();
-  const periodos = [];
-  let inicio = new Date(ingreso);
-  let num = 1;
-  while (inicio <= hoy && num <= 20) {
-    const fin = new Date(inicio);
-    fin.setMonth(fin.getMonth() + 6);
-    fin.setDate(fin.getDate() - 1);
-    // Solo periodos COMPLETADOS
-    if (fin < hoy) {
-      periodos.push({
-        numero: num,
-        inicio: new Date(inicio),
-        fin: new Date(fin),
-        anio: inicio.getFullYear(),
-        semestre: num % 2 === 1 ? 1 : 2,
-        label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
-      });
-    }
-    inicio = new Date(fin);
-    inicio.setDate(inicio.getDate() + 1);
-    num++;
-  }
-  return periodos;
-}
-
 function ModalAsignarPeriodo({ solicitudId, empleadoId, onClose, onConfirmado }) {
-  const [periodos, setPeriodos] = useState([]);
-  const [periodoIdx, setPeriodoIdx] = useState(0);
-  const [guardando, setGuardando] = useState(false);
+  const [preview, setPreview] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get(`/api/empleados/${empleadoId}`)
-      .then(r => {
-        const emp = r.data?.empleado || r.data;
-        const ps = calcularPeriodosReales(emp?.fecha_ingreso);
-        setPeriodos(ps);
-        // Seleccionar el último periodo por defecto
-        if (ps.length) setPeriodoIdx(ps.length - 1);
-      })
-      .catch(console.error)
+    api.get(`/api/solicitudes/${solicitudId}/preview-aprobacion`)
+      .then(r => setPreview(r.data))
+      .catch(e => setError(e.response?.data?.error || 'Error al cargar'))
       .finally(() => setCargando(false));
-  }, [empleadoId]);
+  }, [solicitudId]);
 
   const confirmar = async () => {
     setGuardando(true);
-    const p = periodos[periodoIdx];
     try {
-      await api.put(`/api/solicitudes/${solicitudId}/resolver`, {
-        estatus: 'aprobada',
-        periodo_semestre: p?.semestre,
-        anio_periodo: p?.anio,
-      });
+      await api.put(`/api/solicitudes/${solicitudId}/resolver`, { estatus: 'aprobada' });
       onConfirmado();
     } catch(e) {
-      alert(e.response?.data?.error || 'Error al aprobar');
-    } finally { setGuardando(false); }
+      setError(e.response?.data?.error || 'Error al aprobar');
+      setGuardando(false);
+    }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ maxWidth:460 }} onClick={e=>e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth:500 }} onClick={e=>e.stopPropagation()}>
         <div className="modal-header" style={{ background:'linear-gradient(135deg,#1B5E20,#27ae60)' }}>
           <h2>✅ Aprobar Solicitud</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          <div style={{ padding:'12px 14px', background:'#E8F5E9', borderRadius:10, border:'1px solid #C8E6C9', fontSize:13, color:'#1B5E20', fontWeight:600 }}>
-            ✅ Estás a punto de aprobar esta solicitud. ¿A qué periodo de vacaciones pertenecen estos días?
-          </div>
           {cargando ? (
-            <div style={{ textAlign:'center', padding:20, color:'var(--g60)' }}>Cargando periodos...</div>
-          ) : periodos.length === 0 ? (
-            <div style={{ padding:'12px 14px', background:'#FFF8E1', borderRadius:10, border:'1px solid #FFE082', fontSize:13, color:'#856404', fontWeight:600 }}>
-              ⚠️ Este empleado no tiene fecha de ingreso registrada. Se aprobará sin asignar periodo.
+            <div style={{ textAlign:'center', padding:30, color:'var(--g60)' }}>Calculando días disponibles...</div>
+          ) : error ? (
+            <div style={{ padding:'12px 14px', background:'#FFEBEE', borderRadius:10, border:'1px solid #FFCDD2', color:'#B71C1C', fontSize:13, fontWeight:600 }}>
+              ❌ {error}
             </div>
-          ) : (
-            <div className="form-group">
-              <label>Periodo al que pertenecen los días</label>
-              <select className="form-control" value={periodoIdx}
-                onChange={e => setPeriodoIdx(parseInt(e.target.value))}>
-                {periodos.map((p, i) => (
-                  <option key={i} value={i}>{p.label}</option>
-                ))}
-              </select>
-              {periodos[periodoIdx] && (
-                <div style={{ marginTop:8, padding:'10px 12px', background:'var(--g-soft)', borderRadius:8, fontSize:12, color:'var(--g)', fontFamily:'Montserrat,sans-serif', fontWeight:700 }}>
-                  📅 {periodos[periodoIdx].label}
+          ) : preview && (
+            <>
+              {/* Info solicitud */}
+              <div style={{ padding:'12px 14px', background:'#E8F5E9', borderRadius:10, border:'1px solid #C8E6C9', fontSize:13, color:'#1B5E20', fontWeight:600 }}>
+                ✅ Solicitud de <strong>{preview.dias_pedidos} días</strong> — {preview.empleado.nombre} {preview.empleado.apellido_paterno}
+              </div>
+
+              {/* Distribución por periodos */}
+              <div>
+                <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, color:'var(--g)', marginBottom:10, textTransform:'uppercase', letterSpacing:'0.5px' }}>
+                  Así se descontarán los días:
                 </div>
-              )}
-            </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {preview.distribucion.map((item, i) => (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'var(--g-soft)', borderRadius:10, border:'1px solid rgba(107,15,43,0.15)' }}>
+                      <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:22, color:'var(--g)', minWidth:32 }}>{item.dias_a_usar}</div>
+                      <div>
+                        <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, color:'var(--g)' }}>
+                          Periodo {item.numero}
+                        </div>
+                        <div style={{ fontSize:11, color:'var(--g60)', marginTop:1 }}>
+                          {new Date(item.inicio).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} → {new Date(item.fin).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}
+                        </div>
+                        <div style={{ fontSize:11, color:'var(--g60)', marginTop:1 }}>
+                          Tenía {item.dias_disponibles} días disponibles → quedará con <strong style={{ color: item.dias_disponibles-item.dias_a_usar > 0 ? '#1B5E20' : '#B71C1C' }}>{item.dias_disponibles - item.dias_a_usar} días</strong>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ padding:'10px 14px', background:'#FFF8E1', borderRadius:10, border:'1px solid #FFE082', fontSize:12, color:'#856404', fontWeight:600 }}>
+                📊 Total disponible antes: <strong>{preview.total_disponible} días</strong> → después: <strong>{preview.total_disponible - preview.dias_pedidos} días</strong>
+              </div>
+            </>
           )}
         </div>
         <div className="modal-footer">
           <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
           <button className="btn-institucional filled btn-sm"
             style={{ background:'#1B5E20', borderColor:'#1B5E20' }}
-            onClick={confirmar} disabled={guardando}>
+            onClick={confirmar}
+            disabled={guardando || cargando || !!error}>
             {guardando ? '⏳ Aprobando...' : '✅ Confirmar Aprobación'}
           </button>
         </div>
