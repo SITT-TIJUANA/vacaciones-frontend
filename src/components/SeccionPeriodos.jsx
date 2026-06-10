@@ -253,6 +253,85 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
         )}
       </div>
 
+      {/* HISTORIAL COMPLETO CRONOLÓGICO */}
+      {(() => {
+        // Juntar solicitudes aprobadas + manuales de todos los periodos
+        const todasVacaciones = [];
+        periodos.forEach(p => {
+          (p.solicitudes||[]).forEach(s => todasVacaciones.push({
+            fecha_inicio: s.fecha_inicio,
+            fecha_fin: s.fecha_fin,
+            dias: s.dias_solicitados,
+            tipo: 'aprobada',
+            aprobado_por: s.aprobado_por_username,
+            notas: s.motivo || '',
+            id: s.id,
+            periodo: p.numero,
+          }));
+          (p.manuales||[]).forEach(m => todasVacaciones.push({
+            fecha_inicio: m.fecha_inicio,
+            fecha_fin: m.fecha_fin,
+            dias: m.dias,
+            tipo: 'manual',
+            aprobado_por: m.registrado_por_username,
+            notas: m.notas || '',
+            id: m.id,
+            periodo: p.numero,
+          }));
+        });
+        // Ordenar por fecha
+        todasVacaciones.sort((a,b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+
+        if (!todasVacaciones.length) return null;
+
+        return (
+          <div className="card" style={{ padding:'20px 24px' }}>
+            <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:15, color:'var(--g)', marginBottom:16, display:'flex', alignItems:'center', gap:10 }}>
+              📋 Historial completo de vacaciones
+              <span style={{ background:'var(--g)', color:'#fff', fontSize:11, padding:'2px 10px', borderRadius:20, fontWeight:700 }}>{todasVacaciones.length} registros</span>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {todasVacaciones.map((v, i) => (
+                <div key={v.id||i} style={{
+                  display:'flex', alignItems:'flex-start', gap:14, padding:'14px 16px',
+                  borderRadius:12, flexWrap:'wrap',
+                  background: v.tipo==='manual' ? 'rgba(230,81,0,0.04)' : 'var(--g-soft)',
+                  border: `1.5px solid ${v.tipo==='manual' ? 'rgba(230,81,0,0.18)' : 'rgba(107,15,43,0.12)'}`,
+                }}>
+                  {/* Número */}
+                  <div style={{ width:28, height:28, borderRadius:'50%', background: v.tipo==='manual'?'#E65100':'var(--g)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:12, flexShrink:0 }}>
+                    {i+1}
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex:1, minWidth:200 }}>
+                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:14, color: v.tipo==='manual'?'#E65100':'var(--g)', marginBottom:4 }}>
+                      {v.fecha_inicio
+                        ? `${new Date(v.fecha_inicio).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}${v.fecha_fin && v.fecha_fin!==v.fecha_inicio ? ` al ${new Date(v.fecha_fin).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}` : ''}`
+                        : 'Sin fecha registrada'
+                      }
+                    </div>
+                    <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', fontSize:12, color:'var(--g60)' }}>
+                      <span style={{ fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:16, color: v.tipo==='manual'?'#E65100':'var(--g)' }}>
+                        {v.dias} {v.dias===1?'día':'días'} hábiles
+                      </span>
+                      <span style={{ padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:800, fontFamily:'Montserrat,sans-serif',
+                        background: v.tipo==='manual'?'rgba(230,81,0,0.1)':'#E8F5E9',
+                        color: v.tipo==='manual'?'#E65100':'#1B5E20',
+                        border: `1px solid ${v.tipo==='manual'?'rgba(230,81,0,0.2)':'#C8E6C9'}` }}>
+                        {v.tipo==='manual' ? '📂 Manual' : '✅ Solicitud aprobada'}
+                      </span>
+                      <span>Periodo {v.periodo}</span>
+                      {v.aprobado_por && <span>{v.tipo==='manual'?'Registrado':'Aprobado'} por: {v.aprobado_por}</span>}
+                    </div>
+                    {v.notas && <div style={{ fontSize:11, color:'var(--g60)', marginTop:4, fontStyle:'italic' }}>💬 {v.notas}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* PERIODOS */}
       {periodos.length === 0 ? (
         <div style={{ textAlign:'center',padding:40,color:'var(--g60)' }} className="card">
