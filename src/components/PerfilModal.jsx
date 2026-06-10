@@ -19,12 +19,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const fotoRef = useRef();
 
-  // Estados periodos
-  const [editandoPeriodo, setEditandoPeriodo] = useState(null);
-  const [formPeriodo, setFormPeriodo] = useState({});
-  const [registrarVacs, setRegistrarVacs] = useState(false);
-  const [formVacs, setFormVacs] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
-  const [guardandoVacs, setGuardandoVacs] = useState(false);
+
 
   // Estados contactos emergencia
   const [contactos, setContactos] = useState([]);
@@ -88,34 +83,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
     finally { setGuardandoPerfil(false); }
   };
 
-  const guardarPeriodo = async () => {
-    try {
-      await api.post('/api/periodos', {
-        empleado_id: empleadoId,
-        anio: formPeriodo.anio,
-        dias_correspondientes: parseInt(formPeriodo.dias_correspondientes),
-        observaciones: formPeriodo.observaciones,
-      });
-      const r = await api.get(`/api/empleados/${empleadoId}`);
-      setDatos(r.data);
-      setEditandoPeriodo(null);
-      onActualizar?.();
-    } catch(e) { alert(e.response?.data?.error || 'Error al guardar'); }
-  };
 
-  const guardarVacaciones = async () => {
-    if (!formVacs.fecha_inicio || !formVacs.fecha_fin) return;
-    setGuardandoVacs(true);
-    try {
-      await api.post('/api/solicitudes/manual', { empleado_id: empleadoId, ...formVacs });
-      const r = await api.get(`/api/empleados/${empleadoId}`);
-      setDatos(r.data);
-      setRegistrarVacs(false);
-      setFormVacs({ fecha_inicio:'', fecha_fin:'', motivo:'' });
-      onActualizar?.();
-    } catch(e) { alert(e.response?.data?.error || 'Error al registrar'); }
-    finally { setGuardandoVacs(false); }
-  };
 
   const abrirContacto = (c = null) => {
     setFormContacto(c ? { ...c } : { nombre:'', parentesco:'', telefono:'', telefono_alt:'', correo:'', notas:'' });
@@ -172,10 +140,9 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
   const info = calcularInfo();
 
   const TABS = [
-    { id:'info',       label:'Información',          icon:'📋' },
-    { id:'periodos',   label:'Periodos',              icon:'📅' },
-    { id:'solicitudes',label:'Solicitudes',           icon:'📝' },
-    { id:'contactos',  label:'Emergencia', icon:'🚨' },
+    { id:'info',        label:'Información',  icon:'📋' },
+    { id:'solicitudes', label:'Solicitudes',  icon:'📝' },
+    { id:'contactos',   label:'Contactos',    icon:'🚨' },
   ];
 
   return (
@@ -261,124 +228,17 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
               </div>
             )}
 
-            {/* ── PERIODOS ── */}
-            {tab === 'periodos' && (
-              <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-                {esAdminRRHH && (
-                  <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
-                    <button className="btn-institucional dorado btn-sm" onClick={()=>setRegistrarVacs(true)}>📅 Registrar Vacaciones</button>
-                    <button className="btn-institucional filled btn-sm" onClick={()=>{setEditandoPeriodo('nuevo');setFormPeriodo({anio:anioActual,dias_correspondientes:10,observaciones:''});}}>➕ Agregar Periodo</button>
-                  </div>
-                )}
-
-                {/* Cálculo automático */}
-                {info && (
-                  <div style={{ background:'var(--g-soft)', borderRadius:14, padding:'14px 16px', border:'1px solid rgba(107,15,43,0.15)' }}>
-                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, color:'var(--g)', marginBottom:10 }}>🧠 Cálculo Automático de Antigüedad</div>
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                      {[
-                        { label:'Meses trabajados', value:`${info.meses} meses` },
-                        { label:'Periodos de 6 meses completados', value:`${Math.floor(info.meses/6)} periodos` },
-                        { label:'Periodo actual', value:`Periodo ${info.periodoNum%2===1?'1 — Enero a Junio':'2 — Julio a Diciembre'}` },
-                        { label:'Siguiente periodo en', value:`${info.mesesFaltantes} mes${info.mesesFaltantes!==1?'es':''}` },
-                      ].map(({ label, value }) => (
-                        <div key={label}>
-                          <div style={{ fontSize:10,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'var(--g60)',textTransform:'uppercase',letterSpacing:'0.4px' }}>{label}</div>
-                          <div style={{ fontWeight:800,color:'var(--g)',fontSize:14,marginTop:2 }}>{value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Formulario registrar vacaciones */}
-                {registrarVacs && esAdminRRHH && (
-                  <div style={{ background:'#E3F2FD', borderRadius:12, padding:16, border:'2px solid #1565C0' }}>
-                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, color:'#1565C0', marginBottom:12, fontSize:12 }}>📅 Registrar Vacaciones Manualmente</div>
-                    <div className="form-grid" style={{ gap:10 }}>
-                      <div className="form-group"><label>Fecha inicio</label><input type="date" className="form-control" value={formVacs.fecha_inicio} onChange={e=>setFormVacs({...formVacs,fecha_inicio:e.target.value})} /></div>
-                      <div className="form-group"><label>Fecha fin</label><input type="date" className="form-control" value={formVacs.fecha_fin} onChange={e=>setFormVacs({...formVacs,fecha_fin:e.target.value})} /></div>
-                      <div className="form-group" style={{ gridColumn:'1/-1' }}><label>Motivo o notas</label><input className="form-control" value={formVacs.motivo} onChange={e=>setFormVacs({...formVacs,motivo:e.target.value})} placeholder="Ej: Vacaciones aprobadas en junta..." /></div>
-                    </div>
-                    <div style={{ display:'flex', gap:8, marginTop:12, justifyContent:'flex-end' }}>
-                      <button className="btn-institucional btn-sm" onClick={()=>setRegistrarVacs(false)}>Cancelar</button>
-                      <button className="btn-institucional filled btn-sm" style={{ background:'#1565C0',borderColor:'#1565C0' }} onClick={guardarVacaciones} disabled={guardandoVacs}>
-                        {guardandoVacs?'⏳...':'💾 Registrar'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Formulario nuevo/editar periodo */}
-                {editandoPeriodo && esAdminRRHH && (
-                  <div style={{ background:'var(--g10)', borderRadius:12, padding:16, border:'2px solid var(--g)' }}>
-                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, color:'var(--g)', marginBottom:12, fontSize:12 }}>
-                      {editandoPeriodo==='nuevo'?'➕ Nuevo Periodo':'✏️ Editar Periodo'}
-                    </div>
-                    <div className="form-grid" style={{ gap:10 }}>
-                      <div className="form-group"><label>Año</label><input type="number" className="form-control" value={formPeriodo.anio} onChange={e=>setFormPeriodo({...formPeriodo,anio:e.target.value})} /></div>
-                      <div className="form-group"><label>Días correspondientes</label><input type="number" className="form-control" value={formPeriodo.dias_correspondientes} onChange={e=>setFormPeriodo({...formPeriodo,dias_correspondientes:e.target.value})} min="1" max="60" /></div>
-                      <div className="form-group" style={{ gridColumn:'1/-1' }}><label>Observaciones</label><input className="form-control" value={formPeriodo.observaciones||''} onChange={e=>setFormPeriodo({...formPeriodo,observaciones:e.target.value})} placeholder="Notas..." /></div>
-                    </div>
-                    <div style={{ display:'flex', gap:8, marginTop:12, justifyContent:'flex-end' }}>
-                      <button className="btn-institucional btn-sm" onClick={()=>setEditandoPeriodo(null)}>Cancelar</button>
-                      <button className="btn-institucional filled btn-sm" onClick={guardarPeriodo}>💾 Guardar</button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Cards de días — lo más importante en grande */}
-                {periodos.map(p => (
-                  <div key={p.id} style={{ borderRadius:16, border:'1.5px solid var(--g20)', overflow:'hidden' }}>
-                    {/* Header año */}
-                    <div style={{ background:'linear-gradient(135deg,var(--g-dk),var(--g))', padding:'12px 16px', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <div>
-                        <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:15 }}>
-                          {p.anio} — Periodo {p.periodo_semestre||1===1?'1 — Enero a Junio':'2 — Julio a Diciembre'}
-                        </div>
-                      </div>
-                      {esAdminRRHH && (
-                        <button className="btn-institucional btn-sm" style={{ background:'rgba(255,255,255,0.15)',borderColor:'rgba(255,255,255,0.4)',color:'#fff',fontSize:10 }}
-                          onClick={()=>{setEditandoPeriodo(p.id);setFormPeriodo({anio:p.anio,dias_correspondientes:p.dias_correspondientes,observaciones:p.observaciones||''});}}>
-                          ✏️
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Números grandes */}
-                    <div style={{ padding:'16px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
-                      {[
-                        { label:'Días acumulados desde tu fecha de ingreso', value:p.dias_correspondientes, color:'var(--g)', icon:'📋' },
-                        { label:'Días que ya tomaste de vacaciones', value:p.dias_tomados, color:'var(--d-dk)', icon:'🏖️' },
-                        { label:'Días disponibles que te quedan', value:p.dias_disponibles, color:p.dias_disponibles>0?'#1B5E20':'#B71C1C', icon:'✅' },
-                      ].map(({ label, value, color, icon }) => (
-                        <div key={label} style={{ textAlign:'center', padding:'14px 8px', background:'var(--g10)', borderRadius:12, border:`2px solid ${color}22` }}>
-                          <div style={{ fontSize:20, marginBottom:4 }}>{icon}</div>
-                          <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:38, color, lineHeight:1 }}>{value}</div>
-                          <div style={{ fontSize:9, color:'var(--g60)', fontFamily:'Montserrat,sans-serif', fontWeight:700, marginTop:6, lineHeight:1.3 }}>{label}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Barra progreso */}
-                    <div style={{ padding:'0 16px 14px' }}>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{
-                          width: p.dias_correspondientes>0 ? `${Math.min(Math.round(p.dias_tomados/p.dias_correspondientes*100),100)}%` : '0%',
-                          background: p.dias_tomados>=p.dias_correspondientes?'linear-gradient(90deg,#922020,#c0392b)':'linear-gradient(90deg,var(--g),var(--g-lt))'
-                        }} />
-                      </div>
-                    </div>
-
-                    {/* Botón ver detalle */}
-                    <div style={{ padding:'0 16px 16px' }}>
-                      <button className="btn-institucional dorado" style={{ width:'100%', fontSize:12 }}
-                        onClick={() => { onVerPeriodos?.(empleadoId); onClose(); }}>
-                        📊 Ver historial detallado de vacaciones →
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            {/* ── BOTÓN VER PERIODOS en INFO ── */}
+            {tab === 'info' && onVerPeriodos && (
+              <div style={{ marginTop:8 }}>
+                <button
+                  className="btn-institucional dorado"
+                  style={{ width:'100%', fontSize:13, padding:'14px', display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}
+                  onClick={() => { onVerPeriodos(empleadoId); onClose(); }}>
+                  <span style={{ fontSize:20 }}>📅</span>
+                  <span>Ver periodos y vacaciones detalladas</span>
+                  <span>→</span>
+                </button>
               </div>
             )}
 
