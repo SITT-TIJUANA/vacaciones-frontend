@@ -165,7 +165,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
       </div>
 
       {modalHistorico && empleadoSel && (
-        <ModalHistorico empleadoId={empleadoSel.id} onClose={()=>setModalHistorico(false)} onGuardado={()=>{ recargar(); setModalHistorico(false); }} />
+        <ModalHistorico empleadoId={empleadoSel.id} fechaIngreso={empleadoSel.fecha_ingreso} onClose={()=>setModalHistorico(false)} onGuardado={()=>{ recargar(); setModalHistorico(false); }} />
       )}
       {modalEditSol && (
         <ModalEditarSolicitud solicitud={modalEditSol} onClose={()=>setModalEditSol(null)} onGuardado={()=>{ recargar(); setModalEditSol(null); }} />
@@ -408,8 +408,33 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
   );
 }
 
-function ModalHistorico({ empleadoId, onClose, onGuardado }) {
-  const [form, setForm] = useState({ tipo:'rango', fecha_inicio:'', fecha_fin:'', dias:'', anio:new Date().getFullYear(), periodo_semestre:1, notas:'' });
+function calcularPeriodosReales(fechaIngreso) {
+  if (!fechaIngreso) return [];
+  const ingreso = new Date(fechaIngreso);
+  const hoy = new Date();
+  const periodos = [];
+  let inicio = new Date(ingreso);
+  let num = 1;
+  while (inicio <= hoy && num <= 20) {
+    const fin = new Date(inicio);
+    fin.setMonth(fin.getMonth() + 6);
+    fin.setDate(fin.getDate() - 1);
+    periodos.push({
+      numero: num,
+      inicio: new Date(inicio),
+      fin: new Date(fin),
+      label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
+    });
+    inicio = new Date(fin);
+    inicio.setDate(inicio.getDate() + 1);
+    num++;
+  }
+  return periodos;
+}
+
+function ModalHistorico({ empleadoId, fechaIngreso, onClose, onGuardado }) {
+  const periodosReales = calcularPeriodosReales(fechaIngreso);
+  const [form, setForm] = useState({ tipo:'rango', fecha_inicio:'', fecha_fin:'', dias:'', periodo_idx:0, notas:'' });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
 
@@ -428,10 +453,15 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
     if(!diasCalc||diasCalc<=0){setError('Indica los días correctamente');return;}
     setGuardando(true);setError('');
     try {
+      const periodoSel = periodosReales[parseInt(form.periodo_idx)];
       await api.post('/api/solicitudes/historico',{
-        empleado_id:empleadoId, fecha_inicio:form.tipo==='rango'?form.fecha_inicio:null,
-        fecha_fin:form.tipo==='rango'?form.fecha_fin:null, dias:diasCalc,
-        anio:form.anio, periodo_semestre:parseInt(form.periodo_semestre), notas:form.notas,
+        empleado_id:empleadoId,
+        fecha_inicio:form.tipo==='rango'?form.fecha_inicio: periodoSel?.inicio?.toISOString().split('T')[0],
+        fecha_fin:form.tipo==='rango'?form.fecha_fin: periodoSel?.fin?.toISOString().split('T')[0],
+        dias:diasCalc,
+        anio: periodoSel ? periodoSel.inicio.getFullYear() : new Date().getFullYear(),
+        periodo_semestre: periodoSel ? ((periodoSel.numero % 2 === 1) ? 1 : 2) : 1,
+        notas:form.notas,
       });
       onGuardado();
     } catch(e){setError(e.response?.data?.error||'Error');}
@@ -472,18 +502,19 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
           ) : (
             <div className="form-group"><label>Número de días tomados</label><input type="number" className="form-control" min="1" placeholder="Ej: 5" value={form.dias} onChange={e=>setForm({...form,dias:e.target.value})} /></div>
           )}
-          <div className="form-grid">
-            <div className="form-group"><label>Año al que pertenecen</label>
-              <select className="form-control" value={form.anio} onChange={e=>setForm({...form,anio:parseInt(e.target.value)})}>
-                {[2022,2023,2024,2025,2026].map(a=><option key={a} value={a}>{a}</option>)}
+          <div className="form-group">
+            <label>¿A qué periodo pertenecen estos días?</label>
+            {periodosReales.length > 0 ? (
+              <select className="form-control" value={form.periodo_idx} onChange={e=>setForm({...form,periodo_idx:e.target.value})}>
+                {periodosReales.map((p,i) => (
+                  <option key={i} value={i}>{p.label}</option>
+                ))}
               </select>
-            </div>
-            <div className="form-group"><label>Periodo</label>
-              <select className="form-control" value={form.periodo_semestre} onChange={e=>setForm({...form,periodo_semestre:e.target.value})}>
-                <option value={1}>Periodo 1 — Enero a Junio</option>
-                <option value={2}>Periodo 2 — Julio a Diciembre</option>
-              </select>
-            </div>
+            ) : (
+              <div style={{ fontSize:12,color:'var(--g60)',padding:'10px',background:'var(--g10)',borderRadius:8 }}>
+                Sin fecha de ingreso registrada
+              </div>
+            )}
           </div>
           <div className="form-group"><label>Notas</label><input className="form-control" placeholder="Ej: Vacaciones tomadas en mayo antes del sistema..." value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} /></div>
         </div>
