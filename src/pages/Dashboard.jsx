@@ -11,6 +11,7 @@ import Calendario from '../components/Calendario';
 import VincularCuenta from '../components/VincularCuenta';
 import InstalarApp from '../components/InstalarApp';
 import Historial from '../components/Historial';
+import SeccionPeriodos from '../components/SeccionPeriodos';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { id:'miperfil',     icon:'👤', label:'Mi Perfil',   roles:['admin','rrhh','empleado'] },
   { id:'solicitudes',  icon:'📋', label:'Solicitudes', roles:['admin','rrhh','empleado'] },
   { id:'calendario',   icon:'📅', label:'Calendario',  roles:['admin','rrhh','empleado'] },
+  { id:'periodos-sec',  icon:'🗂️', label:'Periodos',    roles:['admin','rrhh'] },
   { id:'reportes',     icon:'📊', label:'Reportes',    roles:['admin','rrhh'] },
   { id:'adeudados',    icon:'💰', label:'Adeudados',   roles:['admin','rrhh'] },
   { id:'alta',         icon:'➕', label:'Alta',         roles:['admin','rrhh'] },
@@ -169,6 +171,7 @@ export default function Dashboard() {
           {seccion==='bajas'       && <Bajas />}
           {seccion==='usuarios'    && <Usuarios />}
           {seccion==='historial'   && <Historial />}
+          {seccion==='periodos-sec' && <SeccionPeriodos />}
         </div>
       </main>
 
