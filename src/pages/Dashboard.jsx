@@ -47,6 +47,7 @@ export default function Dashboard() {
   const [showNotif, setShowNotif] = useState(false);
   const [showVincular, setShowVincular] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [empleadoPeriodos, setEmpleadoPeriodos] = useState(null);
   const canvasRef = useRef(null);
 
   const navItems = NAV_ITEMS.filter(i => i.roles.includes(rolEfectivo));
@@ -161,7 +162,7 @@ export default function Dashboard() {
       {/* Contenido */}
       <main className="dash-main">
         <div className="dash-content fade-in" key={seccion+modoEmpleado}>
-          {seccion==='inicio'      && <Tablero />}
+          {seccion==='inicio'      && <Tablero onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }} />}
           {seccion==='miperfil'    && <MiPerfil />}
           {seccion==='solicitudes' && <Solicitudes onActualizarNotif={()=>api.get('/api/notificaciones').then(r=>setNotificaciones(r.data))} />}
           {seccion==='calendario'  && <Calendario />}
@@ -171,7 +172,7 @@ export default function Dashboard() {
           {seccion==='bajas'       && <Bajas />}
           {seccion==='usuarios'    && <Usuarios />}
           {seccion==='historial'   && <Historial />}
-          {seccion==='periodos-sec' && <SeccionPeriodos />}
+          {seccion==='periodos-sec' && <SeccionPeriodos empleadoInicial={empleadoPeriodos} />}
         </div>
       </main>
 
