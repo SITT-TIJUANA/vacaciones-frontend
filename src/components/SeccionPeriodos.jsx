@@ -455,7 +455,7 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
     if (!diasCalc || diasCalc <= 0) { setError('Indica los días correctamente'); return; }
     setGuardando(true); setError('');
     try {
-      await api.post('/api/solicitudes/historico', {
+      await api.post('/api/solicitudes/manual', {
         empleado_id: empleadoId,
         fecha_inicio: form.fecha_inicio,
         fecha_fin: form.fecha_fin || form.fecha_inicio,
