@@ -109,7 +109,7 @@ export default function Tablero({ onVerPeriodos }) {
       )}
 
       {seleccionado && (
-        <PerfilModal empleadoId={seleccionado} onClose={() => setSeleccionado(null)} onActualizar={cargar} />
+        <PerfilModal empleadoId={seleccionado} onClose={() => setSeleccionado(null)} onActualizar={cargar} onVerPeriodos={onVerPeriodos} />
       )}
 
       {/* Modal dar de baja */}
