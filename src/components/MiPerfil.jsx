@@ -16,8 +16,15 @@ export default function MiPerfil({ onVerPeriodos }) {
 
   useEffect(() => {
     if (usuario?.empleado_id) {
-      api.get(`/api/empleados/${usuario.empleado_id}`)
-        .then(r => setPerfil(r.data))
+      api.get(`/api/solicitudes/periodos-detalle/${usuario.empleado_id}`)
+        .then(r => setPerfil({
+          empleado: r.data.empleado,
+          periodos: r.data.periodos,
+          solicitudes: r.data.periodos.flatMap(p => p.solicitudes||[]),
+          total_disponible: r.data.total_disponible,
+          total_tomado: r.data.total_tomado,
+          total_correspondiente: r.data.total_correspondiente,
+        }))
         .catch(console.error)
         .finally(() => setCargando(false));
     } else {
@@ -43,9 +50,11 @@ export default function MiPerfil({ onVerPeriodos }) {
   if (cargando) return <div className="loader-wrapper"><div className="loader" /></div>;
 
   const anioActual = new Date().getFullYear();
-  const periodoActual = perfil?.periodos?.find(p => p.anio === anioActual) || {};
-  const pct = periodoActual.dias_correspondientes
-    ? Math.round((periodoActual.dias_tomados / periodoActual.dias_correspondientes) * 100) : 0;
+  const totalDisponible = perfil?.total_disponible ?? 0;
+  const totalTomado = perfil?.total_tomado ?? 0;
+  const totalCorrespondiente = perfil?.total_correspondiente ?? 0;
+  const pct = totalCorrespondiente > 0 ? Math.round((totalTomado / totalCorrespondiente) * 100) : 0;
+  const periodoActual = { dias_disponibles: totalDisponible, dias_tomados: totalTomado, dias_correspondientes: totalCorrespondiente };
 
   return (
     <div className="fade-in">
@@ -94,7 +103,7 @@ export default function MiPerfil({ onVerPeriodos }) {
 
             <div style={{ padding: '16px 28px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12, fontFamily: 'Montserrat', fontWeight: 700, color: 'var(--guinda)' }}>
-                <span>Vacaciones {anioActual}</span>
+                <span>Vacaciones acumuladas</span>
                 <span>{periodoActual.dias_tomados || 0} / {periodoActual.dias_correspondientes || 0} días usados ({pct}%)</span>
               </div>
               <div className="progress-bar">
@@ -106,8 +115,8 @@ export default function MiPerfil({ onVerPeriodos }) {
           {/* KPIs */}
           <div className="grid-4">
             {[
-              { label: 'Días disponibles', value: periodoActual.dias_disponibles ?? 0, icon: '✅', clase: 'verde' },
-              { label: 'Días tomados', value: periodoActual.dias_tomados ?? 0, icon: '📅', clase: 'dorado' },
+              { label: 'Días disponibles', value: totalDisponible, icon: '✅', clase: 'verde' },
+              { label: 'Días tomados', value: totalTomado, icon: '📅', clase: 'dorado' },
               { label: 'Días totales', value: periodoActual.dias_correspondientes ?? 0, icon: '📆', clase: '' },
               { label: 'Solicitudes', value: perfil.solicitudes?.length ?? 0, icon: '📋', clase: '' },
             ].map(({ label, value, icon, clase }) => (
