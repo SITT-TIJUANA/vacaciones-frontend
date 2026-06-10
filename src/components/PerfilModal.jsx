@@ -3,7 +3,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import PeriodosDetalle from './PeriodosDetalle';
 
-export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
+export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPeriodos }) {
   const { usuario } = useAuth();
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -175,7 +175,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
     { id:'info',       label:'Información',          icon:'📋' },
     { id:'periodos',   label:'Periodos',              icon:'📅' },
     { id:'solicitudes',label:'Solicitudes',           icon:'📝' },
-    { id:'contactos',  label:'Contactos de Emergencia', icon:'🚨' },
+    { id:'contactos',  label:'Emergencia', icon:'🚨' },
   ];
 
   return (
@@ -348,7 +348,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
                     {/* Números grandes */}
                     <div style={{ padding:'16px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
                       {[
-                        { label:'Días que corresponden a este periodo', value:p.dias_correspondientes, color:'var(--g)', icon:'📋' },
+                        { label:'Días acumulados desde tu fecha de ingreso', value:p.dias_correspondientes, color:'var(--g)', icon:'📋' },
                         { label:'Días que ya tomaste de vacaciones', value:p.dias_tomados, color:'var(--d-dk)', icon:'🏖️' },
                         { label:'Días disponibles que te quedan', value:p.dias_disponibles, color:p.dias_disponibles>0?'#1B5E20':'#B71C1C', icon:'✅' },
                       ].map(({ label, value, color, icon }) => (
@@ -373,7 +373,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
                     {/* Botón ver detalle */}
                     <div style={{ padding:'0 16px 16px' }}>
                       <button className="btn-institucional dorado" style={{ width:'100%', fontSize:12 }}
-                        onClick={() => { onClose(); /* Navegar a sección Periodos */ }}>
+                        onClick={() => { onVerPeriodos?.(empleadoId); onClose(); }}>
                         📊 Ver historial detallado de vacaciones →
                       </button>
                     </div>
