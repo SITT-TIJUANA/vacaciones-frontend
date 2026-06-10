@@ -477,20 +477,15 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
     if(!diasCalc||diasCalc<=0){setError('Indica los días correctamente');return;}
     setGuardando(true);setError('');
     try {
-      const periodoSel = periodosReales[parseInt(form.periodo_idx)];
       await api.post('/api/solicitudes/historico',{
-        empleado_id:empleadoId,
-        fecha_inicio:form.tipo==='rango'?form.fecha_inicio: periodoSel?.inicio?.toISOString().split('T')[0],
-        fecha_fin:form.tipo==='rango'?form.fecha_fin: periodoSel?.fin?.toISOString().split('T')[0],
-        dias:diasCalc,
-        anio: periodoSel ? periodoSel.inicio.getFullYear() : new Date().getFullYear(),
-        periodo_semestre: periodoSel ? ((periodoSel.numero % 2 === 1) ? 1 : 2) : 1,
-        periodo_inicio: periodoSel ? periodoSel.inicio.toISOString().split('T')[0] : null,
-        periodo_fin: periodoSel ? periodoSel.fin.toISOString().split('T')[0] : null,
-        notas:form.notas,
+        empleado_id: empleadoId,
+        fecha_inicio: form.tipo==='rango' ? form.fecha_inicio : null,
+        fecha_fin: form.tipo==='rango' ? form.fecha_fin : null,
+        dias: diasCalc,
+        notas: form.notas,
       });
       onGuardado();
-    } catch(e){setError(e.response?.data?.error||'Error');}
+    } catch(e){setError(e.response?.data?.error||'Error al registrar');}
     finally{setGuardando(false);}
   };
 
