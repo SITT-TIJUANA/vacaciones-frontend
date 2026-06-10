@@ -217,7 +217,24 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
                   { label:'Teléfono', value:empleado.telefono, icon:'📱' },
                   { label:'Fecha de ingreso', value:empleado.fecha_ingreso ? new Date(empleado.fecha_ingreso).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}) : null, icon:'📆' },
                   { label:'Antigüedad', value:empleado.fecha_ingreso ? calcularAntiguedad(empleado.fecha_ingreso) : null, icon:'⏱️' },
-                  { label:'Periodo actual', value:info ? `Periodo ${info.periodoNum%2===1?'1 — Enero a Junio':'2 — Julio a Diciembre'}` : null, icon:'🔄' },
+                  { label:'Periodo actual', value:info ? (() => {
+                    if (!empleado.fecha_ingreso) return null;
+                    const ingreso = new Date(empleado.fecha_ingreso);
+                    let ini = new Date(ingreso);
+                    let num = 1;
+                    const hoy = new Date();
+                    while (num <= 30) {
+                      const fin = new Date(ini);
+                      fin.setMonth(fin.getMonth() + 6);
+                      fin.setDate(fin.getDate() - 1);
+                      if (fin >= hoy) {
+                        return `Periodo ${num}: ${ini.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`;
+                      }
+                      ini = new Date(fin); ini.setDate(ini.getDate() + 1);
+                      num++;
+                    }
+                    return null;
+                  })() : null, icon:'🔄' },
                   { label:'Periodos completados', value:info ? `${Math.floor(info.meses/6)} periodos de 6 meses` : null, icon:'✅' },
                 ].map(({ label, value, icon }) => (
                   <div key={label} style={{ background:'var(--g10)', borderRadius:12, padding:'12px 14px', borderLeft:'3px solid var(--g)' }}>
