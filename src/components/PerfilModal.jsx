@@ -15,6 +15,10 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
   const [nuevaFoto, setNuevaFoto] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
+  const [contacto, setContacto] = useState(null);
+  const [editandoContacto, setEditandoContacto] = useState(false);
+  const [formContacto, setFormContacto] = useState({});
+  const [guardandoContacto, setGuardandoContacto] = useState(false);
   const fotoRef = useRef();
   const [registrarVacs, setRegistrarVacs] = useState(false);
   const [formVacs, setFormVacs] = useState({ fecha_inicio:'', fecha_fin:'', motivo:'' });
@@ -26,6 +30,9 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
       .then(r => setDatos(r.data))
       .catch(console.error)
       .finally(() => setCargando(false));
+    api.get(`/api/contacto-emergencia/${empleadoId}`)
+      .then(r => setContacto(r.data))
+      .catch(() => setContacto(null));
   }, [empleadoId]);
 
   // Cerrar con ESC
@@ -50,6 +57,29 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
     } catch (e) {
       alert(e.response?.data?.error || 'Error al guardar');
     }
+  };
+
+  const abrirEditarContacto = () => {
+    setFormContacto({
+      nombre: contacto?.nombre || '',
+      parentesco: contacto?.parentesco || '',
+      telefono: contacto?.telefono || '',
+      telefono_alt: contacto?.telefono_alt || '',
+      correo: contacto?.correo || '',
+      notas: contacto?.notas || '',
+    });
+    setEditandoContacto(true);
+  };
+
+  const guardarContacto = async () => {
+    if (!formContacto.nombre) { alert('El nombre es requerido'); return; }
+    setGuardandoContacto(true);
+    try {
+      const r = await api.put(`/api/contacto-emergencia/${empleadoId}`, formContacto);
+      setContacto(r.data);
+      setEditandoContacto(false);
+    } catch(e) { alert(e.response?.data?.error || 'Error al guardar'); }
+    finally { setGuardandoContacto(false); }
   };
 
   const abrirEditarPerfil = () => {
@@ -240,20 +270,66 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
 
             {/* INFO */}
             {tab === 'info' && (
-              <div className="form-grid" style={{ gap:14 }}>
-                {[
-                  { label:'Correo', value:empleado.email, icon:'✉️' },
-                  { label:'Teléfono', value:empleado.telefono, icon:'📱' },
-                  { label:'Fecha de ingreso', value:empleado.fecha_ingreso ? new Date(empleado.fecha_ingreso).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}) : null, icon:'📆' },
-                  { label:'Antigüedad', value:empleado.fecha_ingreso ? calcularAntiguedad(empleado.fecha_ingreso) : null, icon:'⏱️' },
-                  { label:'Periodo actual', value:infoSemestral ? `Periodo ${infoSemestral.periodoActualNum%2===1?'1':'2'} · ${infoSemestral.mesesFaltantes} meses para el siguiente` : null, icon:'🔄' },
-                  { label:'Periodos cumplidos', value:infoSemestral ? `${Math.floor(infoSemestral.mesesTrabajados/6)} periodos de 6 meses` : null, icon:'✅' },
-                ].map(({ label, value, icon }) => (
-                  <div key={label} style={{ background:'var(--g10)', borderRadius:12, padding:'12px 14px', borderLeft:'3px solid var(--g)' }}>
-                    <div style={{ fontSize:10, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)', textTransform:'uppercase', marginBottom:3 }}>{icon} {label}</div>
-                    <div style={{ fontWeight:600, color:'var(--txt)', fontSize:14 }}>{value||'—'}</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                <div className="form-grid" style={{ gap:12 }}>
+                  {[
+                    { label:'Correo', value:empleado.email, icon:'✉️' },
+                    { label:'Teléfono', value:empleado.telefono, icon:'📱' },
+                    { label:'Fecha de ingreso', value:empleado.fecha_ingreso ? new Date(empleado.fecha_ingreso).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}) : null, icon:'📆' },
+                    { label:'Antigüedad', value:empleado.fecha_ingreso ? calcularAntiguedad(empleado.fecha_ingreso) : null, icon:'⏱️' },
+                    { label:'Periodo actual', value:infoSemestral ? `Periodo ${infoSemestral.periodoActualNum%2===1?'1':'2'} · ${infoSemestral.mesesFaltantes} meses para el siguiente` : null, icon:'🔄' },
+                    { label:'Periodos cumplidos', value:infoSemestral ? `${Math.floor(infoSemestral.mesesTrabajados/6)} periodos de 6 meses` : null, icon:'✅' },
+                  ].map(({ label, value, icon }) => (
+                    <div key={label} style={{ background:'var(--g10)', borderRadius:12, padding:'12px 14px', borderLeft:'3px solid var(--g)' }}>
+                      <div style={{ fontSize:10, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)', textTransform:'uppercase', marginBottom:3 }}>{icon} {label}</div>
+                      <div style={{ fontWeight:600, color:'var(--txt)', fontSize:14 }}>{value||'—'}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── CONTACTO DE EMERGENCIA ── */}
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                    <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, color:'var(--g)', textTransform:'uppercase', letterSpacing:'0.6px', display:'flex', alignItems:'center', gap:6 }}>
+                      🚨 Contacto de Emergencia
+                    </div>
+                    <button className="btn-institucional btn-sm" onClick={abrirEditarContacto}
+                      style={{ fontSize:11 }}>
+                      {contacto ? '✏️ Editar' : '➕ Agregar'}
+                    </button>
                   </div>
-                ))}
+
+                  {contacto ? (
+                    <div style={{ background:'#FFF8E1', borderRadius:12, padding:'14px 16px', border:'1.5px solid #FFE082' }}>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                        {[
+                          { icon:'👤', label:'Nombre', value:contacto.nombre },
+                          { icon:'💑', label:'Parentesco', value:contacto.parentesco },
+                          { icon:'📱', label:'Teléfono', value:contacto.telefono },
+                          { icon:'📞', label:'Tel. alternativo', value:contacto.telefono_alt },
+                          { icon:'✉️', label:'Correo', value:contacto.correo },
+                        ].filter(f => f.value).map(({ icon, label, value }) => (
+                          <div key={label} style={{ background:'rgba(255,255,255,0.7)', borderRadius:8, padding:'8px 10px' }}>
+                            <div style={{ fontSize:9, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'#856404', textTransform:'uppercase', marginBottom:2 }}>{icon} {label}</div>
+                            <div style={{ fontWeight:600, color:'#3D3A35', fontSize:13 }}>{value}</div>
+                          </div>
+                        ))}
+                        {contacto.notas && (
+                          <div style={{ gridColumn:'1/-1', background:'rgba(255,255,255,0.7)', borderRadius:8, padding:'8px 10px' }}>
+                            <div style={{ fontSize:9, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'#856404', textTransform:'uppercase', marginBottom:2 }}>📝 Notas</div>
+                            <div style={{ fontWeight:500, color:'#3D3A35', fontSize:12 }}>{contacto.notas}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ background:'var(--g10)', borderRadius:12, padding:'20px 16px', border:'2px dashed var(--g20)', textAlign:'center' }}>
+                      <div style={{ fontSize:32, marginBottom:8 }}>🚨</div>
+                      <p style={{ fontSize:13, color:'var(--g60)', fontFamily:'Montserrat,sans-serif', fontWeight:600 }}>Sin contacto de emergencia</p>
+                      <p style={{ fontSize:11, color:'var(--g60)', marginTop:4 }}>Agrega un contacto para casos de emergencia</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -393,6 +469,61 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar }) {
           </div>
         </div>
       </div>
+
+      {/* Modal contacto de emergencia */}
+      {editandoContacto && (
+        <div className="modal-overlay" onClick={() => setEditandoContacto(false)}>
+          <div className="modal" style={{ maxWidth:500 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ background:'linear-gradient(135deg,#856404,#E65100)' }}>
+              <h2>🚨 Contacto de Emergencia</h2>
+              <button className="modal-close" onClick={() => setEditandoContacto(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Nombre completo *</label>
+                  <input className="form-control" placeholder="Ej: María González" value={formContacto.nombre||''} onChange={e=>setFormContacto({...formContacto,nombre:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label>Parentesco</label>
+                  <select className="form-control" value={formContacto.parentesco||''} onChange={e=>setFormContacto({...formContacto,parentesco:e.target.value})}>
+                    <option value="">Seleccionar...</option>
+                    <option value="Esposo/a">Esposo/a</option>
+                    <option value="Padre">Padre</option>
+                    <option value="Madre">Madre</option>
+                    <option value="Hijo/a">Hijo/a</option>
+                    <option value="Hermano/a">Hermano/a</option>
+                    <option value="Amigo/a">Amigo/a</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Teléfono principal</label>
+                  <input className="form-control" placeholder="664-000-0000" value={formContacto.telefono||''} onChange={e=>setFormContacto({...formContacto,telefono:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label>Teléfono alternativo</label>
+                  <input className="form-control" placeholder="664-000-0000" value={formContacto.telefono_alt||''} onChange={e=>setFormContacto({...formContacto,telefono_alt:e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn:'1/-1' }}>
+                  <label>Correo electrónico</label>
+                  <input type="email" className="form-control" placeholder="correo@ejemplo.com" value={formContacto.correo||''} onChange={e=>setFormContacto({...formContacto,correo:e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn:'1/-1' }}>
+                  <label>Notas adicionales</label>
+                  <textarea className="form-control" rows={2} placeholder="Ej: Disponible después de las 6pm..." value={formContacto.notas||''} onChange={e=>setFormContacto({...formContacto,notas:e.target.value})} />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-institucional btn-sm" onClick={() => setEditandoContacto(false)}>Cancelar</button>
+              <button className="btn-institucional filled btn-sm" style={{ background:'#E65100', borderColor:'#E65100' }} onClick={guardarContacto} disabled={guardandoContacto}>
+                {guardandoContacto ? '⏳...' : '💾 Guardar Contacto'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal editar perfil */}
       {editandoPerfil && esAdminRRHH && (
