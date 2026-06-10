@@ -88,7 +88,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
   const eliminarHistorico = async (id) => {
     if (!window.confirm('¿Eliminar este registro histórico?')) return;
     try {
-      await api.delete(`/api/solicitudes/historicos/${id}`);
+      await api.delete(`/api/solicitudes/manual/${id}`);
       recargar();
     } catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
   };
@@ -247,7 +247,7 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
         {esAdmin && (
           <div style={{ marginTop:14,paddingTop:14,borderTop:'1px solid var(--g20)' }}>
             <button className="btn-institucional filled btn-sm" onClick={onRegistrarHistorico}>
-              📥 Registrar vacaciones pasadas
+              ➕ Agregar vacaciones manualmente
             </button>
           </div>
         )}
@@ -267,7 +267,7 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
           const pct = p.dias_correspondientes > 0 ? Math.round((p.dias_tomados/p.dias_correspondientes)*100) : 0;
           const todasVacaciones = [
             ...(p.solicitudes||[]).map(s => ({ ...s, tipo:'sistema' })),
-            ...(p.historicos||[]).map(h => ({ ...h, tipo:'historico' })),
+            ...(p.manuales||[]).map(h => ({ ...h, tipo:'historico' })),
           ].sort((a,b) => new Date(a.fecha_inicio||0) - new Date(b.fecha_inicio||0));
 
           return (
