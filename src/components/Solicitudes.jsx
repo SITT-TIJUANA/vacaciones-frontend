@@ -3,24 +3,28 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Solicitudes({ onActualizarNotif }) {
-  const { usuario } = useAuth();
+  const { usuario, rolEfectivo } = useAuth();
   const [solicitudes, setSolicitudes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [modalNueva, setModalNueva] = useState(false);
   const [filtroEstatus, setFiltroEstatus] = useState('');
   const [resolviendo, setResolviendo] = useState(null);
 
-  const esAdmin = ['admin', 'rrhh'].includes(usuario?.rol);
+  const esAdmin = ['admin', 'rrhh'].includes(rolEfectivo);
 
   const cargar = () => {
     setCargando(true);
-    api.get('/api/solicitudes')
+    // En modo empleado solo ver las propias solicitudes
+    const endpoint = rolEfectivo === 'empleado' && usuario?.empleado_id
+      ? `/api/solicitudes?empleado_id=${usuario.empleado_id}`
+      : '/api/solicitudes';
+    api.get(endpoint)
       .then(r => setSolicitudes(r.data))
       .catch(console.error)
       .finally(() => setCargando(false));
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { cargar(); }, [rolEfectivo]);
 
   const resolver = async (id, estatus, comentario = '') => {
     try {
