@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { id:'miperfil',     icon:'👤', label:'Mi Perfil',   roles:['admin','rrhh','empleado'] },
   { id:'solicitudes',  icon:'📋', label:'Solicitudes', roles:['admin','rrhh','empleado'] },
   { id:'calendario',   icon:'📅', label:'Calendario',  roles:['admin','rrhh','empleado'] },
-  { id:'periodos-sec',  icon:'🗂️', label:'Periodos',    roles:['admin','rrhh'] },
+  { id:'periodos-sec',  icon:'🗂️', label:'Periodos',    roles:['admin','rrhh','empleado'] },
   { id:'reportes',     icon:'📊', label:'Reportes',    roles:['admin','rrhh'] },
   { id:'adeudados',    icon:'💰', label:'Adeudados',   roles:['admin','rrhh'] },
   { id:'alta',         icon:'➕', label:'Alta',         roles:['admin','rrhh'] },
@@ -162,8 +162,8 @@ export default function Dashboard() {
       {/* Contenido */}
       <main className="dash-main">
         <div className="dash-content fade-in" key={seccion+modoEmpleado}>
-          {seccion==='inicio'      && <Tablero onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }} />}
-          {seccion==='miperfil'    && <MiPerfil onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }} />}
+          {seccion==='inicio'      && <Tablero onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(null); setTimeout(()=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }, 10); }} />}
+          {seccion==='miperfil'    && <MiPerfil onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(null); setTimeout(()=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }, 10); }} />}
           {seccion==='solicitudes' && <Solicitudes onActualizarNotif={()=>api.get('/api/notificaciones').then(r=>setNotificaciones(r.data))} />}
           {seccion==='calendario'  && <Calendario />}
           {seccion==='reportes'    && <Reportes />}
