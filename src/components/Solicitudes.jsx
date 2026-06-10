@@ -114,7 +114,7 @@ export default function Solicitudes({ onActualizarNotif }) {
                 </div>
                 {esAdmin && s.estatus === 'pendiente' && (
                   <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                    <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>✅ Aprobar</button>
+                    <button className="btn-institucional dorado btn-sm" onClick={() => setModalPeriodo({ id: s.id, empleado_id: s.empleado_id })}>✅ Aprobar</button>
                     <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>❌ Rechazar</button>
                   </div>
                 )}
@@ -296,14 +296,17 @@ function calcularPeriodosReales(fechaIngreso) {
     const fin = new Date(inicio);
     fin.setMonth(fin.getMonth() + 6);
     fin.setDate(fin.getDate() - 1);
-    periodos.push({
-      numero: num,
-      inicio: new Date(inicio),
-      fin: new Date(fin),
-      anio: inicio.getFullYear(),
-      semestre: num % 2 === 1 ? 1 : 2,
-      label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
-    });
+    // Solo periodos COMPLETADOS
+    if (fin < hoy) {
+      periodos.push({
+        numero: num,
+        inicio: new Date(inicio),
+        fin: new Date(fin),
+        anio: inicio.getFullYear(),
+        semestre: num % 2 === 1 ? 1 : 2,
+        label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
+      });
+    }
     inicio = new Date(fin);
     inicio.setDate(inicio.getDate() + 1);
     num++;
