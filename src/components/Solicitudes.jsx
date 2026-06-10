@@ -113,7 +113,7 @@ export default function Solicitudes({ onActualizarNotif }) {
                 </div>
                 {esAdmin && s.estatus === 'pendiente' && (
                   <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                    <button className="btn-institucional dorado btn-sm" onClick={() => setModalPeriodo({ id: s.id, empleado_id: s.empleado_id })}>✅ Aprobar</button>
+                    <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>✅ Aprobar</button>
                     <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>❌ Rechazar</button>
                   </div>
                 )}
