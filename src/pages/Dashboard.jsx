@@ -163,7 +163,7 @@ export default function Dashboard() {
       <main className="dash-main">
         <div className="dash-content fade-in" key={seccion+modoEmpleado}>
           {seccion==='inicio'      && <Tablero onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }} />}
-          {seccion==='miperfil'    && <MiPerfil />}
+          {seccion==='miperfil'    && <MiPerfil onVerPeriodos={(empId)=>{ setEmpleadoPeriodos(empId); setSeccion('periodos-sec'); }} />}
           {seccion==='solicitudes' && <Solicitudes onActualizarNotif={()=>api.get('/api/notificaciones').then(r=>setNotificaciones(r.data))} />}
           {seccion==='calendario'  && <Calendario />}
           {seccion==='reportes'    && <Reportes />}
