@@ -9,6 +9,7 @@ export default function Solicitudes({ onActualizarNotif }) {
   const [modalNueva, setModalNueva] = useState(false);
   const [filtroEstatus, setFiltroEstatus] = useState('');
   const [resolviendo, setResolviendo] = useState(null);
+  const [modalPeriodo, setModalPeriodo] = useState(null); // { id, empleado_id }
 
   const esAdmin = ['admin', 'rrhh'].includes(rolEfectivo);
 
@@ -127,6 +128,15 @@ export default function Solicitudes({ onActualizarNotif }) {
         <FormNuevaSolicitud
           onClose={() => setModalNueva(false)}
           onCreada={() => { cargar(); setModalNueva(false); onActualizarNotif?.(); }}
+        />
+      )}
+
+      {modalPeriodo && (
+        <ModalAsignarPeriodo
+          solicitudId={modalPeriodo.id}
+          empleadoId={modalPeriodo.empleado_id}
+          onClose={() => setModalPeriodo(null)}
+          onConfirmado={() => { cargar(); setModalPeriodo(null); onActualizarNotif?.(); }}
         />
       )}
 
@@ -266,6 +276,115 @@ function FormNuevaSolicitud({ onClose, onCreada }) {
           </button>
           <button className="btn-institucional filled" style={{ flex: 2 }} onClick={enviar} disabled={enviando}>
             {enviando ? '⏳ Enviando...' : '📤 Enviar Solicitud'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// Calcular periodos reales desde fecha ingreso
+function calcularPeriodosReales(fechaIngreso) {
+  if (!fechaIngreso) return [];
+  const ingreso = new Date(fechaIngreso);
+  const hoy = new Date();
+  const periodos = [];
+  let inicio = new Date(ingreso);
+  let num = 1;
+  while (inicio <= hoy && num <= 20) {
+    const fin = new Date(inicio);
+    fin.setMonth(fin.getMonth() + 6);
+    fin.setDate(fin.getDate() - 1);
+    periodos.push({
+      numero: num,
+      inicio: new Date(inicio),
+      fin: new Date(fin),
+      anio: inicio.getFullYear(),
+      semestre: num % 2 === 1 ? 1 : 2,
+      label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
+    });
+    inicio = new Date(fin);
+    inicio.setDate(inicio.getDate() + 1);
+    num++;
+  }
+  return periodos;
+}
+
+function ModalAsignarPeriodo({ solicitudId, empleadoId, onClose, onConfirmado }) {
+  const [periodos, setPeriodos] = useState([]);
+  const [periodoIdx, setPeriodoIdx] = useState(0);
+  const [guardando, setGuardando] = useState(false);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    api.get(`/api/empleados/${empleadoId}`)
+      .then(r => {
+        const emp = r.data?.empleado || r.data;
+        const ps = calcularPeriodosReales(emp?.fecha_ingreso);
+        setPeriodos(ps);
+        // Seleccionar el último periodo por defecto
+        if (ps.length) setPeriodoIdx(ps.length - 1);
+      })
+      .catch(console.error)
+      .finally(() => setCargando(false));
+  }, [empleadoId]);
+
+  const confirmar = async () => {
+    setGuardando(true);
+    const p = periodos[periodoIdx];
+    try {
+      await api.put(`/api/solicitudes/${solicitudId}/resolver`, {
+        estatus: 'aprobada',
+        periodo_semestre: p?.semestre,
+        anio_periodo: p?.anio,
+      });
+      onConfirmado();
+    } catch(e) {
+      alert(e.response?.data?.error || 'Error al aprobar');
+    } finally { setGuardando(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{ maxWidth:460 }} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header" style={{ background:'linear-gradient(135deg,#1B5E20,#27ae60)' }}>
+          <h2>✅ Aprobar Solicitud</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div style={{ padding:'12px 14px', background:'#E8F5E9', borderRadius:10, border:'1px solid #C8E6C9', fontSize:13, color:'#1B5E20', fontWeight:600 }}>
+            ✅ Estás a punto de aprobar esta solicitud. ¿A qué periodo de vacaciones pertenecen estos días?
+          </div>
+          {cargando ? (
+            <div style={{ textAlign:'center', padding:20, color:'var(--g60)' }}>Cargando periodos...</div>
+          ) : periodos.length === 0 ? (
+            <div style={{ padding:'12px 14px', background:'#FFF8E1', borderRadius:10, border:'1px solid #FFE082', fontSize:13, color:'#856404', fontWeight:600 }}>
+              ⚠️ Este empleado no tiene fecha de ingreso registrada. Se aprobará sin asignar periodo.
+            </div>
+          ) : (
+            <div className="form-group">
+              <label>Periodo al que pertenecen los días</label>
+              <select className="form-control" value={periodoIdx}
+                onChange={e => setPeriodoIdx(parseInt(e.target.value))}>
+                {periodos.map((p, i) => (
+                  <option key={i} value={i}>{p.label}</option>
+                ))}
+              </select>
+              {periodos[periodoIdx] && (
+                <div style={{ marginTop:8, padding:'10px 12px', background:'var(--g-soft)', borderRadius:8, fontSize:12, color:'var(--g)', fontFamily:'Montserrat,sans-serif', fontWeight:700 }}>
+                  📅 {periodos[periodoIdx].label}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
+          <button className="btn-institucional filled btn-sm"
+            style={{ background:'#1B5E20', borderColor:'#1B5E20' }}
+            onClick={confirmar} disabled={guardando}>
+            {guardando ? '⏳ Aprobando...' : '✅ Confirmar Aprobación'}
           </button>
         </div>
       </div>
