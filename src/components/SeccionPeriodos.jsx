@@ -174,7 +174,7 @@ export default function SeccionPeriodos({ empleadoInicial }) {
       </div>
 
       {modalHistorico && empleadoSel && (
-        <ModalHistorico empleadoId={empleadoSel.id} fechaIngreso={empleadoSel.fecha_ingreso} onClose={()=>setModalHistorico(false)} onGuardado={()=>{ recargar(); setModalHistorico(false); }} />
+        <ModalHistorico empleadoId={empleadoSel.id} onClose={()=>setModalHistorico(false)} onGuardado={()=>{ recargar(); setModalHistorico(false); }} />
       )}
       {modalEditSol && (
         <ModalEditarSolicitud solicitud={modalEditSol} onClose={()=>setModalEditSol(null)} onGuardado={()=>{ recargar(); setModalEditSol(null); }} />
@@ -448,9 +448,8 @@ function calcularPeriodosReales(fechaIngreso) {
   return periodos;
 }
 
-function ModalHistorico({ empleadoId, fechaIngreso, onClose, onGuardado }) {
-  const periodosReales = calcularPeriodosReales(fechaIngreso);
-  const [form, setForm] = useState({ tipo:'rango', fecha_inicio:'', fecha_fin:'', dias:'', periodo_idx:0, notas:'' });
+function ModalHistorico({ empleadoId, onClose, onGuardado }) {
+  const [form, setForm] = useState({ tipo:'rango', fecha_inicio:'', fecha_fin:'', dias:'', notas:'' });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
 
@@ -520,19 +519,8 @@ function ModalHistorico({ empleadoId, fechaIngreso, onClose, onGuardado }) {
           ) : (
             <div className="form-group"><label>Número de días tomados</label><input type="number" className="form-control" min="1" placeholder="Ej: 5" value={form.dias} onChange={e=>setForm({...form,dias:e.target.value})} /></div>
           )}
-          <div className="form-group">
-            <label>¿A qué periodo pertenecen estos días?</label>
-            {periodosReales.length > 0 ? (
-              <select className="form-control" value={form.periodo_idx} onChange={e=>setForm({...form,periodo_idx:e.target.value})}>
-                {periodosReales.map((p,i) => (
-                  <option key={i} value={i}>{p.label}</option>
-                ))}
-              </select>
-            ) : (
-              <div style={{ fontSize:12,color:'var(--g60)',padding:'10px',background:'var(--g10)',borderRadius:8 }}>
-                Sin fecha de ingreso registrada
-              </div>
-            )}
+          <div style={{ padding:'10px 12px', background:'#E8F5E9', borderRadius:8, border:'1px solid #C8E6C9', fontSize:12, color:'#1B5E20', fontWeight:600 }}>
+            ✅ Los días se descontarán automáticamente del periodo más viejo al más nuevo.
           </div>
           <div className="form-group"><label>Notas</label><input className="form-control" placeholder="Ej: Vacaciones tomadas en mayo antes del sistema..." value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} /></div>
         </div>
