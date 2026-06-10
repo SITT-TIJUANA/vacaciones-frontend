@@ -4,7 +4,9 @@ import { useAuth } from '../context/AuthContext';
 
 function fmtFecha(f) {
   if (!f) return '—';
-  return new Date(f).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' });
+  // Parsear como fecha local para evitar offset de timezone
+  const [y,m,d] = f.substring(0,10).split('-');
+  return new Date(parseInt(y), parseInt(m)-1, parseInt(d)).toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' });
 }
 
 // Calcular periodos desde fecha de ingreso
@@ -306,7 +308,7 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                   <div style={{ flex:1, minWidth:200 }}>
                     <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:14, color: v.tipo==='manual'?'#E65100':'var(--g)', marginBottom:4 }}>
                       {v.fecha_inicio
-                        ? `${new Date(v.fecha_inicio).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}${v.fecha_fin && v.fecha_fin!==v.fecha_inicio ? ` al ${new Date(v.fecha_fin).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}` : ''}`
+                        ? `${fmtFecha(v.fecha_inicio)}${v.fecha_fin && v.fecha_fin.substring(0,10)!==v.fecha_inicio.substring(0,10) ? ` al ${fmtFecha(v.fecha_fin)}` : ''}`
                         : 'Sin fecha registrada'
                       }
                     </div>
@@ -530,14 +532,15 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
   const diasCalc = form.fecha_inicio && form.fecha_fin ? calcDias() : parseInt(form.dias||0);
 
   const guardar = async () => {
-    if (!form.fecha_inicio) { setError('La fecha de inicio es obligatoria para saber a qué periodo pertenecen'); return; }
+    if (!form.fecha_inicio) { setError('La fecha de inicio es obligatoria'); return; }
+    if (!form.fecha_fin) { setForm(f => ({...f, fecha_fin: form.fecha_inicio})); }
     if (!diasCalc || diasCalc <= 0) { setError('Indica los días correctamente'); return; }
     setGuardando(true); setError('');
     try {
       await api.post('/api/solicitudes/manual', {
         empleado_id: empleadoId,
         fecha_inicio: form.fecha_inicio,
-        fecha_fin: form.fecha_fin || form.fecha_inicio,
+        fecha_fin: form.fecha_fin && form.fecha_fin.trim()!=='' ? form.fecha_fin : form.fecha_inicio,
         dias: diasCalc,
         notas: form.notas,
       });
@@ -565,7 +568,7 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
               <input type="date" className="form-control" value={form.fecha_inicio} onChange={e=>setForm({...form,fecha_inicio:e.target.value})} />
             </div>
             <div className="form-group">
-              <label>Fecha de fin (opcional)</label>
+              <label>Fecha de fin *</label>
               <input type="date" className="form-control" value={form.fecha_fin} min={form.fecha_inicio} onChange={e=>setForm({...form,fecha_fin:e.target.value})} />
             </div>
           </div>
