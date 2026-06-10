@@ -3,7 +3,7 @@ import api from '../services/api';
 import PerfilModal from './PerfilModal';
 import { useAuth } from '../context/AuthContext';
 
-export default function Tablero() {
+export default function Tablero({ onVerPeriodos }) {
   const { rolEfectivo } = useAuth();
   const [empleados, setEmpleados] = useState([]);
   const [cargando, setCargando] = useState(true);
