@@ -190,7 +190,13 @@ export default function AltaPersonal({ onCreado }) {
                 📞 Contacto
               </h3>
               <div className="form-grid">
-                <div className="form-group"><label>Correo</label><input type="email" className="form-control" placeholder="correo@ejemplo.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} /></div>
+                <div className="form-group" style={{ gridColumn:'1/-1' }}>
+                  <label>Correo electrónico <span style={{ color:'#B71C1C', fontWeight:900 }}>*</span></label>
+                  <div style={{ background:'#FFF8E1', border:'1px solid #FFE082', borderRadius:8, padding:'8px 12px', marginBottom:6, fontSize:12, color:'#856404', fontWeight:600 }}>
+                    ⚠️ Obligatorio — el empleado recibirá notificaciones de vacaciones en este correo
+                  </div>
+                  <input type="email" className="form-control" placeholder="correo@tijuana.gob.mx" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} />
+                </div>
                 <div className="form-group"><label>Teléfono</label><input className="form-control" placeholder="664-000-0000" value={form.telefono} onChange={e=>setForm({...form,telefono:e.target.value})} /></div>
               </div>
             </div>
