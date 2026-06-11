@@ -9,6 +9,12 @@ export default function Solicitudes({ onActualizarNotif }) {
   const [modalNueva, setModalNueva] = useState(false);
   const [filtroEstatus, setFiltroEstatus] = useState('');
   const [resolviendo, setResolviendo] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const mostrarToast = (msg, tipo='exito') => {
+    setToast({ msg, tipo });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const esAdmin = ['admin', 'rrhh'].includes(rolEfectivo);
 
@@ -32,6 +38,7 @@ export default function Solicitudes({ onActualizarNotif }) {
       cargar();
       onActualizarNotif?.();
       setResolviendo(null);
+      mostrarToast(estatus==='aprobada' ? '✅ Solicitud aprobada — El empleado recibirá notificación por app y correo electrónico.' : '❌ Solicitud rechazada — El empleado recibirá notificación por app y correo electrónico.');
     } catch (e) {
       alert(e.response?.data?.error || 'Error al resolver');
     }
@@ -126,8 +133,19 @@ export default function Solicitudes({ onActualizarNotif }) {
       {modalNueva && (
         <FormNuevaSolicitud
           onClose={() => setModalNueva(false)}
-          onCreada={() => { cargar(); setModalNueva(false); onActualizarNotif?.(); }}
+          onCreada={(t) => { cargar(); setModalNueva(false); onActualizarNotif?.(); if(t==='toast') mostrarToast('✅ Solicitud enviada — Se notificó a Recursos Humanos y Administración. Recibirás respuesta por app y correo electrónico.'); }}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:'fixed', bottom:100, left:'50%', transform:'translateX(-50%)', zIndex:9999,
+          background: toast.tipo==='exito' ? '#1B5E20' : '#B71C1C',
+          color:'#fff', padding:'14px 24px', borderRadius:14, fontFamily:'Montserrat,sans-serif',
+          fontWeight:700, fontSize:13, boxShadow:'0 8px 32px rgba(0,0,0,0.3)',
+          maxWidth:480, textAlign:'center', animation:'slideUp 0.3s ease' }}>
+          {toast.msg}
+        </div>
       )}
 
       {resolviendo && (
@@ -171,7 +189,7 @@ function FormNuevaSolicitud({ onClose, onCreada }) {
     setEnviando(true); setError('');
     try {
       await api.post('/api/solicitudes', { fecha_inicio: fechaInicio, fecha_fin: fechaFin, motivo });
-      onCreada();
+      onCreada('toast');
     } catch(e) {
       setError(e.response?.data?.error || 'Error al enviar');
       setEnviando(false);
