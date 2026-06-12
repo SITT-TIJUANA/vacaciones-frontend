@@ -13,13 +13,13 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const canvasRef = useRef(null);
 
-  // Limpiar tema México al cargar login — siempre empieza normal
+  // Solo quitar el CSS visual al cargar login, pero NO borrar localStorage
   useEffect(() => {
-    localStorage.removeItem('mx-tema');
     const el = document.getElementById('mx-style');
     if (el) el.remove();
   }, []);
   const [mxFase, setMxFase] = useState('idle'); // idle | juego | gol
+  const [mxTema, setMxTema] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -88,7 +88,7 @@ export default function Login() {
               H. XXV Ayuntamiento de <em>Tijuana</em>
             </div>
             <div className="login-subtitle">SITT</div>
-            <VacacionesLogo onActivar={onMxActivar} />
+            {!mxTema && <VacacionesLogo onActivar={onMxActivar} />}
           </div>
         </div>
 
@@ -155,6 +155,7 @@ export default function Login() {
       let el = document.getElementById('mx-style');
       if (!el) { el = document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
       el.textContent = `:root{--g:#006847!important;--d:#CE1126!important;--g-soft:rgba(0,104,71,0.07)!important;--g10:rgba(0,104,71,0.1)!important;--g20:rgba(0,104,71,0.2)!important;--g60:rgba(0,104,71,0.6)!important;} .login-page{background:linear-gradient(135deg,#003d2a 0%,#006847 50%,#004d35 100%)!important;} .login-container{border-top:3px solid #CE1126!important;} .btn-institucional.filled{background:linear-gradient(135deg,#006847,#004d35)!important;} .login-header{border-bottom-color:rgba(0,104,71,0.2)!important;}`;
+      setMxTema(true);
       setMxFase('idle');
     }}/>}}
   </>
