@@ -15,7 +15,7 @@ export default function Login() {
 
   // Aplicar/mantener tema México si está activo
   useEffect(() => {
-    if (localStorage.getItem('mx-tema') === '1') {
+    if (sessionStorage.getItem('mx-tema') === '1') {
       document.body.classList.add('tema-mexico');
     } else {
       document.body.classList.remove('tema-mexico');
@@ -63,7 +63,7 @@ export default function Login() {
 
   const onMxActivar = () => setMxFase('juego');
   const onMxGol = () => setMxFase('gol');
-  const onMxContinuar = () => { localStorage.setItem('mx-tema','1'); setMxFase('idle'); };
+  const onMxContinuar = () => { sessionStorage.setItem('mx-tema','1'); setMxFase('idle'); };
   const onMxSkip = () => setMxFase('idle');
 
   const handleSubmit = async (e) => {
@@ -153,7 +153,7 @@ export default function Login() {
     
     {mxFase==='juego' && <PenaltyGame onGol={()=>setMxFase('gol')} onSkip={()=>setMxFase('idle')}/>}
     {mxFase==='gol' && <PantallaGol onContinuar={()=>{
-      localStorage.setItem('mx-tema','1');
+      sessionStorage.setItem('mx-tema','1');
       document.body.classList.add('tema-mexico');
       // Aplicar tema México al login inmediatamente
       let el = document.getElementById('mx-style');
