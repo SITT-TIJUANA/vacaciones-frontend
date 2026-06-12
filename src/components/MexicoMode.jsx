@@ -469,26 +469,30 @@ export default function MexicoMode() {
   const [tema, setTema] = useState(()=>localStorage.getItem('mx-tema')==='1');
   const styleEl = useRef(null);
 
+  // Aplicar tema INMEDIATAMENTE al montar — antes del primer render
+  useEffect(()=>{
+    const saved = localStorage.getItem('mx-tema')==='1';
+    if(saved){
+      let el = document.getElementById('mx-style');
+      if(!el){ el=document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
+      el.textContent = MEXICO_CSS;
+      styleEl.current = el;
+      if(!tema) setTema(true);
+    }
+  },[]); // Solo al montar
+
   useEffect(()=>{
     if(tema){
-      if(!styleEl.current){
-        let el = document.getElementById('mx-style');
-        if(!el){ el=document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
-        styleEl.current=el;
-      }
-      styleEl.current.textContent=MEXICO_CSS;
+      let el = document.getElementById('mx-style');
+      if(!el){ el=document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
+      el.textContent = MEXICO_CSS;
+      styleEl.current = el;
     } else {
       const el=document.getElementById('mx-style');
       if(el) el.remove();
       styleEl.current=null;
     }
   },[tema]);
-
-  // Re-check localStorage when component mounts (in case login set it)
-  useEffect(()=>{
-    const saved = localStorage.getItem('mx-tema')==='1';
-    if(saved !== tema) setTema(saved);
-  },[]);
 
   if(!tema) return null;
   return <BanderaMexico onQuitarTema={()=>{ localStorage.setItem('mx-tema','0'); setTema(false); }}/>;
