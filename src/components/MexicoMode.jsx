@@ -99,8 +99,8 @@ function PenaltyGame({ onGol, onSkip }) {
 
       {/* Campo */}
       <div ref={fieldRef} onMouseMove={handleMove} onTouchMove={e=>{e.preventDefault();handleMove(e);}}
-        onClick={()=>{ if(fase==='volando'||fase==='gol') return; setFase('fallo'); setTimeout(()=>{ setFase('listo'); setBalPos({x:50,y:82}); },1200); }}
-        onTouchEnd={e=>{e.preventDefault(); if(fase==='volando'||fase==='gol') return; setFase('fallo'); setTimeout(()=>{ setFase('listo'); setBalPos({x:50,y:82}); },1200); }}
+        onClick={e=>{ if(fase==='volando'||fase==='gol'||e.target.dataset.spot) return; setFase('fallo'); setTimeout(()=>{ setFase('listo'); setBalPos({x:50,y:82}); },1200); }}
+        onTouchEnd={e=>{ if(fase==='volando'||fase==='gol') return; if(e.target.dataset.spot) return; e.preventDefault(); setFase('fallo'); setTimeout(()=>{ setFase('listo'); setBalPos({x:50,y:82}); },1200); }}
         style={{
           position:'relative',width:'min(460px,92vw)',height:'min(340px,68vw)',
           background:'linear-gradient(180deg,#1e7a3a,#28924a)',
@@ -164,7 +164,9 @@ function PenaltyGame({ onGol, onSkip }) {
           {x:23,y:35,label:'←'},{x:50,y:35,label:'·'},{x:77,y:35,label:'→'},
         ].map((pt,i)=>(
           <div key={i}
+            data-spot="true"
             onClick={e=>{ e.stopPropagation(); setTarget({x:pt.x,y:pt.y}); patearTarget(pt.x,pt.y); }}
+            onTouchEnd={e=>{ e.stopPropagation(); e.preventDefault(); setTarget({x:pt.x,y:pt.y}); patearTarget(pt.x,pt.y); }}
             style={{
               position:'absolute',left:`${pt.x}%`,top:`${pt.y}%`,
               transform:'translate(-50%,-50%)',
@@ -467,35 +469,28 @@ export function LoginMexicoEggs({ onActivar }) {
 // ─── Componente principal (dentro del sistema) ────────────
 export default function MexicoMode() {
   const [tema, setTema] = useState(()=>localStorage.getItem('mx-tema')==='1');
-  const styleEl = useRef(null);
-
-  // Aplicar tema INMEDIATAMENTE al montar — antes del primer render
-  useEffect(()=>{
-    const saved = localStorage.getItem('mx-tema')==='1';
-    if(saved){
-      let el = document.getElementById('mx-style');
-      if(!el){ el=document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
-      el.textContent = MEXICO_CSS;
-      styleEl.current = el;
-      if(!tema) setTema(true);
-    }
-  },[]); // Solo al montar
 
   useEffect(()=>{
     if(tema){
-      let el = document.getElementById('mx-style');
-      if(!el){ el=document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
-      el.textContent = MEXICO_CSS;
-      styleEl.current = el;
+      document.body.classList.add('tema-mexico');
     } else {
-      const el=document.getElementById('mx-style');
-      if(el) el.remove();
-      styleEl.current=null;
+      document.body.classList.remove('tema-mexico');
+      localStorage.setItem('mx-tema','0');
     }
   },[tema]);
 
+  // Siempre verificar al montar
+  useEffect(()=>{
+    const saved = localStorage.getItem('mx-tema')==='1';
+    if(saved){ document.body.classList.add('tema-mexico'); setTema(true); }
+  },[]);
+
   if(!tema) return null;
-  return <BanderaMexico onQuitarTema={()=>{ localStorage.setItem('mx-tema','0'); setTema(false); }}/>;
+  return <BanderaMexico onQuitarTema={()=>{ 
+    localStorage.setItem('mx-tema','0'); 
+    document.body.classList.remove('tema-mexico');
+    setTema(false); 
+  }}/>;
 }
 
 // Exportar componentes del juego para Login
