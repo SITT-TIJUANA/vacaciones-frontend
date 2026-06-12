@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import './assets/styles/global.css';
 import './assets/styles/mobile.css';
+import MexicoMode from './components/MexicoMode';
 
 function ProtectedRoute({ children }) {
   const { usuario, cargando } = useAuth();
@@ -30,6 +31,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <MexicoMode />
           <Routes>
             <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
