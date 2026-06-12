@@ -125,7 +125,25 @@ export default function Reportes() {
     return `${e.apellido_paterno} ${e.nombre} ${e.apellido_materno||''}`.toLowerCase().includes(busqueda.toLowerCase());
   });
 
-  const empSeleccionado = empleadoFiltro ? detalle.find(e => e.id === empleadoFiltro) : null;
+  const empSeleccionadoBase = empleadoFiltro ? detalle.find(e => e.id === empleadoFiltro) : null;
+  const [empDetalleReal, setEmpDetalleReal] = useState(null);
+  
+  useEffect(() => {
+    if (empleadoFiltro) {
+      api.get(`/api/solicitudes/periodos-detalle/${empleadoFiltro}`)
+        .then(r => setEmpDetalleReal(r.data))
+        .catch(() => setEmpDetalleReal(null));
+    } else {
+      setEmpDetalleReal(null);
+    }
+  }, [empleadoFiltro]);
+
+  const empSeleccionado = empDetalleReal
+    ? { ...empSeleccionadoBase, ...empDetalleReal.empleado, 
+        dias_correspondientes: empDetalleReal.total_correspondiente,
+        dias_tomados: empDetalleReal.total_tomado,
+        dias_disponibles: empDetalleReal.total_disponible }
+    : empSeleccionadoBase;
 
   // ── EXPORTAR PDF ─────────────────────────────────────
   const exportarPDF = async (cfg) => {
@@ -245,7 +263,8 @@ export default function Reportes() {
       // ── Periodos detallados cuando es reporte individual ────
       if (empSeleccionado) {
         try {
-          const { data: periodosData } = await api.get(`/api/solicitudes/periodos-detalle/${empSeleccionado.id}`);
+          const periodosDataRes = empDetalleReal || (await api.get(`/api/solicitudes/periodos-detalle/${empSeleccionado.id}`)).data;
+          const periodosData = periodosDataRes;
           if (periodosData?.periodos?.length) {
             doc.setFillColor(...GUINDA);
             doc.rect(14, y, 182, 7, 'F');
@@ -263,24 +282,23 @@ export default function Reportes() {
               doc.rect(14, y, 182, 8);
               doc.setTextColor(...GUINDA);
               doc.setFontSize(9); doc.setFont('helvetica','bold');
-              doc.text(`${p.anio} — Periodo ${p.periodo_semestre} (${p.periodo_semestre===1?'Enero–Junio':'Julio–Diciembre'})`, 18, y + 5.5);
+              const fmtP = (f) => { if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); };
+              doc.text(`Periodo ${p.numero}: ${fmtP(p.fecha_inicio)} — ${fmtP(p.fecha_fin)}`, 18, y + 5.5);
               doc.setFont('helvetica','normal');
-              doc.text(`${p.dias_correspondientes} corresp. | ${p.dias_tomados} tomados | ${p.dias_disponibles} disponibles`, 120, y + 5.5);
+              doc.text(`${p.dias_correspondientes} corresp. | ${p.dias_tomados} tomados | ${p.dias_disponibles} disponibles`, 115, y + 5.5);
               y += 10;
 
-              // Vacaciones de este periodo
-              if (p.solicitudes?.length) {
-                const rows = p.solicitudes.map(s => [
-                  s.es_historico ? '📂 HISTÓRICO' : '✅',
-                  new Date(s.fecha_inicio).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}),
-                  new Date(s.fecha_fin).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}),
-                  `${s.dias_solicitados} días`,
-                  s.motivo || '—',
-                ]);
+              // Vacaciones de este periodo (solicitudes + manuales)
+              const fmtD = (f) => { if(!f)return'—'; const[yr,m,d]=String(f).substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}); };
+              const todasVacs = [
+                ...(p.solicitudes||[]).map(s=>(['✅ Sistema', fmtD(s.fecha_inicio), fmtD(s.fecha_fin), `${s.dias_solicitados} días`, s.motivo||'—'])),
+                ...(p.manuales||[]).map(m=>(['📂 Manual', fmtD(m.fecha_inicio), fmtD(m.fecha_fin), `${m.dias} días`, m.notas||'—'])),
+              ];
+              if (todasVacs.length) {
                 doc.autoTable({
                   startY: y,
                   head: [['Tipo','Fecha inicio','Fecha fin','Días','Notas']],
-                  body: rows,
+                  body: todasVacs,
                   headStyles: { fillColor: [74,10,30], fontSize:8 },
                   bodyStyles: { fontSize:8 },
                   margin: { left:18, right:14 },
