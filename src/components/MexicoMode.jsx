@@ -383,14 +383,11 @@ function PantallaGol({ onContinuar }) {
 }
 
 // ─── Bandera flotante en sistema ─────────────────────────
-function BanderaMexico({ onQuitarTema }) {
+function BanderaMexico() {
   return (
-    <div style={{position:'fixed',bottom:76,right:14,zIndex:1000,display:'flex',flexDirection:'column',alignItems:'center',gap:5,filter:'drop-shadow(0 4px 16px rgba(0,0,0,0.3))'}}>
+    <div style={{position:'fixed',bottom:76,right:14,zIndex:1000,filter:'drop-shadow(0 4px 16px rgba(0,0,0,0.3))'}}>
       <img src="/vacaciones-frontend/bandera-mexico.png" alt="🇲🇽"
         style={{width:68,height:'auto',animation:'banderaWave 1.8s ease-in-out infinite',transformOrigin:'15% 90%'}}/>
-      <button onClick={onQuitarTema} style={{padding:'4px 10px',background:'rgba(0,0,0,0.65)',border:'1px solid rgba(255,255,255,0.2)',borderRadius:12,color:'white',fontFamily:'Montserrat,sans-serif',fontWeight:700,fontSize:9,cursor:'pointer',whiteSpace:'nowrap',backdropFilter:'blur(4px)'}}>
-        🎨 Quitar tema México
-      </button>
       <style>{`@keyframes banderaWave{0%,100%{transform:rotate(-6deg) skewX(2deg)}25%{transform:rotate(5deg) skewX(-3deg)}50%{transform:rotate(-4deg) skewX(2deg)}75%{transform:rotate(5deg) skewX(-2deg)}}`}</style>
     </div>
   );
@@ -486,11 +483,7 @@ export default function MexicoMode() {
   },[]);
 
   if(!tema) return null;
-  return <BanderaMexico onQuitarTema={()=>{ 
-    localStorage.setItem('mx-tema','0'); 
-    document.body.classList.remove('tema-mexico');
-    setTema(false); 
-  }}/>;
+  return <BanderaMexico />;
 }
 
 // Exportar componentes del juego para Login
