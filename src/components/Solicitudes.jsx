@@ -24,9 +24,15 @@ async function generarPermiso(s) {
 
   if (s.foto_url) {
     try {
-      const r = await fetch(`/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`);
-      const blob = await r.blob();
-      fotoBase64 = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); });
+      const token = localStorage.getItem('token');
+      const API = 'https://vacaciones-backend-7ota.onrender.com';
+      const r = await fetch(`${API}/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (r.ok) {
+        const blob = await r.blob();
+        fotoBase64 = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); });
+      }
     } catch(e) {}
   }
 
