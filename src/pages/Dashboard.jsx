@@ -12,6 +12,7 @@ import VincularCuenta from '../components/VincularCuenta';
 import InstalarApp from '../components/InstalarApp';
 import Historial from '../components/Historial';
 import SeccionPeriodos from '../components/SeccionPeriodos';
+import SeccionPermisos from '../components/SeccionPermisos';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
