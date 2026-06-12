@@ -548,11 +548,16 @@ export function LoginMexicoEggs() {
 
   const activar = () => { cancelAnimationFrame(animRef.current); setFase('juego'); };
   const onGol = () => setFase('gol');
-  const onContinuar = () => { localStorage.setItem('mx-tema','1'); setFase('idle'); };
-  const onSkip = () => setFase('idle');
+  const onContinuar = () => {
+    // Solo cierra el juego — el tema se activa cuando entran al sistema
+    localStorage.setItem('mx-tema','1');
+    setFase('done');
+  };
+  const onSkip = () => setFase('done');
 
   if (fase === 'juego') return <PenaltyGame onGol={onGol} onSkip={onSkip} />;
   if (fase === 'gol') return <PantallaGol onContinuar={onContinuar} />;
+  if (fase === 'done') return null;
 
   return (
     <>
