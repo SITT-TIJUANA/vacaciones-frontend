@@ -290,27 +290,29 @@ function PantallaGol({ onContinuar }) {
             letterSpacing:1.5,textAlign:'center',marginBottom:10,fontWeight:700}}>
             🏆 {partido.competicion}
           </div>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(12px,3vw,24px)'}}>
-            {/* Equipo 1 */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(10px,3vw,24px)'}}>
+            {/* México */}
             <div style={{textAlign:'center',flex:1}}>
-              <div style={{fontSize:'clamp(36px,9vw,56px)',lineHeight:1}}>{partido.bandera1}</div>
-              <div style={{fontSize:'clamp(9px,2vw,12px)',color:'white',fontWeight:900,marginTop:4,letterSpacing:0.5}}>{partido.equipo1}</div>
+              <img src="https://flagcdn.com/w80/mx.png" alt="México"
+                style={{width:'clamp(50px,10vw,72px)',height:'auto',borderRadius:4,boxShadow:'0 2px 8px rgba(0,0,0,0.4)',display:'block',margin:'0 auto'}}/>
+              <div style={{fontSize:'clamp(9px,2vw,12px)',color:'white',fontWeight:900,marginTop:6,letterSpacing:0.5}}>{partido.equipo1}</div>
             </div>
             {/* Marcador */}
             <div style={{textAlign:'center',padding:'0 8px'}}>
-              <div style={{fontSize:'clamp(32px,8vw,50px)',fontWeight:900,color:'#FFD700',
-                lineHeight:1,textShadow:'0 0 20px rgba(255,215,0,0.5)',letterSpacing:2}}>
+              <div style={{fontSize:'clamp(34px,8vw,52px)',fontWeight:900,color:'#FFD700',
+                lineHeight:1,textShadow:'0 0 20px rgba(255,215,0,0.6)',letterSpacing:2}}>
                 {partido.goles1} - {partido.goles2}
               </div>
-              <div style={{fontSize:'clamp(9px,2vw,11px)',color:partido.color,
-                fontWeight:900,marginTop:4,letterSpacing:1}}>
-                {partido.resultado==='VICTORIA'?'✅':partido.resultado==='EMPATE'?'🤝':'❌'} {partido.resultado}
+              <div style={{fontSize:'clamp(10px,2vw,12px)',color:partido.color,
+                fontWeight:900,marginTop:5,letterSpacing:1}}>
+                {partido.resultado==='VICTORIA'?'✅ VICTORIA':partido.resultado==='EMPATE'?'🤝 EMPATE':'❌ DERROTA'}
               </div>
             </div>
-            {/* Equipo 2 */}
+            {/* Sudáfrica */}
             <div style={{textAlign:'center',flex:1}}>
-              <div style={{fontSize:'clamp(36px,9vw,56px)',lineHeight:1}}>{partido.bandera2}</div>
-              <div style={{fontSize:'clamp(9px,2vw,12px)',color:'white',fontWeight:900,marginTop:4,letterSpacing:0.5}}>{partido.equipo2}</div>
+              <img src="https://flagcdn.com/w80/za.png" alt="Sudáfrica"
+                style={{width:'clamp(50px,10vw,72px)',height:'auto',borderRadius:4,boxShadow:'0 2px 8px rgba(0,0,0,0.4)',display:'block',margin:'0 auto'}}/>
+              <div style={{fontSize:'clamp(9px,2vw,12px)',color:'white',fontWeight:900,marginTop:6,letterSpacing:0.5}}>{partido.equipo2}</div>
             </div>
           </div>
           {partido.goles&&(
