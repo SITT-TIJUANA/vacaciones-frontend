@@ -374,50 +374,100 @@ const MEXICO_CSS = `
 
 // ─── Letras VACACIONES con Easter Egg ────────────────────
 export function VacacionesLogo({ onActivar }) {
-  const letras = 'VACACI_NES'.split(''); // _ = balón
-
   return (
-    <div style={{
-      display:'flex',alignItems:'center',justifyContent:'center',
-      gap:'clamp(2px,0.8vw,6px)',cursor:'pointer',
-      marginTop:8,
-    }} onClick={onActivar} title="⚽ ¡Haz clic!">
-      {letras.map((l,i)=>(
-        l==='_' ? (
-          // La O es un balón
-          <div key={i} style={{
-            display:'inline-flex',alignItems:'center',justifyContent:'center',
-            width:'clamp(22px,4.5vw,36px)',height:'clamp(22px,4.5vw,36px)',
-            animation:'rotateBal 2s linear infinite',
-            filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.2))',
-          }}>
-            <svg viewBox="0 0 54 54" style={{width:'100%',height:'100%'}}>
-              <radialGradient id="bg3" cx="38%" cy="32%">
-                <stop offset="0%" stopColor="#fff"/><stop offset="60%" stopColor="#e0e0e0"/><stop offset="100%" stopColor="#888"/>
-              </radialGradient>
-              <circle cx="27" cy="27" r="24" fill="url(#bg3)" stroke="#ccc" strokeWidth="0.5"/>
-              <polygon points="27,8 33,14 31,21 23,21 21,14" fill="#222" opacity="0.85"/>
-              <polygon points="7,20 14,16 20,21 18,28 10,27" fill="#222" opacity="0.85"/>
-              <polygon points="47,20 40,16 34,21 36,28 44,27" fill="#222" opacity="0.85"/>
-              <polygon points="11,39 10,32 18,30 22,36 17,42" fill="#222" opacity="0.85"/>
-              <polygon points="43,39 44,32 36,30 32,36 37,42" fill="#222" opacity="0.85"/>
-              <polygon points="27,46 22,41 24,35 30,35 32,41" fill="#222" opacity="0.85"/>
-              <ellipse cx="20" cy="17" rx="6" ry="4" fill="rgba(255,255,255,0.5)" transform="rotate(-20,20,17)"/>
-            </svg>
-          </div>
-        ) : (
-          <span key={i} style={{
-            fontSize:'clamp(20px,4vw,32px)',fontWeight:900,
-            fontFamily:'Montserrat,sans-serif',letterSpacing:1,
-            color: i<3?'#006847': i>=7?'#CE1126':'#222',
-            textShadow: i<3?'0 1px 4px rgba(0,104,71,0.3)': i>=7?'0 1px 4px rgba(206,17,38,0.3)':'none',
-            transition:'transform 0.15s',
-          }}
-            onMouseEnter={e=>e.target.style.transform='translateY(-3px) scale(1.1)'}
-            onMouseLeave={e=>e.target.style.transform='none'}
-          >{l}</span>
-        )
+    <div onClick={onActivar} title="⚽ ¡Haz clic!"
+      style={{display:'flex',alignItems:'center',justifyContent:'center',
+        cursor:'pointer',userSelect:'none',marginTop:6,padding:'2px 6px',
+        gap:0,flexWrap:'nowrap',
+      }}>
+
+      {/* V grande estilo azteca */}
+      <span style={{
+        fontSize:'clamp(42px,9vw,72px)', fontWeight:900,
+        fontFamily:'"Montserrat",sans-serif', lineHeight:0.9,
+        color:'#006847',
+        textShadow:'2px 2px 0 #004d35, 0 0 20px rgba(0,104,71,0.6), 1px 1px 0 rgba(0,0,0,0.4)',
+        display:'inline-block', letterSpacing:-2,
+        transition:'transform 0.15s',
+        WebkitTextStroke:'0.5px #004d35',
+      }}
+        onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px) scale(1.1)';}}
+        onMouseLeave={e=>{e.currentTarget.style.transform='none';}}
+      >V</span>
+
+      {/* ac en verde más pequeño */}
+      {'ac'.split('').map((l,i)=>(
+        <span key={i} style={{
+          fontSize:'clamp(28px,6vw,50px)', fontWeight:700,
+          fontFamily:'"Montserrat",sans-serif', lineHeight:0.9,
+          color:'#006847',
+          textShadow:'0 0 10px rgba(0,104,71,0.4)',
+          display:'inline-block',
+          transition:'transform 0.15s',
+        }}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none';}}
+        >{l}</span>
       ))}
+
+      {/* ACION en blanco */}
+      {'acion'.split('').map((l,i)=>(
+        <span key={i} style={{
+          fontSize:'clamp(28px,6vw,50px)', fontWeight:700,
+          fontFamily:'"Montserrat",sans-serif', lineHeight:0.9,
+          color:'#f0f0f0',
+          textShadow:'0 1px 4px rgba(0,0,0,0.3)',
+          display:'inline-block',
+          transition:'transform 0.15s',
+        }}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none';}}
+        >{l}</span>
+      ))}
+
+      {/* O = Balón Mundial 2026 girando */}
+      <span style={{
+        display:'inline-flex',alignItems:'center',justifyContent:'center',
+        width:'clamp(26px,5.5vw,44px)',height:'clamp(26px,5.5vw,44px)',
+        animation:'rotateBal 1.6s linear infinite',
+        verticalAlign:'middle',
+      }}>
+        <svg viewBox="0 0 54 54" style={{width:'100%',height:'100%',filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.4))'}}>
+          <defs>
+            <radialGradient id="bGr" cx="35%" cy="30%">
+              <stop offset="0%" stopColor="#ffffff"/>
+              <stop offset="50%" stopColor="#e8e8e8"/>
+              <stop offset="100%" stopColor="#aaa"/>
+            </radialGradient>
+          </defs>
+          <circle cx="27" cy="27" r="24" fill="url(#bGr)" stroke="#ccc" strokeWidth="0.5"/>
+          <polygon points="27,8 33,14 31,21 23,21 21,14" fill="#006847" opacity="0.9"/>
+          <polygon points="7,20 14,16 20,21 18,28 10,27" fill="#CE1126" opacity="0.9"/>
+          <polygon points="47,20 40,16 34,21 36,28 44,27" fill="#006847" opacity="0.9"/>
+          <polygon points="11,39 10,32 18,30 22,36 17,42" fill="#CE1126" opacity="0.9"/>
+          <polygon points="43,39 44,32 36,30 32,36 37,42" fill="#006847" opacity="0.9"/>
+          <polygon points="27,46 22,41 24,35 30,35 32,41" fill="#CE1126" opacity="0.9"/>
+          <ellipse cx="19" cy="17" rx="6" ry="4" fill="rgba(255,255,255,0.55)" transform="rotate(-20,19,17)"/>
+          <text x="27" y="25" textAnchor="middle" fontSize="5" fontFamily="Arial" fontWeight="900" fill="#006847">MUNDIAL</text>
+          <text x="27" y="32" textAnchor="middle" fontSize="7" fontFamily="Arial" fontWeight="900" fill="#CE1126">2026</text>
+        </svg>
+      </span>
+
+      {/* NES en rojo */}
+      {'nes'.split('').map((l,i)=>(
+        <span key={i} style={{
+          fontSize:'clamp(28px,6vw,50px)', fontWeight:700,
+          fontFamily:'"Montserrat",sans-serif', lineHeight:0.9,
+          color:'#CE1126',
+          textShadow:'0 0 10px rgba(206,17,38,0.4)',
+          display:'inline-block',
+          transition:'transform 0.15s',
+        }}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none';}}
+        >{l}</span>
+      ))}
+
       <style>{`@keyframes rotateBal{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
     </div>
   );
