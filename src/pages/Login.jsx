@@ -62,6 +62,7 @@ export default function Login() {
   };
 
   return (
+    <>
     <div className="login-page">
       <canvas ref={canvasRef} className="particles-canvas" />
 
@@ -132,5 +133,6 @@ export default function Login() {
       </div>
     </div>
     <LoginMexicoEggs />
+  </>
   );
 }
