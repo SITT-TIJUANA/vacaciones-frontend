@@ -64,16 +64,20 @@ function PenaltyGame({ onGol, onSkip }) {
     setFase('apuntando');
   };
 
-  const patear=()=>{
+  const patearTarget=(tx,ty)=>{
     if(fase==='volando'||fase==='gol') return;
     setFase('volando');
-    setBalPos({x:target.x,y:target.y});
+    setBalPos({x:tx,y:ty});
     setTimeout(()=>{
-      const enPorteria=target.x>20&&target.x<80&&target.y>8&&target.y<45;
-      const porteroAtrapa=Math.abs(target.x-porteroX)<11;
+      const enPorteria=tx>20&&tx<80&&ty>8&&ty<45;
+      const porteroAtrapa=Math.abs(tx-porteroX)<10;
       if(enPorteria&&!porteroAtrapa){ setFase('gol'); setTimeout(()=>onGol(),600); }
       else{ setFase('fallo'); setTimeout(()=>{ setFase('listo'); setBalPos({x:50,y:82}); setTarget({x:50,y:28}); },1200); }
     },560);
+  };
+
+  const patear=()=>{
+    patearTarget(target.x, target.y);
   };
 
   return (
@@ -151,6 +155,30 @@ function PenaltyGame({ onGol, onSkip }) {
           <img src="/vacaciones-frontend/logo-mexico-tri.png" alt="México"
             style={{width:'clamp(34px,7.5vw,48px)',display:'block'}}/>
         </div>
+
+        {/* Puntos objetivo en la portería — clickeables */}
+        {(fase==='listo'||fase==='apuntando') && [
+          {x:23,y:15,label:'↖'},{x:50,y:13,label:'↑'},{x:77,y:15,label:'↗'},
+          {x:23,y:35,label:'←'},{x:50,y:35,label:'·'},{x:77,y:35,label:'→'},
+        ].map((pt,i)=>(
+          <div key={i}
+            onClick={e=>{ e.stopPropagation(); setTarget({x:pt.x,y:pt.y}); patearTarget(pt.x,pt.y); }}
+            style={{
+              position:'absolute',left:`${pt.x}%`,top:`${pt.y}%`,
+              transform:'translate(-50%,-50%)',
+              width:22,height:22,borderRadius:'50%',
+              background:'rgba(255,215,0,0.25)',
+              border:'2px solid rgba(255,215,0,0.7)',
+              cursor:'pointer',zIndex:11,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:10,color:'rgba(255,215,0,0.9)',fontWeight:900,
+              transition:'all 0.15s',
+              boxShadow:'0 0 8px rgba(255,215,0,0.3)',
+            }}
+            onMouseEnter={e=>{ e.currentTarget.style.background='rgba(255,215,0,0.6)'; e.currentTarget.style.transform='translate(-50%,-50%) scale(1.3)'; }}
+            onMouseLeave={e=>{ e.currentTarget.style.background='rgba(255,215,0,0.25)'; e.currentTarget.style.transform='translate(-50%,-50%) scale(1)'; }}
+          />
+        ))}
 
         {/* Mira */}
         {(fase==='listo'||fase==='apuntando')&&(
@@ -366,12 +394,31 @@ function BanderaMexico({ onQuitarTema }) {
 
 // ─── CSS Tema México ──────────────────────────────────────
 const MEXICO_CSS = `
-  :root{--g:#006847!important;--d:#CE1126!important;--d-dk:#a30d1e!important;--g-soft:rgba(0,104,71,0.07)!important;--g10:rgba(0,104,71,0.1)!important;--g20:rgba(0,104,71,0.2)!important;--g60:rgba(0,104,71,0.6)!important;}
-  .bottom-nav{background:linear-gradient(135deg,#004d35,#006847,#004d35)!important;border-top:2px solid #CE1126!important;}
-  .bottom-nav-item.active{color:#FFD700!important;}
-  .btn-institucional.filled{background:linear-gradient(135deg,#006847,#004d35)!important;}
-  .btn-institucional.dorado{border-color:#CE1126!important;color:#CE1126!important;}
-  header,.dash-header{background:linear-gradient(135deg,#004d35,#006847,#CE1126)!important;}
+  :root{
+    --g: #006847 !important;
+    --d: #CE1126 !important;
+    --d-dk: #a30d1e !important;
+    --g-soft: rgba(0,104,71,0.07) !important;
+    --g10: rgba(0,104,71,0.1) !important;
+    --g20: rgba(0,104,71,0.2) !important;
+    --g60: rgba(0,104,71,0.6) !important;
+  }
+  header.dash-header,
+  header,
+  .dash-header {
+    background: linear-gradient(135deg, #003d2a 0%, #006847 60%, #004d35 100%) !important;
+    border-bottom: 2px solid #CE1126 !important;
+  }
+  nav.bottom-nav,
+  .bottom-nav {
+    background: linear-gradient(135deg, #003d2a 0%, #006847 50%, #003d2a 100%) !important;
+    border-top: 2px solid #CE1126 !important;
+  }
+  .bottom-nav-item.active { color: #FFD700 !important; }
+  .bottom-nav-item.active .bottom-nav-icon { color: #FFD700 !important; }
+  .btn-institucional.filled { background: linear-gradient(135deg,#006847,#004d35) !important; }
+  .btn-institucional.dorado { border-color: #CE1126 !important; color: #CE1126 !important; }
+  .card { border-top: 2px solid rgba(0,104,71,0.12) !important; }
 `;
 
 // ─── Letras VACACIONES con Easter Egg ────────────────────
