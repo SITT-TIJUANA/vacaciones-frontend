@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vacaciones-sitt-v8';
+const CACHE_NAME = 'vacaciones-sitt-v9';
 const STATIC_ASSETS = [
   '/vacaciones-frontend/',
   '/vacaciones-frontend/index.html',
