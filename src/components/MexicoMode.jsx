@@ -76,7 +76,7 @@ function PantallaGol({ onContinuar }) {
       setPartido({ rival: 'Sudáfrica', golMex: 2, golRival: 0,
         fecha: '11 de junio', competicion: 'Copa del Mundo 2026',
         gano: true, empato: false,
-        goles: 'Quiñones 8' · Jiménez 65'',
+        goles: "Quiñones 8' · Jiménez 65'",
         proximo: '¡Vamos por Corea del Sur! 🔥' });
     });
   }, []);
