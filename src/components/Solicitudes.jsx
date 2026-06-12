@@ -250,13 +250,15 @@ export default function Solicitudes({ onActualizarNotif }) {
       <div className="section-header">
         <h2 className="section-title">Solicitudes</h2>
         <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
-          <select className="form-control" style={{ width:180 }} value={filtroEmpleado} onChange={e => setFiltroEmpleado(e.target.value)}>
-            <option value="">Todos los empleados</option>
-            {[...new Set(solicitudes.map(s => s.empleado_id).filter(Boolean))].map(id => {
-              const s = solicitudes.find(x => x.empleado_id === id);
-              return <option key={id} value={id}>{s?.nombre} {s?.apellido_paterno}</option>;
-            })}
-          </select>
+          {esAdmin && (
+            <select className="form-control" style={{ width:180 }} value={filtroEmpleado} onChange={e => setFiltroEmpleado(e.target.value)}>
+              <option value="">Todos los empleados</option>
+              {[...new Set(solicitudes.map(s => s.empleado_id).filter(Boolean))].map(id => {
+                const s = solicitudes.find(x => x.empleado_id === id);
+                return <option key={id} value={id}>{s?.nombre} {s?.apellido_paterno}</option>;
+              })}
+            </select>
+          )}
           <select className="form-control" style={{ width:150 }} value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}>
             <option value="">Todos</option>
             <option value="pendiente">⏳ Pendientes</option>
@@ -323,10 +325,24 @@ export default function Solicitudes({ onActualizarNotif }) {
                     {s.aprobado_por_username && ` · Por: ${s.aprobado_por_username}`}
                   </div>
                 </div>
-                {esAdmin && s.estatus === 'pendiente' && (
-                  <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                    <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>✅ Aprobar</button>
-                    <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>❌ Rechazar</button>
+                {esAdmin && (
+                  <div style={{ display:'flex', gap:6, flexShrink:0, flexWrap:'wrap' }}>
+                    {s.estatus === 'pendiente' && <>
+                      <button className="btn-institucional dorado btn-sm" onClick={() => resolver(s.id, 'aprobada')}>✅ Aprobar</button>
+                      <button className="btn-institucional peligro btn-sm" onClick={() => setResolviendo({ id:s.id })}>❌ Rechazar</button>
+                    </>}
+                    {s.estatus === 'aprobada' && (
+                      <button className="btn-institucional dorado btn-sm" style={{ fontSize:11 }}
+                        onClick={async () => {
+                          try {
+                            const r = await api.get(`/api/empleados/${s.empleado_id}`);
+                            const emp = r.data.empleado || r.data;
+                            generarPermiso({ ...s, ...emp, dias_solicitados: s.dias_solicitados });
+                          } catch(e) { generarPermiso({ ...s }); }
+                        }}>
+                        📄 Permiso
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
