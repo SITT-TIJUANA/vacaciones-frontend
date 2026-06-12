@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import escudoSitt from '../assets/escudo-sitt.png';
-import { LoginMexicoEggs } from '../components/MexicoMode';
+import { VacacionesLogo, PenaltyGame, PantallaGol } from '../components/MexicoMode';
 
 export default function Login() {
   const { login } = useAuth();
@@ -12,6 +12,7 @@ export default function Login() {
   const [cargando, setCargando] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const canvasRef = useRef(null);
+  const [mxFase, setMxFase] = useState('idle'); // idle | juego | gol
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -50,6 +51,11 @@ export default function Login() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
   }, []);
 
+  const onMxActivar = () => setMxFase('juego');
+  const onMxGol = () => setMxFase('gol');
+  const onMxContinuar = () => { localStorage.setItem('mx-tema','1'); setMxFase('idle'); };
+  const onMxSkip = () => setMxFase('idle');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.username || !form.password) { setError('Completa todos los campos'); return; }
@@ -74,7 +80,8 @@ export default function Login() {
             <div className="login-title-main">
               H. XXV Ayuntamiento de <em>Tijuana</em>
             </div>
-            <div className="login-subtitle">SITT — Control de Vacaciones</div>
+            <div className="login-subtitle">SITT</div>
+            <VacacionesLogo onActivar={onMxActivar} />
           </div>
         </div>
 
@@ -133,7 +140,7 @@ export default function Login() {
         </p>
       </div>
     </div>
-    <LoginMexicoEggs />
+    
   </>
   );
 }
