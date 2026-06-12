@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vacaciones-sitt-v1';
+const CACHE_NAME = 'vacaciones-sitt-v8';
 const STATIC_ASSETS = [
   '/vacaciones-frontend/',
   '/vacaciones-frontend/index.html',
@@ -7,14 +7,12 @@ const STATIC_ASSETS = [
   '/vacaciones-frontend/icon-192x192.png',
   '/vacaciones-frontend/icon-512x512.png',
 ];
-
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
-
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -23,9 +21,7 @@ self.addEventListener('activate', (e) => {
   );
   self.clients.claim();
 });
-
 self.addEventListener('fetch', (e) => {
-  // No cachear llamadas al API
   if (e.request.url.includes('onrender.com') || e.request.url.includes('/api/')) {
     return;
   }
