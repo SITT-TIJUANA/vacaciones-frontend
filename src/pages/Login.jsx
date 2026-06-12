@@ -12,6 +12,13 @@ export default function Login() {
   const [cargando, setCargando] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const canvasRef = useRef(null);
+
+  // Limpiar tema México al cargar login — siempre empieza normal
+  useEffect(() => {
+    localStorage.removeItem('mx-tema');
+    const el = document.getElementById('mx-style');
+    if (el) el.remove();
+  }, []);
   const [mxFase, setMxFase] = useState('idle'); // idle | juego | gol
 
   useEffect(() => {
