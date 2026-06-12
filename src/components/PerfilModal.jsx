@@ -36,6 +36,10 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
       .catch(console.error)
       .finally(() => setCargando(false));
     cargarContactos();
+    // Cargar permisos del empleado
+    api.get(`/api/permisos/empleado/${empleadoId}`)
+      .then(r => setPermisos(r.data))
+      .catch(console.error);
   }, [empleadoId]);
 
   useEffect(() => {
@@ -100,6 +104,10 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
         await api.put(`/api/contactos-emergencia/${modalContacto.id}`, formContacto);
       }
       cargarContactos();
+    // Cargar permisos del empleado
+    api.get(`/api/permisos/empleado/${empleadoId}`)
+      .then(r => setPermisos(r.data))
+      .catch(console.error);
       setModalContacto(null);
     } catch(e) { alert(e.response?.data?.error || 'Error al guardar'); }
     finally { setGuardandoContacto(false); }
@@ -110,6 +118,10 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
     try {
       await api.delete(`/api/contactos-emergencia/${id}`);
       cargarContactos();
+    // Cargar permisos del empleado
+    api.get(`/api/permisos/empleado/${empleadoId}`)
+      .then(r => setPermisos(r.data))
+      .catch(console.error);
     } catch(e) { alert('Error al eliminar'); }
   };
 
