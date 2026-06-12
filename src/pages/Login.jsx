@@ -12,7 +12,7 @@ export default function Login() {
   const [cargando, setCargando] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const canvasRef = useRef(null);
-  const { activar: onMxActivar, GameComponent: MexicoGame } = useMexicoGame();
+  const { activar: onMxActivar, GameComponent: MexicoGame, temaActivo } = useMexicoGame();
 
   // Siempre empezar con tema normal al abrir login
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function Login() {
               H. XXV Ayuntamiento de <em>Tijuana</em>
             </div>
             <div className="login-subtitle">SITT</div>
-            <VacacionesLogo onActivar={onMxActivar} />
+            {!temaActivo && <VacacionesLogo onActivar={onMxActivar} />}
           </div>
         </div>
 
