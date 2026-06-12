@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import escudoSitt from '../assets/escudo-sitt.png';
-import { VacacionesLogo, PenaltyGame, PantallaGol } from '../components/MexicoMode';
+import { VacacionesLogo, useMexicoGame } from '../components/MexicoMode';
 
 export default function Login() {
   const { login } = useAuth();
@@ -21,8 +21,7 @@ export default function Login() {
       document.body.classList.remove('tema-mexico');
     }
   }, []);
-  const [mxFase, setMxFase] = useState('idle'); // idle | juego | gol
-  const [mxTema, setMxTema] = useState(false);
+  const { activar: onMxActivar, GameComponent: MexicoGame } = useMexicoGame();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,7 +90,7 @@ export default function Login() {
               H. XXV Ayuntamiento de <em>Tijuana</em>
             </div>
             <div className="login-subtitle">SITT</div>
-            {!mxTema && <VacacionesLogo onActivar={onMxActivar} />}
+            <VacacionesLogo onActivar={onMxActivar} />
           </div>
         </div>
 
