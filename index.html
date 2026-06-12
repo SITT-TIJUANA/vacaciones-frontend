@@ -2,45 +2,32 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Vacaciones SITT</title>
-
-    <!-- PWA -->
-    <link rel="manifest" href="/vacaciones-frontend/manifest.json" />
-    <meta name="theme-color" content="#6B0F2B" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Vacaciones SITT" />
-    <link rel="apple-touch-icon" href="/vacaciones-frontend/apple-touch-icon.png" />
-
-    <!-- SEO -->
-    <meta name="description" content="Sistema de Control de Vacaciones SITT - Ayuntamiento de Tijuana" />
-
-    <!-- Fonts -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Control de Vacaciones | SITT – Ayuntamiento de Tijuana</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,900&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <script>
-      // Registrar Service Worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/vacaciones-frontend/sw.js')
-            .then(reg => console.log('SW registrado:', reg.scope))
-            .catch(err => console.log('SW error:', err));
-        });
+      // Aplicar tema México ANTES de que React cargue
+      if (localStorage.getItem('mx-tema') === '1') {
+        var s = document.createElement('style');
+        s.id = 'mx-style';
+        s.textContent = [
+          ':root{--g:#006847!important;--d:#CE1126!important;--d-dk:#a30d1e!important;',
+          '--g-soft:rgba(0,104,71,0.07)!important;--g10:rgba(0,104,71,0.1)!important;',
+          '--g20:rgba(0,104,71,0.2)!important;--g60:rgba(0,104,71,0.6)!important;}',
+          '.dash-header{background:rgba(0,61,42,0.97)!important;',
+          'border-bottom:1px solid rgba(206,17,38,0.4)!important;',
+          'box-shadow:0 4px 30px rgba(0,40,25,0.5)!important;}',
+          '.bottom-nav{background:rgba(0,40,25,0.97)!important;',
+          'border-top:1px solid rgba(206,17,38,0.4)!important;',
+          'box-shadow:0 -8px 40px rgba(0,40,25,0.5)!important;}',
+          '.bottom-nav-item.active{background:rgba(206,17,38,0.15)!important;}',
+          '.btn-institucional.filled{background:linear-gradient(135deg,#006847,#004d35)!important;}',
+          '.btn-institucional.dorado{border-color:#CE1126!important;color:#CE1126!important;}'
+        ].join('');
+        document.head.appendChild(s);
       }
-      // Fix HashRouter redirect
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) {
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))
     </script>
   </head>
   <body>
