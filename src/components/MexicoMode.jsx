@@ -94,6 +94,7 @@ function PantallaGol({ onContinuar }) {
         </div>
         <div style={{textAlign:'center',marginTop:8,fontSize:'clamp(10px,2vw,12px)',color:'rgba(255,255,255,0.65)',fontWeight:600}}>⚽ {partido.goles}</div>
         <div style={{textAlign:'center',marginTop:6,fontSize:'clamp(11px,2.2vw,13px)',color:'#FFD700',fontWeight:800}}>{partido.proximo}</div>
+        <div style={{textAlign:'center',marginTop:4,fontSize:'clamp(9px,1.8vw,11px)',color:'rgba(255,255,255,0.6)',fontWeight:600}}>📅 Jueves 18 de junio · 19:00 hrs · Estadio Akron, Guadalajara</div>
       </div>
 
       <button onClick={onContinuar} style={{marginTop:24,padding:'14px 36px',background:'linear-gradient(135deg,#CE1126,#a30d1e)',border:'2.5px solid #FFD700',borderRadius:50,color:'#FFD700',fontFamily:'Montserrat,sans-serif',fontWeight:900,fontSize:'clamp(13px,2.8vw,17px)',cursor:'pointer',zIndex:2,position:'relative',boxShadow:'0 8px 30px rgba(206,17,38,0.5)',animation:'subir 0.5s ease 0.9s both'}}>
