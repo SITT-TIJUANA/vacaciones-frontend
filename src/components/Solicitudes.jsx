@@ -17,7 +17,7 @@ async function generarPermiso(s) {
   let logoBase64 = null;
 
   try {
-    const logoRes = await fetch('/vacaciones-frontend/logo-sitt.png');
+    const logoRes = await fetch(`${window.location.origin}/vacaciones-frontend/escudo-sitt.png?t=${Date.now()}`);
     const logoBlob = await logoRes.blob();
     logoBase64 = await new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(logoBlob); });
   } catch(e) {}
