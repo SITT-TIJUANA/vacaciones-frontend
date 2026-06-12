@@ -149,7 +149,14 @@ export default function Login() {
     </div>
     
     {mxFase==='juego' && <PenaltyGame onGol={()=>setMxFase('gol')} onSkip={()=>setMxFase('idle')}/>}
-    {mxFase==='gol' && <PantallaGol onContinuar={()=>{ localStorage.setItem('mx-tema','1'); setMxFase('idle'); }}/>}
+    {mxFase==='gol' && <PantallaGol onContinuar={()=>{
+      localStorage.setItem('mx-tema','1');
+      // Aplicar tema México al login inmediatamente
+      let el = document.getElementById('mx-style');
+      if (!el) { el = document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
+      el.textContent = `:root{--g:#006847!important;--d:#CE1126!important;--g-soft:rgba(0,104,71,0.07)!important;--g10:rgba(0,104,71,0.1)!important;--g20:rgba(0,104,71,0.2)!important;--g60:rgba(0,104,71,0.6)!important;} .login-page{background:linear-gradient(135deg,#003d2a 0%,#006847 50%,#004d35 100%)!important;} .login-container{border-top:3px solid #CE1126!important;} .btn-institucional.filled{background:linear-gradient(135deg,#006847,#004d35)!important;} .login-header{border-bottom-color:rgba(0,104,71,0.2)!important;}`;
+      setMxFase('idle');
+    }}/>}}
   </>
   );
 }
