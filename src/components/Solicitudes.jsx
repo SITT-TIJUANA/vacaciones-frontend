@@ -1,6 +1,204 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { useAuth } from '../context/AuthContext';
+
+async function generarPermiso(s) {
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'letter' });
+
+  const GUINDA = [107,15,43];
+  const DORADO = [201,168,76];
+  const BLANCO = [255,255,255];
+  const GRIS   = [248,245,245];
+
+  // Obtener foto del empleado si tiene
+  let fotoBase64 = null;
+  let logoBase64 = null;
+
+  try {
+    const logoRes = await fetch('/vacaciones-frontend/logo-sitt.png');
+    const logoBlob = await logoRes.blob();
+    logoBase64 = await new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(logoBlob); });
+  } catch(e) {}
+
+  if (s.foto_url) {
+    try {
+      const r = await fetch(`/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`);
+      const blob = await r.blob();
+      fotoBase64 = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); });
+    } catch(e) {}
+  }
+
+  const pageW = 215.9;
+  const pageH = 279.4;
+  const hoy = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+
+  // ── HEADER GUINDA ──
+  doc.setFillColor(...GUINDA);
+  doc.rect(0, 0, pageW, 48, 'F');
+  doc.setFillColor(...DORADO);
+  doc.rect(0, 48, pageW, 2.5, 'F');
+
+  // Logo
+  if (logoBase64) {
+    try { doc.addImage(logoBase64, 'PNG', 8, 6, 30, 30); } catch(e) {}
+  }
+
+  // Foto empleado
+  if (fotoBase64) {
+    try {
+      doc.addImage(fotoBase64, 'JPEG', pageW-46, 4, 36, 36);
+      doc.setDrawColor(...DORADO);
+      doc.setLineWidth(1);
+      doc.rect(pageW-46, 4, 36, 36);
+    } catch(e) {}
+  }
+
+  // Textos header
+  doc.setTextColor(...BLANCO);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.text('H. XXV Ayuntamiento de Tijuana', 44, 14);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text('Sistema Integral de Transporte de Tijuana — SITT', 44, 21);
+  doc.text('Dirección de Operaciones', 44, 27);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...DORADO);
+  doc.text('PERMISO DE VACACIONES', 44, 35);
+  doc.setTextColor(...BLANCO);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.text(`Expedido el: ${hoy}`, 44, 41);
+
+  // ── DATOS EMPLEADO ──
+  let y = 62;
+
+  // Recuadro datos
+  doc.setFillColor(...GRIS);
+  doc.setDrawColor(...GUINDA);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(14, y, pageW-28, 44, 3, 3, 'FD');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...GUINDA);
+  doc.text('DATOS DEL EMPLEADO', 20, y+8);
+
+  doc.setDrawColor(...DORADO);
+  doc.setLineWidth(0.5);
+  doc.line(20, y+10, pageW-20, y+10);
+
+  const datos = [
+    ['Nombre completo:', `${s.nombre||''} ${s.apellido_paterno||''} ${s.apellido_materno||''}`.trim()],
+    ['Puesto:', s.puesto || '—'],
+    ['Departamento:', s.departamento || '—'],
+    ['No. de empleado:', s.numero_empleado || '—'],
+  ];
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(50,50,50);
+  datos.forEach(([label, valor], i) => {
+    const col = i < 2 ? 20 : 115;
+    const row = y + 16 + (i % 2) * 12;
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(...GUINDA);
+    doc.text(label, col, row);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(50,50,50);
+    doc.text(valor, col + 36, row);
+  });
+
+  // ── PERIODO VACACIONAL ──
+  y += 56;
+
+  doc.setFillColor(...GUINDA);
+  doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'F');
+  doc.setTextColor(...BLANCO);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.text('PERIODO VACACIONAL AUTORIZADO', pageW/2, y+7, { align:'center' });
+
+  y += 18;
+
+  // Fechas en grande
+  const fi = (() => { const f=s.fecha_inicio; if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); })();
+  const ff = (() => { const f=s.fecha_fin; if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); })();
+
+  // 3 cajas: inicio, flechita, fin
+  const cajaW = 60;
+  doc.setFillColor(240,235,235);
+  doc.setDrawColor(...GUINDA);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(14, y, cajaW, 28, 3, 3, 'FD');
+  doc.roundedRect(pageW-14-cajaW, y, cajaW, 28, 3, 3, 'FD');
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...GUINDA);
+  doc.text('FECHA DE INICIO', 14+cajaW/2, y+8, {align:'center'});
+  doc.text('FECHA DE FIN', pageW-14-cajaW/2, y+8, {align:'center'});
+
+  doc.setFontSize(9);
+  doc.setTextColor(30,30,30);
+  doc.text(fi, 14+cajaW/2, y+18, {align:'center'});
+  doc.text(ff, pageW-14-cajaW/2, y+18, {align:'center'});
+
+  // Flecha central
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(...GUINDA);
+  doc.text('→', pageW/2, y+18, {align:'center'});
+
+  // Total días
+  y += 36;
+  doc.setFillColor(...GUINDA);
+  doc.roundedRect(pageW/2-30, y, 60, 16, 3, 3, 'F');
+  doc.setTextColor(...DORADO);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text(`${s.dias_solicitados} días hábiles`, pageW/2, y+10, {align:'center'});
+
+  // ── FIRMAS ──
+  y += 36;
+
+  doc.setDrawColor(180,180,180);
+  doc.setLineWidth(0.3);
+
+  const firma1X = 30, firma2X = pageW/2-20, firma3X = pageW-70;
+  const firmaY = y + 24;
+
+  [firma1X, firma2X, firma3X].forEach(x => {
+    doc.line(x, firmaY, x+60, firmaY);
+  });
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...GUINDA);
+  doc.text('Firma del Empleado', firma1X+30, firmaY+6, {align:'center'});
+  doc.text('Vo.Bo. Recursos Humanos', firma2X+30, firmaY+6, {align:'center'});
+  doc.text('Vo.Bo. Administración', firma3X+30, firmaY+6, {align:'center'});
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(150,150,150);
+  doc.text(`${s.nombre||''} ${s.apellido_paterno||''}`.trim(), firma1X+30, firmaY+11, {align:'center'});
+
+  // ── FOOTER ──
+  doc.setFillColor(...GUINDA);
+  doc.rect(0, pageH-14, pageW, 14, 'F');
+  doc.setFillColor(...DORADO);
+  doc.rect(0, pageH-16, pageW, 2, 'F');
+  doc.setTextColor(...BLANCO);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.text('Sistema de Control de Vacaciones — SITT · H. XXV Ayuntamiento de Tijuana', pageW/2, pageH-6, {align:'center'});
+
+  doc.save(`Permiso_${(s.nombre||'').replace(/\s/g,'_')}_${s.fecha_inicio?.substring(0,10)||''}.pdf`);
+}
 
 export default function Solicitudes({ onActualizarNotif }) {
   const { usuario, rolEfectivo } = useAuth();
@@ -8,6 +206,7 @@ export default function Solicitudes({ onActualizarNotif }) {
   const [cargando, setCargando] = useState(true);
   const [modalNueva, setModalNueva] = useState(false);
   const [filtroEstatus, setFiltroEstatus] = useState('');
+  const [filtroEmpleado, setFiltroEmpleado] = useState('');
   const [resolviendo, setResolviendo] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -44,13 +243,20 @@ export default function Solicitudes({ onActualizarNotif }) {
     }
   };
 
-  const filtradas = solicitudes.filter(s => !filtroEstatus || s.estatus === filtroEstatus);
+  const filtradas = solicitudes.filter(s => (!filtroEstatus || s.estatus === filtroEstatus) && (!filtroEmpleado || s.empleado_id === filtroEmpleado));
 
   return (
     <div className="fade-in">
       <div className="section-header">
         <h2 className="section-title">Solicitudes</h2>
         <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+          <select className="form-control" style={{ width:180 }} value={filtroEmpleado} onChange={e => setFiltroEmpleado(e.target.value)}>
+            <option value="">Todos los empleados</option>
+            {[...new Set(solicitudes.map(s => s.empleado_id).filter(Boolean))].map(id => {
+              const s = solicitudes.find(x => x.empleado_id === id);
+              return <option key={id} value={id}>{s?.nombre} {s?.apellido_paterno}</option>;
+            })}
+          </select>
           <select className="form-control" style={{ width:150 }} value={filtroEstatus} onChange={e => setFiltroEstatus(e.target.value)}>
             <option value="">Todos</option>
             <option value="pendiente">⏳ Pendientes</option>
