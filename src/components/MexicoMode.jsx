@@ -513,17 +513,124 @@ const MEXICO_CSS = `
   .card { border-top: 2px solid rgba(0,104,71,0.15) !important; }
 `;
 
-// ── Componente principal ──
+// ── Elementos flotantes en login ──
+export function LoginMexicoEggs() {
+  const [fase, setFase] = useState('idle'); // idle | juego | gol
+  const [balPos, setBalPos] = useState({ x: 15, y: 60 });
+  const [logoPos, setLogoPos] = useState({ x: 78, y: 25 });
+  const [balDir, setBalDir] = useState({ x: 0.4, y: -0.3 });
+  const [logoDir, setLogoDir] = useState({ x: -0.3, y: 0.4 });
+  const animRef = useRef(null);
+
+  // Animación de rebote
+  useEffect(() => {
+    if (fase !== 'idle') return;
+    const animate = () => {
+      setBalPos(p => {
+        let nx = p.x + balDir.x;
+        let ny = p.y + balDir.y;
+        if (nx <= 2 || nx >= 88) { balDir.x *= -1; nx = Math.max(2, Math.min(88, nx)); }
+        if (ny <= 5 || ny >= 88) { balDir.y *= -1; ny = Math.max(5, Math.min(88, ny)); }
+        return { x: nx, y: ny };
+      });
+      setLogoPos(p => {
+        let nx = p.x + logoDir.x;
+        let ny = p.y + logoDir.y;
+        if (nx <= 2 || nx >= 88) { logoDir.x *= -1; nx = Math.max(2, Math.min(88, nx)); }
+        if (ny <= 5 || ny >= 88) { logoDir.y *= -1; ny = Math.max(5, Math.min(88, ny)); }
+        return { x: nx, y: ny };
+      });
+      animRef.current = requestAnimationFrame(animate);
+    };
+    animRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [fase]);
+
+  const activar = () => { cancelAnimationFrame(animRef.current); setFase('juego'); };
+  const onGol = () => setFase('gol');
+  const onContinuar = () => { localStorage.setItem('mx-tema','1'); setFase('idle'); };
+  const onSkip = () => setFase('idle');
+
+  if (fase === 'juego') return <PenaltyGame onGol={onGol} onSkip={onSkip} />;
+  if (fase === 'gol') return <PantallaGol onContinuar={onContinuar} />;
+
+  return (
+    <>
+      {/* Balón rebotando */}
+      <div
+        onClick={activar}
+        title="⚽ ¡Haz clic!"
+        style={{
+          position:'fixed',
+          left:`${balPos.x}%`, top:`${balPos.y}%`,
+          zIndex:999, cursor:'pointer',
+          animation:'rotateBal 1.5s linear infinite',
+          filter:'drop-shadow(0 4px 12px rgba(0,0,0,0.25))',
+          transition:'left 0.016s linear, top 0.016s linear',
+          userSelect:'none',
+        }}>
+        {/* Balón SVG con texto Mundial 2026 */}
+        <svg width="54" height="54" viewBox="0 0 54 54">
+          <defs>
+            <radialGradient id="balGrad" cx="38%" cy="32%">
+              <stop offset="0%" stopColor="#ffffff"/>
+              <stop offset="60%" stopColor="#e8e8e8"/>
+              <stop offset="100%" stopColor="#999"/>
+            </radialGradient>
+          </defs>
+          {/* Sombra */}
+          <ellipse cx="27" cy="51" rx="12" ry="3" fill="rgba(0,0,0,0.15)"/>
+          {/* Balón */}
+          <circle cx="27" cy="26" r="22" fill="url(#balGrad)" stroke="#ccc" strokeWidth="0.5"/>
+          {/* Pentágonos negros */}
+          <polygon points="27,8 33,13 31,20 23,20 21,13" fill="#222" opacity="0.85"/>
+          <polygon points="8,20 14,16 20,20 18,27 11,27" fill="#222" opacity="0.85"/>
+          <polygon points="46,20 40,16 34,20 36,27 43,27" fill="#222" opacity="0.85"/>
+          <polygon points="12,38 11,31 18,29 22,35 18,41" fill="#222" opacity="0.85"/>
+          <polygon points="42,38 43,31 36,29 32,35 36,41" fill="#222" opacity="0.85"/>
+          <polygon points="27,44 22,40 24,34 30,34 32,40" fill="#222" opacity="0.85"/>
+          {/* Brillo */}
+          <ellipse cx="20" cy="17" rx="6" ry="4" fill="rgba(255,255,255,0.5)" transform="rotate(-20,20,17)"/>
+          {/* Texto Mundial 2026 */}
+          <text x="27" y="25" textAnchor="middle" fontSize="5.5" fontFamily="Arial,sans-serif" fontWeight="900" fill="#006847" letterSpacing="0.2">MUNDIAL</text>
+          <text x="27" y="32" textAnchor="middle" fontSize="7" fontFamily="Arial,sans-serif" fontWeight="900" fill="#CE1126">2026</text>
+        </svg>
+        <style>{`@keyframes rotateBal{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+      </div>
+
+      {/* Escudo Tri flotando */}
+      <div
+        onClick={activar}
+        title="🇲🇽 ¡Haz clic!"
+        style={{
+          position:'fixed',
+          left:`${logoPos.x}%`, top:`${logoPos.y}%`,
+          zIndex:999, cursor:'pointer',
+          animation:'triFloat 3s ease-in-out infinite',
+          filter:'drop-shadow(0 6px 16px rgba(0,104,71,0.4))',
+          transition:'left 0.016s linear, top 0.016s linear',
+          userSelect:'none',
+        }}>
+        <img src="/vacaciones-frontend/logo-mexico-tri.png" alt="🇲🇽"
+          style={{ width:44, height:44, display:'block', objectFit:'contain' }}/>
+        <style>{`
+          @keyframes triFloat{
+            0%,100%{transform:perspective(200px) rotateY(-12deg) scale(1)}
+            50%{transform:perspective(200px) rotateY(12deg) scale(1.06)}
+          }
+        `}</style>
+      </div>
+    </>
+  );
+}
+
+// ── Componente principal (dentro del sistema) ──
 export default function MexicoMode() {
-  const [estado, setEstado] = useState(() => ({
-    mostrarJuego: !sessionStorage.getItem('mx-visto'),
-    mostrarGol: false,
-    temaMexico: localStorage.getItem('mx-tema') === '1',
-  }));
+  const [temaMexico] = useState(() => localStorage.getItem('mx-tema') === '1');
   const styleEl = useRef(null);
 
   useEffect(() => {
-    if (estado.temaMexico) {
+    if (temaMexico) {
       if (!styleEl.current) {
         const el = document.createElement('style');
         el.id = 'mx-style';
@@ -531,42 +638,18 @@ export default function MexicoMode() {
         styleEl.current = el;
       }
       styleEl.current.textContent = MEXICO_CSS;
-    } else {
+    }
+    return () => {
       const el = document.getElementById('mx-style');
       if (el) el.remove();
-      styleEl.current = null;
-    }
-  }, [estado.temaMexico]);
+    };
+  }, [temaMexico]);
 
-  const onGol = () => setEstado(e => ({...e, mostrarGol: true}));
+  const [mostrarBandera, setMostrarBandera] = useState(temaMexico);
 
-  const onContinuar = () => {
-    sessionStorage.setItem('mx-visto','1');
-    localStorage.setItem('mx-tema','1');
-    setEstado({ mostrarJuego:false, mostrarGol:false, temaMexico:true });
-  };
-
-  const onSkip = () => {
-    sessionStorage.setItem('mx-visto','1');
-    setEstado(e => ({...e, mostrarJuego:false, mostrarGol:false}));
-  };
-
-  const onQuitarTema = () => {
+  if (!mostrarBandera) return null;
+  return <BanderaMexico onQuitarTema={() => {
     localStorage.setItem('mx-tema','0');
-    setEstado(e => ({...e, temaMexico:false}));
-  };
-
-  return (
-    <>
-      {estado.mostrarJuego && !estado.mostrarGol && (
-        <PenaltyGame onGol={onGol} onSkip={onSkip} />
-      )}
-      {estado.mostrarGol && (
-        <PantallaGol onContinuar={onContinuar} />
-      )}
-      {!estado.mostrarJuego && !estado.mostrarGol && estado.temaMexico && (
-        <BanderaMexico onQuitarTema={onQuitarTema} />
-      )}
-    </>
-  );
+    setMostrarBandera(false);
+  }} />;
 }
