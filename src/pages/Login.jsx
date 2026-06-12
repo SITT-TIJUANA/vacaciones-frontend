@@ -148,6 +148,8 @@ export default function Login() {
       </div>
     </div>
     
+    {mxFase==='juego' && <PenaltyGame onGol={()=>setMxFase('gol')} onSkip={()=>setMxFase('idle')}/>}
+    {mxFase==='gol' && <PantallaGol onContinuar={()=>{ localStorage.setItem('mx-tema','1'); setMxFase('idle'); }}/>}
   </>
   );
 }
