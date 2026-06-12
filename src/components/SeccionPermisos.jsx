@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function fmtFecha(f) {
   if (!f) return '—';
@@ -8,6 +9,8 @@ function fmtFecha(f) {
 }
 
 export default function SeccionPermisos() {
+  const { usuario, rolEfectivo } = useAuth();
+  const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
   const [permisos, setPermisos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [subiendo, setSubiendo] = useState(null);
@@ -18,7 +21,8 @@ export default function SeccionPermisos() {
 
   const cargar = () => {
     setCargando(true);
-    api.get('/api/permisos')
+    const url = esAdmin ? '/api/permisos' : `/api/permisos/empleado/${usuario?.empleado_id}`;
+    api.get(url)
       .then(r => setPermisos(r.data))
       .catch(console.error)
       .finally(() => setCargando(false));
@@ -84,7 +88,7 @@ export default function SeccionPermisos() {
 
       {/* Filtros */}
       <div className="card" style={{ padding:'16px 20px', marginBottom:20, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
-        <input className="form-control" style={{ flex:1, minWidth:180 }} placeholder="Buscar empleado..." value={busqueda} onChange={e=>setBusqueda(e.target.value)} />
+        {esAdmin && <input className="form-control" style={{ flex:1, minWidth:180 }} placeholder="Buscar empleado..." value={busqueda} onChange={e=>setBusqueda(e.target.value)} />}
         <div style={{ display:'flex', gap:8 }}>
           {[['todos','Todos'],['pendientes','⏳ Pendientes'],['firmados','✅ Firmados']].map(([v,l]) => (
             <button key={v} onClick={()=>setFiltro(v)}
@@ -151,53 +155,36 @@ export default function SeccionPermisos() {
                       </button>
                     )}
 
-                    {/* Subir foto */}
-                    <div style={{ position:'relative' }}>
-                      <input
-                        ref={el => inputRef.current[p.id] = el}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        style={{ display:'none' }}
-                        onChange={e => subirFoto(p.id, e.target.files[0])}
-                      />
-                      <button className="btn-institucional dorado btn-sm" style={{ fontSize:11 }}
-                        disabled={subiendo === p.id}
-                        onClick={() => {
-                          if (inputRef.current[p.id]) {
-                            inputRef.current[p.id].removeAttribute('capture');
-                            inputRef.current[p.id].click();
-                          }
-                        }}>
-                        {subiendo === p.id ? '⏳...' : p.firmado ? '🔄 Cambiar foto' : '📤 Subir firmado'}
-                      </button>
-                    </div>
-
-                    {/* Tomar foto */}
-                    <div style={{ position:'relative' }}>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        style={{ display:'none' }}
-                        ref={el => { if(el) el.id = `cam-${p.id}`; }}
-                        onChange={e => subirFoto(p.id, e.target.files[0])}
-                        id={`cam-${p.id}`}
-                      />
-                      <button className="btn-institucional btn-sm" style={{ fontSize:11 }}
-                        disabled={subiendo === p.id}
-                        onClick={() => document.getElementById(`cam-${p.id}`)?.click()}>
-                        📸 Tomar foto
-                      </button>
-                    </div>
-
-                    {/* Quitar foto */}
-                    {p.firmado && (
-                      <button className="btn-institucional peligro btn-sm" style={{ fontSize:11 }}
-                        onClick={() => quitarFoto(p.id)}>
-                        🗑️
-                      </button>
-                    )}
+                    {/* Subir/quitar foto — solo admin/rrhh */}
+                    {esAdmin && <>
+                      <div style={{ position:'relative' }}>
+                        <input
+                          ref={el => inputRef.current[p.id] = el}
+                          type="file"
+                          accept="image/*"
+                          style={{ display:'none' }}
+                          onChange={e => subirFoto(p.id, e.target.files[0])}
+                        />
+                        <button className="btn-institucional dorado btn-sm" style={{ fontSize:11 }}
+                          disabled={subiendo === p.id}
+                          onClick={() => { if(inputRef.current[p.id]) { inputRef.current[p.id].removeAttribute('capture'); inputRef.current[p.id].click(); } }}>
+                          {subiendo === p.id ? '⏳...' : p.firmado ? '🔄 Cambiar foto' : '📤 Subir firmado'}
+                        </button>
+                      </div>
+                      <div style={{ position:'relative' }}>
+                        <input type="file" accept="image/*" capture="environment" style={{ display:'none' }}
+                          id={`cam-${p.id}`} onChange={e => subirFoto(p.id, e.target.files[0])} />
+                        <button className="btn-institucional btn-sm" style={{ fontSize:11 }}
+                          disabled={subiendo === p.id}
+                          onClick={() => document.getElementById(`cam-${p.id}`)?.click()}>
+                          📸 Tomar foto
+                        </button>
+                      </div>
+                      {p.firmado && (
+                        <button className="btn-institucional peligro btn-sm" style={{ fontSize:11 }}
+                          onClick={() => quitarFoto(p.id)}>🗑️</button>
+                      )}
+                    </>}
                   </div>
                 </div>
               </div>
