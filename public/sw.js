@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vacaciones-sitt-v9';
+const CACHE_NAME = 'vacaciones-sitt-v10';
 const STATIC_ASSETS = [
   '/vacaciones-frontend/',
   '/vacaciones-frontend/index.html',
@@ -22,7 +22,10 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 self.addEventListener('fetch', (e) => {
-  if (e.request.url.includes('onrender.com') || e.request.url.includes('/api/')) {
+  // Nunca cachear llamadas al API ni auth
+  if (e.request.url.includes('onrender.com') || 
+      e.request.url.includes('/api/') ||
+      e.request.url.includes('auth')) {
     return;
   }
   e.respondWith(
