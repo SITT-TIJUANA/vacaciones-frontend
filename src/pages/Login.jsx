@@ -13,10 +13,17 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const canvasRef = useRef(null);
 
-  // Solo quitar el CSS visual al cargar login, pero NO borrar localStorage
+  // Si el tema México está activo, mantenerlo incluso en el login
   useEffect(() => {
-    const el = document.getElementById('mx-style');
-    if (el) el.remove();
+    if (localStorage.getItem('mx-tema') === '1') {
+      let el = document.getElementById('mx-style');
+      if (!el) {
+        el = document.createElement('style');
+        el.id = 'mx-style';
+        document.head.appendChild(el);
+      }
+      el.textContent = `.dash-header{background:rgba(0,61,42,0.97)!important;border-bottom:1px solid rgba(206,17,38,0.4)!important;}.bottom-nav{background:rgba(0,40,25,0.97)!important;border-top:1px solid rgba(206,17,38,0.4)!important;}:root{--g:#006847!important;--d:#CE1126!important;--g-soft:rgba(0,104,71,0.07)!important;--g10:rgba(0,104,71,0.1)!important;--g20:rgba(0,104,71,0.2)!important;--g60:rgba(0,104,71,0.6)!important;}`;
+    }
   }, []);
   const [mxFase, setMxFase] = useState('idle'); // idle | juego | gol
   const [mxTema, setMxTema] = useState(false);
