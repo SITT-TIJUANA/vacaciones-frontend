@@ -242,15 +242,16 @@ function BanderaMexico() {
 
 // ─── Hook para usar el juego desde Login ──────────────────
 export function useMexicoGame() {
-  const [fase, setFase] = useState('idle'); // idle | juego | gol
+  const [fase, setFase] = useState('idle');
+  const [temaActivo, setTemaActivo] = useState(false);
 
   const activar = () => setFase('juego');
   const onGol = () => setFase('gol');
   const onSkip = () => setFase('idle');
   const onContinuar = () => {
-    // Activar tema México para esta sesión
     sessionStorage.setItem('mx-tema','1');
     inyectarCSS();
+    setTemaActivo(true);
     setFase('idle');
   };
 
@@ -258,10 +259,11 @@ export function useMexicoGame() {
     <>
       {fase==='juego' && <PenaltyGame onGol={onGol} onSkip={onSkip}/>}
       {fase==='gol' && <PantallaGol onContinuar={onContinuar}/>}
+      {temaActivo && fase==='idle' && <BanderaMexico />}
     </>
   );
 
-  return { activar, GameComponent, faseActiva: fase !== 'idle' };
+  return { activar, GameComponent, temaActivo };
 }
 
 // ─── Componente principal (solo dentro del sistema) ───────
