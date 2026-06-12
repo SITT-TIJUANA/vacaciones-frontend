@@ -481,3 +481,34 @@ tbody tr:last-child{border-bottom:none;}
 .cal-foto-activo:hover {
   animation: pulse3d 0.8s ease-in-out infinite;
 }
+
+/* ── TEMA MÉXICO ── */
+body.tema-mexico .dash-header {
+  background: rgba(0,61,42,0.97) !important;
+  border-bottom: 1px solid rgba(206,17,38,0.4) !important;
+  box-shadow: 0 4px 30px rgba(0,40,25,0.5) !important;
+}
+body.tema-mexico .bottom-nav {
+  background: rgba(0,40,25,0.97) !important;
+  border-top: 1px solid rgba(206,17,38,0.4) !important;
+  box-shadow: 0 -8px 40px rgba(0,40,25,0.5) !important;
+}
+body.tema-mexico .bottom-nav-item.active {
+  background: rgba(206,17,38,0.15) !important;
+}
+body.tema-mexico .btn-institucional.filled {
+  background: linear-gradient(135deg,#006847,#004d35) !important;
+}
+body.tema-mexico .btn-institucional.dorado {
+  border-color: #CE1126 !important;
+  color: #CE1126 !important;
+}
+body.tema-mexico {
+  --g: #006847;
+  --d: #CE1126;
+  --d-dk: #a30d1e;
+  --g-soft: rgba(0,104,71,0.07);
+  --g10: rgba(0,104,71,0.1);
+  --g20: rgba(0,104,71,0.2);
+  --g60: rgba(0,104,71,0.6);
+}
