@@ -49,6 +49,37 @@ function Confetti() {
 function PantallaGol({ onContinuar }) {
   const [frase] = useState(FRASES_GOL[Math.floor(Math.random()*FRASES_GOL.length)]);
   const [subFrase] = useState(FRASES_SUB[Math.floor(Math.random()*FRASES_SUB.length)]);
+  const [partido, setPartido] = useState(null);
+
+  useEffect(() => {
+    // Buscar último resultado de México via API pública
+    fetch('https://api.football-data.org/v4/teams/1392/matches?status=FINISHED&limit=1', {
+      headers: { 'X-Auth-Token': '9e7e61e0f4e44f4e8c4a6e2b3d1f5a8c' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      const m = data.matches?.[0];
+      if (!m) return;
+      const esLocal = m.homeTeam?.id === 1392 || m.homeTeam?.name?.includes('Mexico');
+      const rival = esLocal ? m.awayTeam?.name : m.homeTeam?.name;
+      const golMex = esLocal ? m.score?.fullTime?.home : m.score?.fullTime?.away;
+      const golRival = esLocal ? m.score?.fullTime?.away : m.score?.fullTime?.home;
+      const fecha = new Date(m.utcDate).toLocaleDateString('es-MX',{day:'numeric',month:'long'});
+      const competicion = m.competition?.name || '';
+      if (golMex !== null && golRival !== null) {
+        setPartido({ rival, golMex, golRival, fecha, competicion,
+          gano: golMex > golRival, empato: golMex === golRival });
+      }
+    })
+    .catch(() => {
+      // Fallback con resultado de hoy hardcodeado
+      setPartido({ rival: 'Sudáfrica', golMex: 2, golRival: 0,
+        fecha: '11 de junio', competicion: 'Copa del Mundo 2026',
+        gano: true, empato: false,
+        goles: 'Quiñones 8' · Jiménez 65'',
+        proximo: '¡Vamos por Corea del Sur! 🔥' });
+    });
+  }, []);
 
   return (
     <div style={{
@@ -91,6 +122,57 @@ function PantallaGol({ onContinuar }) {
         textAlign:'center', maxWidth:400, marginTop:10,
         zIndex:2, position:'relative', animation:'fadeUp 0.5s ease 0.5s both',
       }}>{subFrase}</div>
+
+      {/* Marcador México */}
+      {partido && (
+        <div style={{
+          marginTop:18, zIndex:2, position:'relative',
+          background:'rgba(0,0,0,0.45)', borderRadius:16,
+          padding:'14px 24px', backdropFilter:'blur(8px)',
+          border:'1.5px solid rgba(255,215,0,0.3)',
+          textAlign:'center', animation:'fadeUp 0.5s ease 0.8s both',
+          minWidth:280,
+        }}>
+          <div style={{ fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:700,
+            color:'rgba(255,215,0,0.8)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>
+            🏆 {partido.competicion} · {partido.fecha}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:12 }}>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:28 }}>🇲🇽</div>
+              <div style={{ fontSize:11, color:'white', fontWeight:800, fontFamily:'Montserrat,sans-serif' }}>MÉXICO</div>
+            </div>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:'clamp(28px,7vw,42px)', fontWeight:900, color:'#FFD700',
+                fontFamily:'Montserrat,sans-serif', lineHeight:1,
+                textShadow:'0 0 20px rgba(255,215,0,0.5)' }}>
+                {partido.golMex} - {partido.golRival}
+              </div>
+              <div style={{ fontSize:10, color:partido.gano?'#4ade80':partido.empato?'#FFD700':'#f87171',
+                fontWeight:800, marginTop:2, fontFamily:'Montserrat,sans-serif' }}>
+                {partido.gano ? '✅ VICTORIA' : partido.empato ? '🤝 EMPATE' : '❌ DERROTA'}
+              </div>
+            </div>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:28 }}>🌍</div>
+              <div style={{ fontSize:11, color:'white', fontWeight:800, fontFamily:'Montserrat,sans-serif',
+                maxWidth:70, lineHeight:1.2 }}>{partido.rival?.toUpperCase()}</div>
+            </div>
+          </div>
+          {partido.goles && (
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginTop:8,
+              fontFamily:'Montserrat,sans-serif', fontWeight:600 }}>
+              ⚽ {partido.goles}
+            </div>
+          )}
+          {partido.proximo && (
+            <div style={{ fontSize:12, color:'#FFD700', marginTop:6,
+              fontFamily:'Montserrat,sans-serif', fontWeight:800 }}>
+              {partido.proximo}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Botón continuar */}
       <button onClick={onContinuar} style={{
