@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import escudoSitt from '../assets/escudo-sitt.png';
+import { LoginMexicoEggs } from '../components/MexicoMode';
 
 export default function Login() {
   const { login } = useAuth();
