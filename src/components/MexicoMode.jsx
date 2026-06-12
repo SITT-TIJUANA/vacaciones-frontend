@@ -465,20 +465,20 @@ export function LoginMexicoEggs({ onActivar }) {
 
 // ─── Componente principal (dentro del sistema) ────────────
 export default function MexicoMode() {
-  const [tema, setTema] = useState(()=>localStorage.getItem('mx-tema')==='1');
+  const [tema, setTema] = useState(()=>sessionStorage.getItem('mx-tema')==='1');
 
   useEffect(()=>{
     if(tema){
       document.body.classList.add('tema-mexico');
     } else {
       document.body.classList.remove('tema-mexico');
-      localStorage.setItem('mx-tema','0');
+      sessionStorage.setItem('mx-tema','0');
     }
   },[tema]);
 
   // Siempre verificar al montar
   useEffect(()=>{
-    const saved = localStorage.getItem('mx-tema')==='1';
+    const saved = sessionStorage.getItem('mx-tema')==='1';
     if(saved){ document.body.classList.add('tema-mexico'); setTema(true); }
   },[]);
 
