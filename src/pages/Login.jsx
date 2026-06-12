@@ -13,16 +13,12 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const canvasRef = useRef(null);
 
-  // Si el tema México está activo, mantenerlo incluso en el login
+  // Aplicar/mantener tema México si está activo
   useEffect(() => {
     if (localStorage.getItem('mx-tema') === '1') {
-      let el = document.getElementById('mx-style');
-      if (!el) {
-        el = document.createElement('style');
-        el.id = 'mx-style';
-        document.head.appendChild(el);
-      }
-      el.textContent = `.dash-header{background:rgba(0,61,42,0.97)!important;border-bottom:1px solid rgba(206,17,38,0.4)!important;}.bottom-nav{background:rgba(0,40,25,0.97)!important;border-top:1px solid rgba(206,17,38,0.4)!important;}:root{--g:#006847!important;--d:#CE1126!important;--g-soft:rgba(0,104,71,0.07)!important;--g10:rgba(0,104,71,0.1)!important;--g20:rgba(0,104,71,0.2)!important;--g60:rgba(0,104,71,0.6)!important;}`;
+      document.body.classList.add('tema-mexico');
+    } else {
+      document.body.classList.remove('tema-mexico');
     }
   }, []);
   const [mxFase, setMxFase] = useState('idle'); // idle | juego | gol
@@ -158,6 +154,7 @@ export default function Login() {
     {mxFase==='juego' && <PenaltyGame onGol={()=>setMxFase('gol')} onSkip={()=>setMxFase('idle')}/>}
     {mxFase==='gol' && <PantallaGol onContinuar={()=>{
       localStorage.setItem('mx-tema','1');
+      document.body.classList.add('tema-mexico');
       // Aplicar tema México al login inmediatamente
       let el = document.getElementById('mx-style');
       if (!el) { el = document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
