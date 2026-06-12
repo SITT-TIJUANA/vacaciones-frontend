@@ -262,7 +262,6 @@ export default function Solicitudes({ onActualizarNotif }) {
             <option value="pendiente">⏳ Pendientes</option>
             <option value="aprobada">✅ Aprobadas</option>
             <option value="rechazada">❌ Rechazadas</option>
-            <option value="cancelada">🚫 Canceladas</option>
           </select>
           {usuario?.empleado_id && (
             <button className="btn-institucional filled" onClick={() => setModalNueva(true)}>
