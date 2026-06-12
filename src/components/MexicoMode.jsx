@@ -418,9 +418,8 @@ export default function MexicoMode() {
   useEffect(()=>{
     if(tema){
       if(!styleEl.current){
-        const el=document.createElement('style');
-        el.id='mx-style';
-        document.head.appendChild(el);
+        let el = document.getElementById('mx-style');
+        if(!el){ el=document.createElement('style'); el.id='mx-style'; document.head.appendChild(el); }
         styleEl.current=el;
       }
       styleEl.current.textContent=MEXICO_CSS;
@@ -430,6 +429,12 @@ export default function MexicoMode() {
       styleEl.current=null;
     }
   },[tema]);
+
+  // Re-check localStorage when component mounts (in case login set it)
+  useEffect(()=>{
+    const saved = localStorage.getItem('mx-tema')==='1';
+    if(saved !== tema) setTema(saved);
+  },[]);
 
   if(!tema) return null;
   return <BanderaMexico onQuitarTema={()=>{ localStorage.setItem('mx-tema','0'); setTema(false); }}/>;
