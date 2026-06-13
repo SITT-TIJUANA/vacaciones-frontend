@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const ICONOS_ACCION = {
   alta_empleado:      { icon:'➕', color:'#1B5E20', bg:'#E8F5E9', label:'Alta de empleado' },
@@ -22,10 +23,24 @@ function fmtFecha(f) {
 }
 
 export default function Historial() {
+  const { rolEfectivo } = useAuth();
+  const esAdmin = rolEfectivo === 'admin';
   const [registros, setRegistros] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtroAccion, setFiltroAccion] = useState('');
+
+  const borrarRegistro = async (id) => {
+    if (!window.confirm('¿Borrar este registro?')) return;
+    await api.delete(`/api/historial/${id}`);
+    setRegistros(r => r.filter(x => x.id !== id));
+  };
+
+  const borrarTodo = async () => {
+    if (!window.confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) return;
+    await api.delete('/api/historial');
+    setRegistros([]);
+  };
 
   useEffect(() => {
     api.get('/api/historial')
@@ -47,6 +62,11 @@ export default function Historial() {
     <div className="fade-in">
       <div className="section-header">
         <h2 className="section-title">Historial de Actividad</h2>
+        {esAdmin && (
+          <button onClick={borrarTodo} style={{ background:'#FFF5F5', color:'#B71C1C', border:'1px solid #FED7D7', padding:'8px 16px', borderRadius:30, fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, cursor:'pointer' }}>
+            🗑️ Borrar todo
+          </button>
+        )}
         <span style={{ background:'var(--g-soft)', color:'var(--g)', padding:'8px 18px', borderRadius:30, fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, border:'1px solid rgba(107,15,43,0.15)' }}>
           {filtrados.length} registro{filtrados.length !== 1 ? 's' : ''}
         </span>
