@@ -10,6 +10,7 @@ import PermisosPage from './pages/permisos/PermisosPage';
 import './assets/styles/global.css';
 import './assets/styles/mobile.css';
 import MexicoMode from './components/MexicoMode';
+import TarjetaUsuario from './components/TarjetaUsuario';
 
 // Aplicar tema México inmediatamente si está guardado — antes de cualquier render
 if (localStorage.getItem('mx-tema') === '1') {
@@ -41,12 +42,19 @@ function PublicRoute({ children }) {
   return !usuario ? children : <Navigate to="/menu" replace />;
 }
 
+function TarjetaUsuarioConAuth() {
+  const { usuario } = useAuth();
+  if (!usuario) return null;
+  return <TarjetaUsuario />;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <MexicoMode />
+          <TarjetaUsuarioConAuth />
           <Routes>
             <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/menu" element={<ProtectedRoute><MenuModulos /></ProtectedRoute>} />
