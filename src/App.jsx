@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import MenuModulos from './pages/MenuModulos';
 import './assets/styles/global.css';
 import './assets/styles/mobile.css';
 import MexicoMode from './components/MexicoMode';
@@ -45,6 +46,7 @@ export default function App() {
           <MexicoMode />
           <Routes>
             <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/menu" element={<ProtectedRoute><MenuModulos /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
