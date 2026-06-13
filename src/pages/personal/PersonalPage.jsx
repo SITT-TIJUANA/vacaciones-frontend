@@ -230,6 +230,51 @@ function Organigrama() {
           ))}
         </div>
       </div>
+      {/* Empleados sin jerarquía asignada */}
+      {(() => {
+        const map = {};
+        empleados.forEach(e=>{ map[e.id]=true; });
+        const enArbol = new Set();
+        const marcar = (nodes) => nodes.forEach(n=>{ enArbol.add(n.id); marcar(n.hijos||[]); });
+        marcar(tree);
+        const sinJerarquia = empleados.filter(e=>!enArbol.has(e.id));
+        if (!sinJerarquia.length) return null;
+        return (
+          <div style={{marginTop:40,borderTop:'2px dashed #e2e8f0',paddingTop:24}}>
+            <div style={{textAlign:'center',marginBottom:16}}>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:3,color:'#718096',textTransform:'uppercase'}}>Sin jerarquía asignada</div>
+              {esAdmin && <div style={{fontSize:11,color:'#C9A84C',marginTop:4}}>Usa ⚙️ para asignarlos al organigrama</div>}
+            </div>
+            <div style={{display:'flex',gap:16,flexWrap:'wrap',justifyContent:'center'}}>
+              {sinJerarquia.map(e=>{
+                const color = getDeptColor(e.departamento);
+                return (
+                  <div key={e.id} onClick={()=>setSel(e)}
+                    style={{background:'#fff',borderRadius:14,padding:'12px 16px',textAlign:'center',
+                      border:`2px dashed ${color.border}`,cursor:'pointer',width:148,
+                      boxShadow:'0 2px 8px rgba(0,0,0,0.06)',transition:'all 0.2s',opacity:0.8}}
+                    onMouseEnter={ev=>{ev.currentTarget.style.opacity='1';ev.currentTarget.style.transform='translateY(-3px)';}}
+                    onMouseLeave={ev=>{ev.currentTarget.style.opacity='0.8';ev.currentTarget.style.transform='none';}}>
+                    {e.foto_url
+                      ? <img src={e.foto_url} alt="" style={{width:48,height:48,borderRadius:'50%',objectFit:'cover',border:`2px solid ${color.bg}`,display:'block',margin:'0 auto 6px'}}/>
+                      : <div style={{width:48,height:48,borderRadius:'50%',background:`${color.bg}18`,border:`2px solid ${color.bg}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:color.bg,margin:'0 auto 6px',fontWeight:900}}>{e.nombre?.[0]}{e.apellido_paterno?.[0]}</div>
+                    }
+                    <div style={{fontWeight:800,fontSize:11,color:'#1a1a2e',lineHeight:1.2}}>{e.nombre} {e.apellido_paterno}</div>
+                    <div style={{fontSize:9,color:color.bg,fontWeight:700,marginTop:2}}>{e.cargo_funcional||e.puesto||'—'}</div>
+                    {esAdmin && (
+                      <button onClick={ev=>{ev.stopPropagation();setPanelId(e.id);}}
+                        style={{marginTop:8,padding:'4px 10px',borderRadius:20,border:`1px solid ${color.border}`,background:'transparent',color:color.bg,fontSize:9,fontWeight:800,cursor:'pointer',fontFamily:'Montserrat,sans-serif',width:'100%'}}>
+                        ⚙️ Asignar
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {sel && <ModalOrgEmpleado emp={sel} onClose={()=>setSel(null)}/>}
       {panelId && esAdmin && (() => {
         const empPanel = empleados.find(e=>e.id===panelId);
