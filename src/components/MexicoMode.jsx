@@ -217,15 +217,54 @@ function PenaltyGame({ onGol, onSkip }) {
 
 // ─── Logo VACACIONES clickeable ───────────────────────────
 export function VacacionesLogo({ onActivar }) {
+  const letras = [
+    { l:'P', c:'#006847' },{ l:'E', c:'#006847' },{ l:'R', c:'#006847' },{ l:'S', c:'#006847' },
+    { l:'⚽', c:'ball' },
+    { l:'N', c:'#006847' },{ l:'A', c:'#006847' },{ l:'L', c:'#006847' },
+    { l:' ', c:'gap' },
+    { l:'S', c:'#CE1126' },{ l:'I', c:'#CE1126' },{ l:'T', c:'#CE1126' },{ l:'T', c:'#CE1126' },
+  ];
   return (
-    <div onClick={onActivar} title="⚽ ¡Haz clic!"
-      style={{cursor:'pointer',marginTop:4,userSelect:'none',display:'flex',justifyContent:'center'}}>
-      <img src="/vacaciones-frontend/vacaciones-titulo.png" alt="VACACIONES"
-        style={{width:'clamp(260px,55vw,520px)',height:'auto',display:'block',
-          filter:'drop-shadow(0 2px 8px rgba(0,0,0,0.2))',transition:'transform 0.2s,filter 0.2s'}}
-        onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.04)';e.currentTarget.style.filter='drop-shadow(0 4px 16px rgba(0,104,71,0.5))';}}
-        onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.filter='drop-shadow(0 2px 8px rgba(0,0,0,0.2))';}}
-      />
+    <div onClick={onActivar} title="⚽ ¡Haz clic!" style={{ cursor:'pointer', marginTop:6, userSelect:'none', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+      <div style={{ fontSize:10, fontFamily:'Montserrat,sans-serif', fontWeight:700, letterSpacing:4, textTransform:'uppercase', color:'rgba(201,168,76,0.6)' }}>
+        Sistema Integral de Personal
+      </div>
+      <div style={{ display:'flex', alignItems:'center', flexWrap:'nowrap' }}>
+        {letras.map((item, i) => {
+          if (item.c === 'gap') return <div key={i} style={{ width:'clamp(8px,1.5vw,16px)' }}/>;
+          if (item.c === 'ball') return (
+            <div key={i} style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:'clamp(30px,5.5vw,52px)', height:'clamp(30px,5.5vw,52px)', animation:'spinBal 2s linear infinite' }}>
+              <svg viewBox="0 0 54 54" style={{ width:'100%', height:'100%' }}>
+                <defs><radialGradient id="bgL" cx="35%" cy="30%"><stop offset="0%" stopColor="#fff"/><stop offset="55%" stopColor="#e8e8e8"/><stop offset="100%" stopColor="#aaa"/></radialGradient></defs>
+                <ellipse cx="27" cy="51" rx="11" ry="3" fill="rgba(0,0,0,0.2)"/>
+                <circle cx="27" cy="26" r="23" fill="url(#bgL)" stroke="#ccc" strokeWidth="0.5"/>
+                <polygon points="27,7 34,13 31,21 23,21 20,13" fill="#006847" opacity="0.9"/>
+                <polygon points="6,19 13,15 19,21 17,28 9,27" fill="#CE1126" opacity="0.9"/>
+                <polygon points="48,19 41,15 35,21 37,28 45,27" fill="#006847" opacity="0.9"/>
+                <polygon points="10,39 9,31 17,29 22,36 16,43" fill="#CE1126" opacity="0.9"/>
+                <polygon points="44,39 45,31 37,29 32,36 38,43" fill="#006847" opacity="0.9"/>
+                <polygon points="27,46 21,41 23,34 31,34 33,41" fill="#CE1126" opacity="0.9"/>
+                <ellipse cx="19" cy="17" rx="7" ry="4.5" fill="rgba(255,255,255,0.55)" transform="rotate(-20,19,17)"/>
+                <text x="27" y="24" textAnchor="middle" fontSize="5" fontFamily="Arial" fontWeight="900" fill="#006847">MUNDIAL</text>
+                <text x="27" y="31" textAnchor="middle" fontSize="7" fontFamily="Arial" fontWeight="900" fill="#CE1126">2026</text>
+              </svg>
+            </div>
+          );
+          return (
+            <span key={i} style={{
+              fontSize:'clamp(28px,5.5vw,52px)', fontWeight:900,
+              fontFamily:'Montserrat,sans-serif', lineHeight:1,
+              color: item.c, display:'inline-block',
+              transition:'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)',
+            }}
+              onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-5px) scale(1.15)'; }}
+              onMouseLeave={e=>{ e.currentTarget.style.transform='none'; }}
+            >{item.l}</span>
+          );
+        })}
+      </div>
+      <div style={{ width:50, height:1.5, background:'linear-gradient(90deg,transparent,rgba(201,168,76,0.6),transparent)', marginTop:2 }}/>
+      <style>{`@keyframes spinBal{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
