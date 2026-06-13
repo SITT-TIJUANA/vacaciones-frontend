@@ -26,10 +26,6 @@ const NAV_ITEMS = [
   { id:'permisos',     icon:'📄', label:'Permisos',    roles:['admin','rrhh','empleado'] },
   { id:'reportes',     icon:'📊', label:'Reportes',    roles:['admin','rrhh'] },
   { id:'adeudados',    icon:'💰', label:'Adeudados',   roles:['admin','rrhh'] },
-  { id:'alta',         icon:'➕', label:'Alta',         roles:['admin','rrhh'] },
-  { id:'bajas',        icon:'🚫', label:'Bajas',        roles:['admin','rrhh'] },
-  { id:'historial',    icon:'📋', label:'Historial',   roles:['admin','rrhh'] },
-  { id:'usuarios',     icon:'🔐', label:'Usuarios',    roles:['admin'] },
 ];
 
 const TITULOS = {
