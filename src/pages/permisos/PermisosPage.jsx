@@ -95,10 +95,10 @@ export default function PermisosPage() {
               {s.label}
             </button>
           ))}
-          <button onClick={() => setModalReporte(true)}
+          {esAdmin && <button onClick={() => setModalReporte(true)}
             style={{ padding:'8px 20px', borderRadius:20, border:'none', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, background:'rgba(255,255,255,0.15)', color:'#fff' }}>
             📊 Reporte mensual
-          </button>
+          </button>}
           <button onClick={() => setSeccion('nuevo')}
             style={{ padding:'8px 20px', borderRadius:20, border:'none', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, background:'#2a5298', color:'#fff' }}>
             ➕ {esAdmin ? 'Registrar permiso' : 'Solicitar permiso'}
@@ -971,40 +971,53 @@ function ModalReporteMensual({ permisos, onClose }) {
   const generarExcel = () => {
     setGenerando(true);
     try {
-      const TIPOS_LABEL = { medico:'Médico', escolar:'Escolar/Hijo', personal:'Personal/Familiar', emergencia:'Emergencia', legal:'Legal/Judicial', otro:'Otro' };
-      const datos = filtrados.map(p => ({
-        'Nombre': `${p.nombre||''} ${p.apellido_paterno||''}`.trim(),
-        'Puesto': p.puesto||'',
-        'Departamento': p.departamento||'',
-        'Tipo de permiso': TIPOS_LABEL[p.tipo]||p.tipo,
-        'Fecha': String(p.fecha||'').substring(0,10),
-        'Hora salida': fmtHoraPDF(p.hora_salida),
-        'Hora regreso': p.hora_regreso ? fmtHoraPDF(p.hora_regreso) : 'N/A',
-        'Estatus': p.estatus==='aprobado'?'Aprobado':p.estatus==='rechazado'?'Rechazado':'Pendiente',
-        'Goce de sueldo': p.con_goce===true?'Con goce':p.con_goce===false?'Sin goce':'—',
-        'Motivo rechazo': p.motivo_rechazo||'',
-      }));
+      const TIPOS_LABEL2 = { medico:'Médico', escolar:'Escolar/Hijo', personal:'Personal/Familiar', emergencia:'Emergencia', legal:'Legal/Judicial', otro:'Otro' };
+      
+      // Generar CSV con BOM para Excel
+      const headers = ['Nombre','Puesto','Departamento','Tipo de permiso','Fecha','Hora salida','Hora regreso','Estatus','Goce de sueldo','Motivo rechazo'];
+      const rows = filtrados.map(p => [
+        `${p.nombre||''} ${p.apellido_paterno||''}`.trim(),
+        p.puesto||'',
+        p.departamento||'',
+        TIPOS_LABEL2[p.tipo]||p.tipo,
+        String(p.fecha||'').substring(0,10),
+        fmtHoraPDF(p.hora_salida),
+        p.hora_regreso ? fmtHoraPDF(p.hora_regreso) : 'N/A',
+        p.estatus==='aprobado'?'Aprobado':p.estatus==='rechazado'?'Rechazado':'Pendiente',
+        p.con_goce===true?'Con goce':p.con_goce===false?'Sin goce':'—',
+        p.motivo_rechazo||'',
+      ]);
 
-      // Resumen sheet
-      const resumenDatos = [
-        ['REPORTE MENSUAL DE PERMISOS LABORALES — SITT'],
+      // Resumen al inicio
+      const resumenRows = [
+        [`REPORTE MENSUAL DE PERMISOS LABORALES — SITT`],
         [`Período: ${MESES[mes-1]} ${anio}`],
-        [''],
-        ['RESUMEN'],
+        [],
+        ['RESUMEN',''],
         ['Total permisos', resumen.total],
         ['Aprobados', resumen.aprobados],
         ['Rechazados', resumen.rechazados],
         ['Pendientes', resumen.pendientes],
         ['Con goce de sueldo', resumen.conGoce],
         ['Sin goce de sueldo', resumen.sinGoce],
+        [],
+        ['DETALLE DE PERMISOS'],
+        headers,
+        ...rows,
       ];
 
-      const wb = XLSX.utils.book_new();
-      const wsResumen = XLSX.utils.aoa_to_sheet(resumenDatos);
-      const wsDetalle = XLSX.utils.json_to_sheet(datos);
-      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
-      XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
-      XLSX.writeFile(wb, `Reporte_Permisos_${MESES[mes-1]}_${anio}.xlsx`);
+      const csvContent = '﻿' + resumenRows.map(r => 
+        Array.isArray(r) ? r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',') : ''
+      ).join('
+');
+
+      const blob = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_Permisos_${MESES[mes-1]}_${anio}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch(e) { console.error(e); }
     finally { setGenerando(false); }
   };
@@ -1067,7 +1080,7 @@ function ModalReporteMensual({ permisos, onClose }) {
           <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
           <button onClick={generarExcel} disabled={generando||filtrados.length===0}
             style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'#27ae60', color:'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13 }}>
-            {generando?'⏳...':'📋 Descargar Excel'}
+            {generando?'⏳...':'📋 Descargar CSV/Excel'}
           </button>
           <button onClick={generarPDF} disabled={generando||filtrados.length===0}
             style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#0a1f3d,#2a5298)', color:'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13 }}>
