@@ -1006,10 +1006,7 @@ function ModalReporteMensual({ permisos, onClose }) {
         ...rows,
       ];
 
-      const csvContent = '﻿' + resumenRows.map(r => 
-        Array.isArray(r) ? r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',') : ''
-      ).join('
-');
+      const csvContent = '\uFEFF' + resumenRows.map(r => Array.isArray(r) ? r.map(c => '"' + String(c||'').replace(/"/g, '""') + '"').join(',') : '').join('\n');
 
       const blob = new Blob([csvContent], { type:'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
