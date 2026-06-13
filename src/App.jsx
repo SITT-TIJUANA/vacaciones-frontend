@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MenuModulos from './pages/MenuModulos';
+import PersonalPage from './pages/personal/PersonalPage';
 import PermisosPage from './pages/permisos/PermisosPage';
 import './assets/styles/global.css';
 import './assets/styles/mobile.css';
@@ -48,6 +49,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/menu" element={<ProtectedRoute><MenuModulos /></ProtectedRoute>} />
+            <Route path="/personal" element={<ProtectedRoute><PersonalPage /></ProtectedRoute>} />
             <Route path="/permisos" element={<ProtectedRoute><PermisosPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
