@@ -13,7 +13,7 @@ import InstalarApp from '../components/InstalarApp';
 import Historial from '../components/Historial';
 import SeccionPeriodos from '../components/SeccionPeriodos';
 import SeccionPermisos from '../components/SeccionPermisos';
-import { BtnRegresar } from '../components/BotonesNav';
+import { BtnRegresar, BtnCerrarSesion } from '../components/BotonesNav';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -115,8 +115,9 @@ export default function Dashboard() {
             <div className="dash-subtitle">SITT · Ayto. Tijuana</div>
           </div>
         </div>
-        <div className="dash-header-right">
+        <div className="dash-header-right" style={{gap:10}}>
           <BtnRegresar />
+          <BtnCerrarSesion />
           {esAdminRRHH && (
             <div style={{ display:'flex',alignItems:'center',gap:6 }}>
               <button className="icon-btn" style={{ width:32,height:32,fontSize:15 }} onClick={()=>setShowInfo(true)} title="¿Qué es vincular cuenta?">ℹ️</button>
@@ -159,7 +160,6 @@ export default function Dashboard() {
               <div className="dash-user-rol">{modoEmpleado?'👤 Modo Empleado':usuario?.rol}</div>
             </div>
           </div>
-          <button className="icon-btn logout-btn" onClick={logout} title="Cerrar sesión">🚪</button>
         </div>
       </header>
 
