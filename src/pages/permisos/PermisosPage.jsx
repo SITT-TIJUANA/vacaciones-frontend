@@ -42,6 +42,7 @@ export default function PermisosPage() {
   const [modalPDF, setModalPDF] = useState(null);
   const [toast, setToast] = useState(null);
   const [stats, setStats] = useState(null);
+  const [modalReporte, setModalReporte] = useState(false);
 
   const mostrarToast = (msg, tipo='ok') => {
     setToast({ msg, tipo });
@@ -94,6 +95,10 @@ export default function PermisosPage() {
               {s.label}
             </button>
           ))}
+          <button onClick={() => setModalReporte(true)}
+            style={{ padding:'8px 20px', borderRadius:20, border:'none', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, background:'rgba(255,255,255,0.15)', color:'#fff' }}>
+            📊 Reporte mensual
+          </button>
           <button onClick={() => setSeccion('nuevo')}
             style={{ padding:'8px 20px', borderRadius:20, border:'none', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, background:'#2a5298', color:'#fff' }}>
             ➕ {esAdmin ? 'Registrar permiso' : 'Solicitar permiso'}
@@ -215,6 +220,14 @@ export default function PermisosPage() {
       {/* Modal PDF */}
       {modalPDF && (
         <ModalConfigPDF permiso={modalPDF} onClose={() => setModalPDF(null)} />
+      )}
+
+      {/* Modal Reporte Mensual */}
+      {modalReporte && (
+        <ModalReporteMensual
+          permisos={permisos}
+          onClose={() => setModalReporte(false)}
+        />
       )}
     </div>
   );
@@ -809,6 +822,258 @@ function Estadisticas({ stats }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ── Modal Reporte Mensual ─────────────────────────────────
+function ModalReporteMensual({ permisos, onClose }) {
+  const hoy = new Date();
+  const [mes, setMes] = useState(hoy.getMonth() + 1);
+  const [anio, setAnio] = useState(hoy.getFullYear());
+  const [generando, setGenerando] = useState(false);
+
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const TIPOS_LABEL = { medico:'Médico', escolar:'Escolar/Hijo', personal:'Personal/Familiar', emergencia:'Emergencia', legal:'Legal/Judicial', otro:'Otro' };
+
+  const filtrados = permisos.filter(p => {
+    const f = new Date(p.fecha);
+    return f.getMonth()+1 === parseInt(mes) && f.getFullYear() === parseInt(anio);
+  });
+
+  const resumen = {
+    total: filtrados.length,
+    aprobados: filtrados.filter(p=>p.estatus==='aprobado').length,
+    rechazados: filtrados.filter(p=>p.estatus==='rechazado').length,
+    pendientes: filtrados.filter(p=>p.estatus==='pendiente').length,
+    conGoce: filtrados.filter(p=>p.con_goce===true).length,
+    sinGoce: filtrados.filter(p=>p.con_goce===false).length,
+  };
+
+  const fmtFechaPDF = (f) => {
+    if (!f) return '—';
+    const [y,m,d] = String(f).substring(0,10).split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const fmtHoraPDF = (h) => {
+    if (!h) return '—';
+    const [hh,mm] = String(h).substring(0,5).split(':');
+    const h24 = parseInt(hh);
+    return `${h24%12||12}:${mm} ${h24>=12?'PM':'AM'}`;
+  };
+
+  const generarPDF = async () => {
+    setGenerando(true);
+    try {
+      const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'letter' });
+      const pW = 279.4, pH = 215.9;
+
+      // Header
+      doc.setFillColor(10,31,61);
+      doc.rect(0,0,pW,36,'F');
+      doc.setFillColor(201,168,76);
+      doc.rect(0,36,pW,2,'F');
+
+      // Logo
+      try {
+        const logoRes = await fetch(`${window.location.origin}/vacaciones-frontend/escudo-sitt.png`);
+        const logoBlob = await logoRes.blob();
+        const logoB64 = await new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(logoBlob); });
+        doc.addImage(logoB64,'PNG',8,5,22,22);
+      } catch(e){}
+
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold'); doc.setFontSize(14);
+      doc.text('H. XXV Ayuntamiento de Tijuana — SITT', 36, 14);
+      doc.setFontSize(10); doc.setFont('helvetica','normal');
+      doc.text('Reporte Mensual de Permisos Laborales', 36, 21);
+      doc.setFontSize(9);
+      doc.text(`Período: ${MESES[mes-1]} ${anio}`, 36, 28);
+
+      // Fecha generación
+      doc.setTextColor(201,168,76); doc.setFontSize(8);
+      doc.text(`Generado: ${new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}`, pW-8, 14, {align:'right'});
+
+      // Resumen ejecutivo
+      let y = 46;
+      doc.setTextColor(10,31,61); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+      doc.text('RESUMEN EJECUTIVO', 8, y);
+      doc.setDrawColor(201,168,76); doc.setLineWidth(0.5);
+      doc.line(8, y+2, pW-8, y+2);
+
+      y += 10;
+      const colW = (pW-16)/6;
+      const resCards = [
+        { label:'Total permisos', val:resumen.total, color:[10,31,61] },
+        { label:'Aprobados', val:resumen.aprobados, color:[27,94,32] },
+        { label:'Rechazados', val:resumen.rechazados, color:[183,28,28] },
+        { label:'Pendientes', val:resumen.pendientes, color:[245,158,11] },
+        { label:'Con goce', val:resumen.conGoce, color:[42,82,152] },
+        { label:'Sin goce', val:resumen.sinGoce, color:[107,114,128] },
+      ];
+      resCards.forEach((c,i)=>{
+        const x = 8 + i*colW;
+        doc.setFillColor(...c.color);
+        doc.roundedRect(x,y,colW-3,18,2,2,'F');
+        doc.setTextColor(255,255,255);
+        doc.setFont('helvetica','bold'); doc.setFontSize(16);
+        doc.text(String(c.val), x+colW/2-1.5, y+11, {align:'center'});
+        doc.setFontSize(7); doc.setFont('helvetica','normal');
+        doc.text(c.label, x+colW/2-1.5, y+16, {align:'center'});
+      });
+
+      // Tabla
+      y += 26;
+      doc.setTextColor(10,31,61); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+      doc.text('DETALLE DE PERMISOS', 8, y);
+      doc.setDrawColor(201,168,76); doc.setLineWidth(0.5);
+      doc.line(8, y+2, pW-8, y+2);
+
+      doc.autoTable({
+        startY: y+6,
+        head: [['Empleado','Puesto','Depto','Tipo','Fecha','Salida','Regreso','Estatus','Goce']],
+        body: filtrados.map(p => [
+          `${p.nombre||''} ${p.apellido_paterno||''}`.trim(),
+          p.puesto||'—',
+          p.departamento||'—',
+          TIPOS_LABEL[p.tipo]||p.tipo,
+          fmtFechaPDF(p.fecha),
+          fmtHoraPDF(p.hora_salida),
+          p.hora_regreso ? fmtHoraPDF(p.hora_regreso) : 'N/A',
+          p.estatus==='aprobado'?'Aprobado':p.estatus==='rechazado'?'Rechazado':'Pendiente',
+          p.con_goce===true?'Con goce':p.con_goce===false?'Sin goce':'—',
+        ]),
+        styles: { fontSize:8, cellPadding:3, fontStyle:'normal' },
+        headStyles: { fillColor:[10,31,61], textColor:[255,255,255], fontStyle:'bold', fontSize:8 },
+        alternateRowStyles: { fillColor:[245,247,255] },
+        columnStyles: {
+          0:{cellWidth:38}, 1:{cellWidth:30}, 2:{cellWidth:28},
+          3:{cellWidth:24}, 4:{cellWidth:20}, 5:{cellWidth:18},
+          6:{cellWidth:18}, 7:{cellWidth:20}, 8:{cellWidth:20},
+        },
+        margin:{left:8,right:8},
+      });
+
+      // Footer
+      const pgH = doc.internal.pageSize.height;
+      doc.setFillColor(10,31,61); doc.rect(0,pgH-10,pW,10,'F');
+      doc.setFillColor(201,168,76); doc.rect(0,pgH-12,pW,2,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+      doc.text('Sistema de Permisos Laborales — SITT · H. XXV Ayuntamiento de Tijuana', pW/2, pgH-4, {align:'center'});
+
+      doc.save(`Reporte_Permisos_${MESES[mes-1]}_${anio}.pdf`);
+    } catch(e) { console.error(e); }
+    finally { setGenerando(false); }
+  };
+
+  const generarExcel = () => {
+    setGenerando(true);
+    try {
+      const TIPOS_LABEL = { medico:'Médico', escolar:'Escolar/Hijo', personal:'Personal/Familiar', emergencia:'Emergencia', legal:'Legal/Judicial', otro:'Otro' };
+      const datos = filtrados.map(p => ({
+        'Nombre': `${p.nombre||''} ${p.apellido_paterno||''}`.trim(),
+        'Puesto': p.puesto||'',
+        'Departamento': p.departamento||'',
+        'Tipo de permiso': TIPOS_LABEL[p.tipo]||p.tipo,
+        'Fecha': String(p.fecha||'').substring(0,10),
+        'Hora salida': fmtHoraPDF(p.hora_salida),
+        'Hora regreso': p.hora_regreso ? fmtHoraPDF(p.hora_regreso) : 'N/A',
+        'Estatus': p.estatus==='aprobado'?'Aprobado':p.estatus==='rechazado'?'Rechazado':'Pendiente',
+        'Goce de sueldo': p.con_goce===true?'Con goce':p.con_goce===false?'Sin goce':'—',
+        'Motivo rechazo': p.motivo_rechazo||'',
+      }));
+
+      // Resumen sheet
+      const resumenDatos = [
+        ['REPORTE MENSUAL DE PERMISOS LABORALES — SITT'],
+        [`Período: ${MESES[mes-1]} ${anio}`],
+        [''],
+        ['RESUMEN'],
+        ['Total permisos', resumen.total],
+        ['Aprobados', resumen.aprobados],
+        ['Rechazados', resumen.rechazados],
+        ['Pendientes', resumen.pendientes],
+        ['Con goce de sueldo', resumen.conGoce],
+        ['Sin goce de sueldo', resumen.sinGoce],
+      ];
+
+      const wb = XLSX.utils.book_new();
+      const wsResumen = XLSX.utils.aoa_to_sheet(resumenDatos);
+      const wsDetalle = XLSX.utils.json_to_sheet(datos);
+      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+      XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
+      XLSX.writeFile(wb, `Reporte_Permisos_${MESES[mes-1]}_${anio}.xlsx`);
+    } catch(e) { console.error(e); }
+    finally { setGenerando(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{ maxWidth:480 }} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header" style={{ background:'linear-gradient(135deg,#0a1f3d,#1a3a6b)' }}>
+          <h2>📊 Reporte Mensual de Permisos</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+          {/* Selector mes/año */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div>
+              <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase' }}>Mes</label>
+              <select value={mes} onChange={e=>setMes(e.target.value)}
+                style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13 }}>
+                {MESES.map((m,i)=><option key={i+1} value={i+1}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase' }}>Año</label>
+              <select value={anio} onChange={e=>setAnio(e.target.value)}
+                style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13 }}>
+                {[2024,2025,2026,2027].map(y=><option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Preview resumen */}
+          <div style={{ background:'#EEF2FF', borderRadius:12, padding:'14px 16px' }}>
+            <div style={{ fontWeight:700, fontSize:12, color:'#0a1f3d', marginBottom:10 }}>Vista previa — {MESES[mes-1]} {anio}</div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+              {[
+                ['Total',resumen.total,'#0a1f3d'],
+                ['Aprobados',resumen.aprobados,'#27ae60'],
+                ['Rechazados',resumen.rechazados,'#E53E3E'],
+                ['Pendientes',resumen.pendientes,'#F59E0B'],
+                ['Con goce',resumen.conGoce,'#2a5298'],
+                ['Sin goce',resumen.sinGoce,'#718096'],
+              ].map(([l,v,c])=>(
+                <div key={l} style={{ textAlign:'center', padding:'8px', background:'#fff', borderRadius:8, borderTop:`3px solid ${c}` }}>
+                  <div style={{ fontSize:20, fontWeight:900, color:c }}>{v}</div>
+                  <div style={{ fontSize:10, color:'#718096', fontWeight:600 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {filtrados.length === 0 && (
+            <div style={{ textAlign:'center', padding:'16px', color:'#718096', fontSize:13, fontWeight:600 }}>
+              No hay permisos registrados en {MESES[mes-1]} {anio}
+            </div>
+          )}
+        </div>
+
+        <div className="modal-footer" style={{ gap:10 }}>
+          <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
+          <button onClick={generarExcel} disabled={generando||filtrados.length===0}
+            style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'#27ae60', color:'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13 }}>
+            {generando?'⏳...':'📋 Descargar Excel'}
+          </button>
+          <button onClick={generarPDF} disabled={generando||filtrados.length===0}
+            style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#0a1f3d,#2a5298)', color:'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13 }}>
+            {generando?'⏳...':'📄 Descargar PDF'}
+          </button>
+        </div>
       </div>
     </div>
   );
