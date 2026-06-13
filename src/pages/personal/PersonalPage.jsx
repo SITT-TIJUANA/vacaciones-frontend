@@ -379,7 +379,12 @@ function PanelJerarquia({ emp, empleados, color, onActualizar, onCerrar }) {
 
   const guardar = () => {
     const dFinal = depto==='__nuevo__' ? deptoNuevo : depto;
-    onActualizar(emp.id,{ jefe_id:jefeId||null, es_asistente:esAsistente, departamento:dFinal||emp.departamento, nivel_jerarquico:parseInt(nivel)||0 });
+    onActualizar(emp.id,{ 
+      jefe_id: jefeId==='__sin_jerarquia__' ? '__sin_jerarquia__' : (jefeId||null), 
+      es_asistente:esAsistente, 
+      departamento:dFinal||emp.departamento, 
+      nivel_jerarquico:parseInt(nivel)||0 
+    });
   };
 
   return (
@@ -389,6 +394,7 @@ function PanelJerarquia({ emp, empleados, color, onActualizar, onCerrar }) {
       <label style={{display:'block',fontSize:10,fontWeight:700,color:'#718096',textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>Reporta a (jefe directo)</label>
       <select value={jefeId} onChange={e=>setJefeId(e.target.value)} style={{width:'100%',padding:'7px 10px',borderRadius:9,border:`1.5px solid ${color.border}`,fontFamily:'Montserrat,sans-serif',fontSize:12,marginBottom:10,boxSizing:'border-box'}}>
         <option value="">— Sin jefe (nivel raíz) —</option>
+        <option value="__sin_jerarquia__">📌 Sin jerarquía asignada</option>
         {posiblesJefes.map(e=><option key={e.id} value={e.id}>{e.nombre} {e.apellido_paterno}</option>)}
       </select>
 
