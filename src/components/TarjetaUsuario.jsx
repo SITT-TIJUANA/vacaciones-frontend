@@ -8,6 +8,35 @@ export default function TarjetaUsuario() {
   const [empleado, setEmpleado] = useState(null);
   const [rotX, setRotX] = useState(0);
   const [rotY, setRotY] = useState(0);
+  const [pos, setPos] = useState(() => {
+    const saved = localStorage.getItem('tarjeta-pos');
+    return saved ? JSON.parse(saved) : { x: window.innerWidth - 180, y: 16 };
+  });
+  const [dragging, setDragging] = useState(false);
+  const dragOffset = useState({x:0,y:0})[0];
+  const dragRef = useState(null);
+
+  const onMouseDownDrag = (e) => {
+    if (e.button !== 0) return;
+    dragRef[0] = { startX: e.clientX - pos.x, startY: e.clientY - pos.y };
+    setDragging(true);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e) => {
+      const nx = Math.max(0, Math.min(window.innerWidth-200, e.clientX - dragRef[0].startX));
+      const ny = Math.max(0, Math.min(window.innerHeight-100, e.clientY - dragRef[0].startY));
+      setPos({x:nx, y:ny});
+    };
+    const onUp = () => {
+      setDragging(false);
+      setPos(p => { localStorage.setItem('tarjeta-pos', JSON.stringify(p)); return p; });
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [dragging]);
 
   useEffect(() => {
     if (usuario?.empleado_id) {
@@ -55,14 +84,16 @@ export default function TarjetaUsuario() {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setRotX(0); setRotY(0); }}
+      onMouseDown={onMouseDownDrag}
       onMouseMove={handleMouseMove}
       style={{
         position: 'fixed',
-        top: 16,
-        right: 16,
+        top: pos.y,
+        left: pos.x,
         zIndex: 998,
         perspective: '800px',
         userSelect: 'none',
+        cursor: dragging ? 'grabbing' : 'grab',
       }}
     >
       <div style={{
