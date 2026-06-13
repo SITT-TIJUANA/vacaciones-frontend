@@ -25,7 +25,7 @@ const MODULOS = [
     color2: '#4A90D9',
     glow: 'rgba(74,144,217,0.4)',
     ruta: '/permisos',
-    disponible: false,
+    disponible: true,
   },
   {
     id: 'incapacidades',
