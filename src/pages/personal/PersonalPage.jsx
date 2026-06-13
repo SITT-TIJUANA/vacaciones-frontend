@@ -179,7 +179,7 @@ function Organigrama() {
   const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
 
   const mostrarToast = (msg, tipo='ok') => { setToast({msg,tipo}); setTimeout(()=>setToast(null),3000); };
-  const cargar = () => api.get('/api/empleados').then(r=>setEmpleados(r.data.filter(e=>e.activo!==false))).catch(console.error);
+  const cargar = () => api.get('/api/empleados').then(r=>setEmpleados(r.data)).catch(console.error);
   useEffect(()=>{ cargar(); },[]);
 
   const buildTree = (emps) => {
@@ -231,6 +231,18 @@ function Organigrama() {
         </div>
       </div>
       {sel && <ModalOrgEmpleado emp={sel} onClose={()=>setSel(null)}/>}
+      {panelId && esAdmin && (() => {
+        const empPanel = empleados.find(e=>e.id===panelId);
+        return empPanel ? (
+          <div className="modal-overlay" onClick={()=>setPanelId(null)}>
+            <div onClick={e=>e.stopPropagation()}>
+              <PanelJerarquia emp={empPanel} empleados={empleados}
+                color={getDeptColor(empPanel.departamento)}
+                onActualizar={actualizarEmp} onCerrar={()=>setPanelId(null)}/>
+            </div>
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 }
@@ -290,10 +302,7 @@ function NodoOrg({ node, nivel, esAdmin, empleados, panelId, setPanelId, onActua
           )}
         </div>
 
-        {panelAbierto&&esAdmin && (
-          <PanelJerarquia emp={node} empleados={empleados} color={color}
-            onActualizar={onActualizar} onCerrar={()=>setPanelId(null)}/>
-        )}
+
       </div>
 
       {tieneHijos && (
@@ -313,6 +322,7 @@ function NodoOrg({ node, nivel, esAdmin, empleados, panelId, setPanelId, onActua
 }
 
 function PanelJerarquia({ emp, empleados, color, onActualizar, onCerrar }) {
+  // Modal panel — no position absolute needed
   const [jefeId, setJefeId] = useState(emp.jefe_id||'');
   const [esAsistente, setEsAsistente] = useState(emp.es_asistente||false);
   const [depto, setDepto] = useState(emp.departamento||'');
@@ -328,7 +338,7 @@ function PanelJerarquia({ emp, empleados, color, onActualizar, onCerrar }) {
   };
 
   return (
-    <div onClick={e=>e.stopPropagation()} style={{position:'absolute',top:'100%',left:'50%',transform:'translateX(-50%)',marginTop:6,background:'#fff',borderRadius:14,padding:'16px',boxShadow:'0 8px 40px rgba(0,0,0,0.18)',zIndex:100,width:240,border:`1.5px solid ${color.border}`}}>
+    <div style={{background:'#fff',borderRadius:20,padding:'24px',boxShadow:'0 20px 60px rgba(0,0,0,0.3)',width:'min(320px,92vw)',border:`2px solid ${color.border}`}}>
       <div style={{fontWeight:800,fontSize:12,color:color.bg,marginBottom:12,textAlign:'center'}}>⚙️ {emp.nombre} {emp.apellido_paterno}</div>
 
       <label style={{display:'block',fontSize:10,fontWeight:700,color:'#718096',textTransform:'uppercase',letterSpacing:0.5,marginBottom:4}}>Reporta a (jefe directo)</label>
