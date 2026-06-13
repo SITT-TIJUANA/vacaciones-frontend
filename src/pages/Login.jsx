@@ -66,7 +66,7 @@ export default function Login() {
     setCargando(true); setError('');
     try {
       await login(form.username, form.password);
-      window.location.href = '/vacaciones-frontend/#/dashboard';
+      window.location.href = '/vacaciones-frontend/#/menu';
     } catch (err) {
       setError(err.response?.data?.error || 'Credenciales incorrectas');
     } finally { setCargando(false); }
