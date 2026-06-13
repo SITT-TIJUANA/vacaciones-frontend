@@ -58,7 +58,7 @@ const MODULOS = [
     icon: '👥',
     titulo: 'Gestión de',
     subtitulo: 'Personal SITT',
-    desc: 'Altas, bajas, directorio, organigrama y usuarios del sistema',
+    desc: 'Altas, bajas, directorio, historial y usuarios del sistema',
     color1: '#3d1a00',
     color2: '#C9A84C',
     glow: 'rgba(201,168,76,0.5)',
