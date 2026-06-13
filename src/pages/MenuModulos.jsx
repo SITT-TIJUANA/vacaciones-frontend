@@ -39,6 +39,20 @@ const MODULOS = [
     ruta: '/incapacidades',
     disponible: false,
   },
+  {
+    id: 'personal',
+    icon: '👥',
+    titulo: 'Gestión de',
+    subtitulo: 'Personal SITT',
+    desc: 'Altas, bajas, directorio, organigrama y usuarios del sistema',
+    color1: '#3d1a00',
+    color2: '#C9A84C',
+    glow: 'rgba(201,168,76,0.5)',
+    ruta: '/personal',
+    disponible: true,
+    soloAdmin: true,
+    destacado: true,
+  },
 ];
 
 export default function MenuModulos() {
@@ -51,10 +65,16 @@ export default function MenuModulos() {
     setTimeout(() => setVisible(true), 100);
   }, []);
 
+  const { rolEfectivo } = useAuth();
+  const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
+
   const entrar = (mod) => {
     if (!mod.disponible) return;
+    if (mod.soloAdmin && !esAdmin) return;
     navigate(mod.ruta);
   };
+
+  const modulosFiltrados = MODULOS.filter(m => !m.soloAdmin || esAdmin);
 
   return (
     <div style={{
@@ -102,7 +122,7 @@ export default function MenuModulos() {
         position: 'relative', zIndex: 2,
         perspective: '1200px',
       }}>
-        {MODULOS.map((mod, i) => (
+        {modulosFiltrados.map((mod, i) => (
           <TarjetaPortal
             key={mod.id}
             mod={mod}
@@ -157,8 +177,8 @@ function TarjetaPortal({ mod, index, visible, hovered, onHover, onLeave, onClick
       onMouseLeave={onLeave}
       onClick={onClick}
       style={{
-        width: 'clamp(240px,28vw,320px)',
-        minHeight: 'clamp(300px,38vh,420px)',
+        width: mod.destacado ? 'clamp(260px,30vw,360px)' : 'clamp(240px,28vw,320px)',
+        minHeight: mod.destacado ? 'clamp(320px,42vh,460px)' : 'clamp(300px,38vh,420px)',
         position: 'relative',
         cursor: mod.disponible ? 'pointer' : 'default',
         opacity: visible ? 1 : 0,
