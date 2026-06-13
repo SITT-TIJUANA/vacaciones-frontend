@@ -187,6 +187,7 @@ function Organigrama() {
     emps.forEach(e=>{ map[e.id]={...e,hijos:[]}; });
     const roots = [];
     emps.forEach(e=>{
+      if (e.sin_jerarquia) return; // excluded from tree
       if (e.jefe_id && map[e.jefe_id]) map[e.jefe_id].hijos.push(map[e.id]);
       else roots.push(map[e.id]);
     });
@@ -237,7 +238,7 @@ function Organigrama() {
         const enArbol = new Set();
         const marcar = (nodes) => nodes.forEach(n=>{ enArbol.add(n.id); marcar(n.hijos||[]); });
         marcar(tree);
-        const sinJerarquia = empleados.filter(e=>!enArbol.has(e.id));
+        const sinJerarquia = empleados.filter(e=>!enArbol.has(e.id) || e.sin_jerarquia===true);
         if (!sinJerarquia.length) return null;
         return (
           <div style={{marginTop:40,borderTop:'2px dashed #e2e8f0',paddingTop:24}}>
