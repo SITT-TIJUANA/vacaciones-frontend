@@ -7,16 +7,15 @@ export default function TarjetaUsuario() {
   const [empleado, setEmpleado] = useState(null);
   const [rotX, setRotX] = useState(0);
   const [rotY, setRotY] = useState(0);
-  const [pos, setPos] = useState({ x: window.innerWidth - 210, y: 80 });
+  const [pos, setPos] = useState({ x: window.innerWidth - 200, y: 80 });
   const isDragging = useRef(false);
   const startRef = useRef({ mx:0, my:0, px:0, py:0 });
   const posRef = useRef(pos);
   const cardRef = useRef(null);
-  const animRef = useRef(null);
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem('credencial-pos');
+      const s = localStorage.getItem('badge-pos');
       if (s) { const p = JSON.parse(s); setPos(p); posRef.current = p; }
     } catch(e){}
   }, []);
@@ -28,169 +27,193 @@ export default function TarjetaUsuario() {
     }
   }, [usuario]);
 
-  // Animación 3D suave automática
   useEffect(() => {
-    let t = 0;
+    let t = 0, frame;
     const anim = () => {
       if (!isDragging.current) {
-        t += 0.015;
-        setRotX(Math.sin(t * 0.5) * 5);
-        setRotY(Math.sin(t * 0.8) * 8);
+        t += 0.012;
+        setRotX(Math.sin(t * 0.5) * 6);
+        setRotY(Math.sin(t * 0.8) * 9);
       }
-      animRef.current = requestAnimationFrame(anim);
+      frame = requestAnimationFrame(anim);
     };
-    animRef.current = requestAnimationFrame(anim);
-    return () => cancelAnimationFrame(animRef.current);
+    frame = requestAnimationFrame(anim);
+    return () => cancelAnimationFrame(frame);
   }, []);
 
-  const startDrag = (clientX, clientY) => {
+  const startDrag = (cx, cy) => {
     isDragging.current = true;
-    startRef.current = { mx:clientX, my:clientY, px:posRef.current.x, py:posRef.current.y };
-
+    startRef.current = { mx:cx, my:cy, px:posRef.current.x, py:posRef.current.y };
     const move = (e) => {
-      const cx = e.touches ? e.touches[0].clientX : e.clientX;
-      const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const nx = Math.max(0, Math.min(window.innerWidth-210, startRef.current.px + cx - startRef.current.mx));
-      const ny = Math.max(0, Math.min(window.innerHeight-280, startRef.current.py + cy - startRef.current.my));
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      const nx = Math.max(0, Math.min(window.innerWidth-200, startRef.current.px + x - startRef.current.mx));
+      const ny = Math.max(0, Math.min(window.innerHeight-200, startRef.current.py + y - startRef.current.my));
       posRef.current = {x:nx, y:ny};
       if (cardRef.current) { cardRef.current.style.left=nx+'px'; cardRef.current.style.top=ny+'px'; }
     };
     const end = () => {
       isDragging.current = false;
-      const p = posRef.current;
-      setPos({...p});
-      localStorage.setItem('credencial-pos', JSON.stringify(p));
-      window.removeEventListener('mousemove', move);
-      window.removeEventListener('mouseup', end);
-      window.removeEventListener('touchmove', move);
-      window.removeEventListener('touchend', end);
+      const p = posRef.current; setPos({...p});
+      localStorage.setItem('badge-pos', JSON.stringify(p));
+      window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', end);
+      window.removeEventListener('touchmove', move); window.removeEventListener('touchend', end);
     };
-    window.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', end);
-    window.addEventListener('touchmove', move, {passive:false});
-    window.addEventListener('touchend', end);
+    window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+    window.addEventListener('touchmove', move, {passive:false}); window.addEventListener('touchend', end);
   };
 
-  const onMouseMove3D = (e) => {
-    if (isDragging.current) return;
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setRotX(-((e.clientY-rect.top-rect.height/2)/(rect.height/2))*12);
-    setRotY(((e.clientX-rect.left-rect.width/2)/(rect.width/2))*12);
+  const ROLES = {
+    admin:    { rango:'UNREAL', icon:'⚡', color:'#CE1126', glow:'rgba(206,17,38,0.7)', grad:'linear-gradient(135deg,#1a0005,#3d0010,#6B0F2B)', accent:'#FF4466', stars:5 },
+    rrhh:     { rango:'ELITE',  icon:'💎', color:'#4A90D9', glow:'rgba(74,144,217,0.7)', grad:'linear-gradient(135deg,#000a1a,#0a1f3d,#1a3a6b)', accent:'#60AFFF', stars:4 },
+    empleado: { rango:'ORO',    icon:'⭐', color:'#C9A84C', glow:'rgba(201,168,76,0.7)', grad:'linear-gradient(135deg,#1a1200,#3d2e00,#6b5200)', accent:'#FFD700', stars:3 },
   };
 
-  const ROL_INFO = {
-    admin:    { label:'ADMINISTRADOR',    color:'#C9A84C' },
-    rrhh:     { label:'RECURSOS HUMANOS', color:'#4A90D9' },
-    empleado: { label:'PERSONAL',         color:'#66BB6A' },
-  };
-
-  const info = ROL_INFO[rolEfectivo] || ROL_INFO.empleado;
-  const nombre = empleado
-    ? `${empleado.nombre} ${empleado.apellido_paterno}`
-    : usuario?.username || 'Usuario';
-  const puesto = empleado?.puesto || info.label;
-  const numEmp = empleado?.numero_empleado || '—';
-
-  // QR decorativo SVG
-  const QR = () => (
-    <svg width="44" height="44" viewBox="0 0 44 44" style={{display:'block'}}>
-      <rect width="44" height="44" fill="rgba(255,255,255,0.08)" rx="4"/>
-      {/* Esquinas QR */}
-      {[[2,2],[28,2],[2,28]].map(([x,y],i)=>(
-        <g key={i}>
-          <rect x={x} y={y} width="14" height="14" fill="none" stroke={info.color} strokeWidth="2" rx="2"/>
-          <rect x={x+3} y={y+3} width="8" height="8" fill={info.color} rx="1"/>
-        </g>
-      ))}
-      {/* Módulos QR aleatorios */}
-      {[[28,20],[30,22],[32,20],[28,24],[32,24],[30,26],[28,28],[32,28],[30,30],[28,32],[32,32],
-        [20,28],[22,30],[24,28],[20,32],[24,32],[22,34],[20,36],[24,36],
-        [16,16],[18,14],[20,16],[16,20],[20,20]].map(([x,y],i)=>(
-        <rect key={i} x={x} y={y} width="2" height="2" fill={info.color} opacity="0.7"/>
-      ))}
-    </svg>
-  );
+  const r = ROLES[rolEfectivo] || ROLES.empleado;
+  const nombre = empleado ? `${empleado.nombre} ${empleado.apellido_paterno}` : usuario?.username || 'Usuario';
+  const firstWord = nombre.split(' ')[0];
 
   return (
     <div
       ref={cardRef}
       onMouseDown={e=>{ e.preventDefault(); startDrag(e.clientX, e.clientY); }}
       onTouchStart={e=>startDrag(e.touches[0].clientX, e.touches[0].clientY)}
-      onMouseMove={onMouseMove3D}
+      onMouseMove={e=>{
+        if (isDragging.current) return;
+        const rect = cardRef.current?.getBoundingClientRect(); if(!rect) return;
+        setRotX(-((e.clientY-rect.top-rect.height/2)/(rect.height/2))*14);
+        setRotY(((e.clientX-rect.left-rect.width/2)/(rect.width/2))*14);
+      }}
       style={{ position:'fixed', left:pos.x, top:pos.y, zIndex:998, userSelect:'none', cursor:'grab', touchAction:'none' }}
     >
+      {/* Glow exterior */}
+      <div style={{ position:'absolute', inset:-8, borderRadius:24, background:r.glow, filter:'blur(16px)', opacity:0.5, pointerEvents:'none', zIndex:-1 }}/>
+
       <div style={{
         transform:`perspective(700px) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
-        transition: isDragging.current ? 'none' : 'transform 0.3s ease',
+        transition: isDragging.current ? 'none' : 'transform 0.4s ease',
         width:190,
-        borderRadius:16,
+        borderRadius:20,
+        background: r.grad,
+        border:`1.5px solid ${r.color}40`,
         overflow:'hidden',
-        boxShadow:'0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-        background:'linear-gradient(160deg,#3d0a15 0%,#6B0F2B 40%,#4a0c1f 100%)',
+        boxShadow:`0 0 30px ${r.glow}, 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)`,
+        fontFamily:'Montserrat,sans-serif',
       }}>
-        {/* Hologram top strip */}
-        <div style={{height:3,background:`linear-gradient(90deg,transparent,${info.color},#fff,${info.color},transparent)`,opacity:0.8}}/>
+        {/* Top glow line */}
+        <div style={{height:2, background:`linear-gradient(90deg,transparent,${r.accent},white,${r.accent},transparent)`}}/>
 
-        {/* Header */}
-        <div style={{padding:'10px 12px 8px',borderBottom:'1px solid rgba(201,168,76,0.2)',display:'flex',alignItems:'center',gap:8}}>
-          <img src="/vacaciones-frontend/escudo-sitt.png" alt="" style={{width:22,height:22,objectFit:'contain',opacity:0.9}} onError={e=>e.target.style.display='none'}/>
-          <div>
-            <div style={{fontSize:7,fontWeight:900,color:'rgba(255,255,255,0.5)',letterSpacing:2,textTransform:'uppercase',fontFamily:'Montserrat,sans-serif'}}>H. XXV Ayuntamiento de Tijuana</div>
-            <div style={{fontSize:9,fontWeight:900,color:info.color,letterSpacing:1.5,textTransform:'uppercase',fontFamily:'Montserrat,sans-serif'}}>SITT</div>
+        {/* Rango banner */}
+        <div style={{
+          padding:'10px 14px 6px',
+          textAlign:'center',
+          position:'relative',
+          overflow:'hidden',
+        }}>
+          {/* Fondo animado */}
+          <div style={{position:'absolute',inset:0,background:`radial-gradient(ellipse at 50% 0%,${r.color}30,transparent 70%)`,pointerEvents:'none'}}/>
+
+          <div style={{fontSize:7,letterSpacing:4,color:`${r.accent}90`,textTransform:'uppercase',marginBottom:2}}>RANGO</div>
+          <div style={{
+            fontSize:22, fontWeight:900, letterSpacing:3,
+            color:r.accent,
+            textShadow:`0 0 20px ${r.accent}, 0 0 40px ${r.color}, 0 2px 4px rgba(0,0,0,0.8)`,
+            lineHeight:1,
+          }}>
+            {r.rango}
+          </div>
+
+          {/* Estrellas */}
+          <div style={{display:'flex',justifyContent:'center',gap:3,marginTop:6}}>
+            {Array.from({length:5}).map((_,i)=>(
+              <div key={i} style={{
+                fontSize:10,
+                color: i < r.stars ? r.accent : 'rgba(255,255,255,0.1)',
+                textShadow: i < r.stars ? `0 0 8px ${r.accent}` : 'none',
+                transition:'color 0.3s',
+              }}>★</div>
+            ))}
           </div>
         </div>
 
-        {/* Body */}
-        <div style={{padding:'10px 12px',display:'flex',gap:10,alignItems:'flex-start'}}>
-          {/* Foto */}
-          <div style={{flexShrink:0}}>
-            {empleado?.foto_url
-              ? <img src={empleado.foto_url} alt="" style={{width:56,height:68,objectFit:'cover',borderRadius:6,border:`2px solid ${info.color}`,display:'block'}}/>
-              : <div style={{width:56,height:68,borderRadius:6,border:`2px solid ${info.color}`,background:'rgba(255,255,255,0.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,flexDirection:'column',gap:2}}>
-                  <span>👤</span>
-                  <span style={{fontSize:7,color:'rgba(255,255,255,0.4)',fontFamily:'Montserrat,sans-serif'}}>FOTO</span>
-                </div>
-            }
-            <div style={{marginTop:6,textAlign:'center'}}>
-              <QR/>
+        {/* Divisor */}
+        <div style={{height:1,background:`linear-gradient(90deg,transparent,${r.accent}60,transparent)`,margin:'0 12px'}}/>
+
+        {/* Avatar + info */}
+        <div style={{padding:'10px 14px',display:'flex',alignItems:'center',gap:10}}>
+          {/* Avatar */}
+          <div style={{position:'relative',flexShrink:0}}>
+            <div style={{
+              width:52, height:52, borderRadius:'50%',
+              border:`2px solid ${r.accent}`,
+              boxShadow:`0 0 16px ${r.glow}`,
+              overflow:'hidden',
+              background:'rgba(255,255,255,0.05)',
+              display:'flex',alignItems:'center',justifyContent:'center',
+            }}>
+              {empleado?.foto_url
+                ? <img src={empleado.foto_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                : <span style={{fontSize:22}}>{r.icon}</span>
+              }
+            </div>
+            {/* Badge nivel */}
+            <div style={{
+              position:'absolute',bottom:-3,right:-3,
+              width:18,height:18,borderRadius:'50%',
+              background:`linear-gradient(135deg,${r.color},${r.accent})`,
+              border:'2px solid #000',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:8,fontWeight:900,color:'#fff',
+              boxShadow:`0 0 8px ${r.glow}`,
+            }}>
+              {r.stars}
             </div>
           </div>
 
-          {/* Info */}
+          {/* Nombre y rol */}
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:7,fontWeight:700,color:info.color,letterSpacing:2,textTransform:'uppercase',fontFamily:'Montserrat,sans-serif',marginBottom:3}}>
-              {info.label}
+            <div style={{fontSize:13,fontWeight:900,color:'#fff',lineHeight:1.2,textShadow:'0 1px 4px rgba(0,0,0,0.8)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+              {firstWord}
             </div>
-            <div style={{fontSize:11,fontWeight:900,color:'#fff',fontFamily:'Montserrat,sans-serif',lineHeight:1.2,marginBottom:6,wordBreak:'break-word'}}>
-              {nombre}
-            </div>
-            <div style={{fontSize:8,color:'rgba(255,255,255,0.6)',fontFamily:'Montserrat,sans-serif',lineHeight:1.4,marginBottom:6}}>
-              {puesto}
-            </div>
-            {empleado?.departamento && (
-              <div style={{fontSize:7,color:'rgba(255,255,255,0.4)',fontFamily:'Montserrat,sans-serif',textTransform:'uppercase',letterSpacing:0.5,marginBottom:6}}>
-                {empleado.departamento}
+            {nombre.includes(' ') && (
+              <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.5)',lineHeight:1.2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                {nombre.split(' ').slice(1).join(' ')}
               </div>
             )}
-            <div style={{borderTop:'1px solid rgba(201,168,76,0.2)',paddingTop:6}}>
-              <div style={{fontSize:7,color:'rgba(255,255,255,0.35)',fontFamily:'Montserrat,sans-serif',letterSpacing:1}}>No. EMPLEADO</div>
-              <div style={{fontSize:11,fontWeight:900,color:info.color,fontFamily:'Montserrat,sans-serif',letterSpacing:1}}>{numEmp}</div>
+            <div style={{
+              marginTop:4,fontSize:8,fontWeight:800,letterSpacing:1,
+              color:r.accent,textTransform:'uppercase',
+              textShadow:`0 0 8px ${r.glow}`,
+            }}>
+              {rolEfectivo==='admin'?'Administrador':rolEfectivo==='rrhh'?'Rec. Humanos':'Personal SITT'}
             </div>
+            {empleado?.puesto && (
+              <div style={{fontSize:8,color:'rgba(255,255,255,0.3)',marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                {empleado.puesto}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Footer */}
-        <div style={{padding:'6px 12px',background:'rgba(0,0,0,0.3)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <div style={{fontSize:7,color:'rgba(255,255,255,0.25)',fontFamily:'Montserrat,sans-serif',letterSpacing:1}}>TIJUANA, B.C. MÉXICO</div>
-          <div style={{width:24,height:16,background:'linear-gradient(135deg,#FFD700,#C9A84C)',borderRadius:3,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <div style={{width:16,height:10,border:'1px solid rgba(0,0,0,0.3)',borderRadius:2,background:'linear-gradient(90deg,#FFD700,#fff9,#FFD700)'}}/>
+        {/* Bottom bar */}
+        <div style={{
+          padding:'6px 14px',
+          background:'rgba(0,0,0,0.4)',
+          display:'flex',justifyContent:'space-between',alignItems:'center',
+          borderTop:`1px solid ${r.color}20`,
+        }}>
+          <div style={{fontSize:7,color:'rgba(255,255,255,0.2)',letterSpacing:1}}>SITT · TIJUANA</div>
+          <div style={{display:'flex',gap:4,alignItems:'center'}}>
+            <div style={{width:6,height:6,borderRadius:'50%',background:r.accent,boxShadow:`0 0 6px ${r.accent}`,animation:'pulse 1.5s ease-in-out infinite'}}/>
+            <div style={{fontSize:7,color:r.accent,fontWeight:700,letterSpacing:1}}>ACTIVO</div>
           </div>
         </div>
 
-        {/* Hologram bottom */}
-        <div style={{height:2,background:`linear-gradient(90deg,transparent,${info.color},transparent)`,opacity:0.5}}/>
+        {/* Bottom glow line */}
+        <div style={{height:2,background:`linear-gradient(90deg,transparent,${r.accent},transparent)`,opacity:0.5}}/>
       </div>
+
+      <style>{`@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}`}</style>
     </div>
   );
 }
