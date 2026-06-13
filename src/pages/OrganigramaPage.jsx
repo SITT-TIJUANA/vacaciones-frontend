@@ -191,13 +191,13 @@ function NodoOrg({ node, nivel, esAdmin, empleados, panelId, setPanelId, onActua
   return (
     <div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative'}}>
       {nivel>0 && <div style={{width:2,height:24,background:'#C9A84C'}}/>}
-      <div style={{position:'relative'}}>
+      <div style={{position:'relative', paddingTop:14}}>
         <div onClick={()=>{ if(!editandoCargo) onClickEmp(node); }}
           style={{background:'#fff',borderRadius:16,padding:nivel===0?'20px 20px 14px':nivel===1?'14px 16px 10px':'10px 12px 8px',textAlign:'center',border:`2px solid ${color.border}`,boxShadow:nivel===0?`0 8px 32px ${color.bg}25`:`0 4px 16px ${color.bg}15`,cursor:'pointer',width:w,transition:'all 0.2s',position:'relative'}}
           onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow=`0 12px 32px ${color.bg}40`;}}
           onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=nivel===0?`0 8px 32px ${color.bg}25`:`0 4px 16px ${color.bg}15`;}}>
 
-          {nivel===0 && <div style={{position:'absolute',top:-10,left:'50%',transform:'translateX(-50%)',background:color.bg,color:color.text,fontSize:8,fontWeight:900,padding:'2px 10px',borderRadius:20,letterSpacing:1,whiteSpace:'nowrap',zIndex:2}}>{(node.departamento||'GENERAL').toUpperCase()}</div>}
+          {nivel===0 && <div style={{position:'absolute',top:-22,left:'50%',transform:'translateX(-50%)',background:color.bg,color:color.text,fontSize:8,fontWeight:900,padding:'3px 12px',borderRadius:20,letterSpacing:1,whiteSpace:'nowrap',zIndex:10,boxShadow:`0 2px 8px ${color.bg}60`}}>{(node.departamento||'GENERAL').toUpperCase()}</div>}
           {node.es_asistente && <div style={{position:'absolute',top:-8,right:8,background:'#C9A84C',color:'#fff',fontSize:7,fontWeight:900,padding:'2px 6px',borderRadius:10}}>ASISTENTE</div>}
 
           {node.foto_url
