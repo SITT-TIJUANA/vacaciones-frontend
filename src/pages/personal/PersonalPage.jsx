@@ -10,7 +10,6 @@ import api from '../../services/api';
 
 const NAV_ITEMS = [
   { id:'directorio',  icon:'👥', label:'Directorio',  roles:['admin','rrhh'] },
-  { id:'organigrama', icon:'📊', label:'Organigrama', roles:['admin','rrhh','empleado'] },
   { id:'alta',        icon:'➕', label:'Alta',         roles:['admin','rrhh'] },
   { id:'bajas',       icon:'🚫', label:'Bajas',        roles:['admin','rrhh'] },
   { id:'historial',   icon:'📋', label:'Historial',   roles:['admin','rrhh'] },
@@ -46,7 +45,6 @@ export default function PersonalPage() {
 
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'24px 16px' }}>
         {seccion==='directorio'  && <Directorio />}
-        {seccion==='organigrama' && <Organigrama />}
         {seccion==='alta'        && <AltaPersonal onCreado={()=>setSeccion('directorio')} />}
         {seccion==='bajas'       && <Bajas />}
         {seccion==='historial'   && <Historial />}
