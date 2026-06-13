@@ -13,6 +13,7 @@ import InstalarApp from '../components/InstalarApp';
 import Historial from '../components/Historial';
 import SeccionPeriodos from '../components/SeccionPeriodos';
 import SeccionPermisos from '../components/SeccionPermisos';
+import { BtnRegresar } from '../components/BotonesNav';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -115,6 +116,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="dash-header-right">
+          <BtnRegresar />
           {esAdminRRHH && (
             <div style={{ display:'flex',alignItems:'center',gap:6 }}>
               <button className="icon-btn" style={{ width:32,height:32,fontSize:15 }} onClick={()=>setShowInfo(true)} title="¿Qué es vincular cuenta?">ℹ️</button>
