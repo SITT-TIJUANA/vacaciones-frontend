@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import jsPDF from 'jspdf';
+import { BtnRegresar, BtnCerrarSesion } from '../../components/BotonesNav';
 import 'jspdf-autotable';
 
 const TIPOS = {
@@ -76,7 +77,10 @@ export default function PermisosPage() {
           <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:2, textTransform:'uppercase' }}>SITT · Control de</div>
           <div style={{ fontSize:28, fontWeight:900, color:'#fff', fontFamily:'Playfair Display,serif', fontStyle:'italic' }}>Permisos Laborales</div>
         </div>
-        <div style={{ display:'flex', gap:8 }}>
+        <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <BtnRegresar />
+          <BtnCerrarSesion />
+          <div style={{ width:1, height:30, background:'rgba(255,255,255,0.15)', margin:'0 4px' }}/>
           {[
             { id:'solicitudes', label:'📋 Solicitudes' },
             ...(esAdmin ? [{ id:'estadisticas', label:'📊 Estadísticas' }] : []),
@@ -370,7 +374,10 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
       <div style={{ marginBottom:16 }}>
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
           <label style={{ fontWeight:700, fontSize:12, color:'#4A5568', textTransform:'uppercase', letterSpacing:0.5 }}>¿Regresa ese día?</label>
-          <div style={{ display:'flex', gap:8 }}>
+          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+          <BtnRegresar />
+          <BtnCerrarSesion />
+          <div style={{ width:1, height:30, background:'rgba(255,255,255,0.15)', margin:'0 4px' }}/>
             {[{v:true,l:'Sí'},{v:false,l:'No'}].map(o=>(
               <button key={String(o.v)} onClick={()=>setForm({...form,regresa:o.v})}
                 style={{ padding:'6px 16px', borderRadius:20, border:`1.5px solid ${form.regresa===o.v?'#2a5298':'#e2e8f0'}`, background:form.regresa===o.v?'#EEF2FF':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:form.regresa===o.v?'#2a5298':'#718096' }}>
