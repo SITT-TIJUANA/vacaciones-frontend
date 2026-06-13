@@ -81,6 +81,7 @@ export default function PermisosPage() {
           <BtnRegresar />
           <BtnCerrarSesion />
           <div style={{ width:1, height:30, background:'rgba(255,255,255,0.15)', margin:'0 4px' }}/>
+          {/* Botones solo en header */}
           {[
             { id:'solicitudes', label:'📋 Solicitudes' },
             ...(esAdmin ? [{ id:'estadisticas', label:'📊 Estadísticas' }] : []),
@@ -95,7 +96,7 @@ export default function PermisosPage() {
           ))}
           <button onClick={() => setSeccion('nuevo')}
             style={{ padding:'8px 20px', borderRadius:20, border:'none', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:12, background:'#2a5298', color:'#fff' }}>
-            ➕ Nuevo permiso
+            ➕ {esAdmin ? 'Registrar permiso' : 'Solicitar permiso'}
           </button>
         </div>
       </div>
@@ -374,10 +375,7 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
       <div style={{ marginBottom:16 }}>
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
           <label style={{ fontWeight:700, fontSize:12, color:'#4A5568', textTransform:'uppercase', letterSpacing:0.5 }}>¿Regresa ese día?</label>
-          <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-          <BtnRegresar />
-          <BtnCerrarSesion />
-          <div style={{ width:1, height:30, background:'rgba(255,255,255,0.15)', margin:'0 4px' }}/>
+          <div style={{ display:'flex', gap:8 }}>
             {[{v:true,l:'Sí'},{v:false,l:'No'}].map(o=>(
               <button key={String(o.v)} onClick={()=>setForm({...form,regresa:o.v})}
                 style={{ padding:'6px 16px', borderRadius:20, border:`1.5px solid ${form.regresa===o.v?'#2a5298':'#e2e8f0'}`, background:form.regresa===o.v?'#EEF2FF':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:form.regresa===o.v?'#2a5298':'#718096' }}>
