@@ -112,7 +112,35 @@ export default function Reportes() {
     Promise.all([
       api.get(`/api/reportes/resumen?anio=${anio}`),
       api.get(`/api/reportes/empleados-detalle?anio=${anio}`),
-    ]).then(([r, d]) => { setResumen(r.data); setDetalle(d.data); })
+    ]).then(([r, d]) => {
+      const res = r.data;
+      if (res.totales) {
+        res.totales = {
+          ...res.totales,
+          total_empleados: parseInt(res.totales.total_empleados)||0,
+          total_dias_asignados: parseInt(res.totales.total_dias_asignados)||0,
+          total_dias_tomados: parseInt(res.totales.total_dias_tomados)||0,
+          total_dias_disponibles: parseInt(res.totales.total_dias_disponibles)||0,
+          solicitudes_pendientes: parseInt(res.totales.solicitudes_pendientes)||0,
+          solicitudes_aprobadas: parseInt(res.totales.solicitudes_aprobadas)||0,
+        };
+      }
+      if (res.por_departamento) {
+        res.por_departamento = res.por_departamento.map(d=>({
+          ...d,
+          empleados: parseInt(d.empleados)||0,
+          dias_tomados: parseInt(d.dias_tomados)||0,
+          dias_disponibles: parseInt(d.dias_disponibles)||0,
+        }));
+      }
+      setResumen(res);
+      setDetalle(d.data.map(e=>({
+        ...e,
+        dias_correspondientes: parseInt(e.dias_correspondientes)||0,
+        dias_tomados: parseInt(e.dias_tomados)||0,
+        dias_disponibles: parseInt(e.dias_disponibles)||0,
+      })));
+    })
       .catch(console.error).finally(() => setCargando(false));
   };
 
@@ -634,8 +662,8 @@ export default function Reportes() {
         <GraficaDonut3D
           titulo="🍩 Uso General de Días"
           datos={[
-            {label:'Días Tomados', valor:tot.total_dias_tomados||0, color:'#6B0F2B'},
-            {label:'Días Disponibles', valor:tot.total_dias_disponibles||0, color:'#C9A84C'},
+            {label:'Días Tomados', valor:parseInt(tot.total_dias_tomados)||0, color:'#6B0F2B'},
+            {label:'Días Disponibles', valor:parseInt(tot.total_dias_disponibles)||0, color:'#C9A84C'},
           ]}
           onClic={d=>setModalGrafica({
             titulo:'Uso General de Días',
@@ -651,15 +679,15 @@ export default function Reportes() {
         <GraficaDonut3D
           titulo="📋 Solicitudes por Estatus"
           datos={[
-            {label:'Aprobadas', valor:tot.solicitudes_aprobadas||0, color:'#27ae60'},
-            {label:'Pendientes', valor:tot.solicitudes_pendientes||0, color:'#F59E0B'},
+            {label:'Aprobadas', valor:parseInt(tot.solicitudes_aprobadas)||0, color:'#27ae60'},
+            {label:'Pendientes', valor:parseInt(tot.solicitudes_pendientes)||0, color:'#F59E0B'},
           ]}
           onClic={d=>setModalGrafica({
             titulo:'Solicitudes de Vacaciones',
             filas:[
-              ['Solicitudes aprobadas', `${tot.solicitudes_aprobadas||0}`],
-              ['Solicitudes pendientes', `${tot.solicitudes_pendientes||0}`],
-              ['Total solicitudes', `${(tot.solicitudes_aprobadas||0)+(tot.solicitudes_pendientes||0)}`],
+              ['✅ Aprobadas', `${parseInt(tot.solicitudes_aprobadas)||0}`],
+              ['⏳ Pendientes', `${parseInt(tot.solicitudes_pendientes)||0}`],
+              ['📋 Total', `${(parseInt(tot.solicitudes_aprobadas)||0)+(parseInt(tot.solicitudes_pendientes)||0)}`],
             ],
           })}
         />
@@ -971,7 +999,7 @@ function GraficaDonut3D({ titulo, datos, onClic }) {
     return () => clearTimeout(t);
   }, [datos]);
 
-  const total = datos.reduce((s,d)=>s+(d.valor||0),0)||1;
+  const total = datos.reduce((s,d)=>s+(parseInt(d.valor)||0),0)||1;
   const SIZE = 180, CX = 90, CY = 90, R_OUT = 70, R_IN = 38, DEPTH = 10;
 
   const getCoords = (angle, r) => ({
@@ -1026,8 +1054,7 @@ function GraficaDonut3D({ titulo, datos, onClic }) {
           })}
           {/* Centro blanco */}
           <circle cx={CX} cy={CY} r={R_IN-2} fill="white"/>
-          <text x={CX} y={CY-5} textAnchor="middle" fontSize="18" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e">{datos.reduce((s,d)=>s+(d.valor||0),0)}</text>
-          <text x={CX} y={CY+12} textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="Montserrat" fill="#718096">TOTAL</text>
+          <text x={CX} y={CY+4} textAnchor="middle" fontSize="13" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e">{datos.reduce((s,d)=>s+(parseInt(d.valor)||0),0)}</text>
         </svg>
 
         {/* Leyenda */}
