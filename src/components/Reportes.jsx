@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
+import { useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import api from '../services/api';
 import ConfigPDF from './ConfigPDF';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Filler);
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 // ── Colores institucionales ──────────────────────────────
@@ -513,37 +511,9 @@ export default function Reportes() {
   if (!resumen) return null;
 
   const tot = resumen.totales;
-  const chartOpts = {
-    responsive: true,
-    plugins: { legend: { position:'bottom', labels:{ font:{family:'Montserrat',size:11}, color:'#6B0F2B' } } },
-  };
-
-  const dataBarDepto = {
-    labels: resumen.por_departamento.map(d => d.departamento),
-    datasets: [
-      { label:'Tomados', data:resumen.por_departamento.map(d=>d.dias_tomados), backgroundColor:'rgba(107,15,43,0.8)', borderRadius:6 },
-      { label:'Disponibles', data:resumen.por_departamento.map(d=>d.dias_disponibles), backgroundColor:'rgba(201,168,76,0.8)', borderRadius:6 },
-    ],
-  };
-  const dataDonut = {
-    labels: ['Tomados','Disponibles'],
-    datasets: [{ data:[tot.total_dias_tomados,tot.total_dias_disponibles], backgroundColor:['rgba(107,15,43,0.85)','rgba(201,168,76,0.85)'], borderColor:['#6B0F2B','#C9A84C'], borderWidth:2 }],
-  };
+  const top5 = [...detalle].sort((a,b) => b.dias_disponibles - a.dias_disponibles).slice(0,5);
   const mesesData = Array(12).fill(0);
   resumen.solicitudes_por_mes.forEach(m => { mesesData[parseInt(m.mes)-1] = parseInt(m.dias||0); });
-  const dataLine = {
-    labels: MESES,
-    datasets: [{ label:'Días Aprobados', data:mesesData, borderColor:'#6B0F2B', backgroundColor:'rgba(107,15,43,0.08)', fill:true, tension:0.4, pointBackgroundColor:'#C9A84C', pointRadius:5 }],
-  };
-  const top5 = [...detalle].sort((a,b) => b.dias_disponibles - a.dias_disponibles).slice(0,5);
-  const dataTop5 = {
-    labels: top5.map(e => e.apellido_paterno),
-    datasets: [{ label:'Días Disponibles', data:top5.map(e=>e.dias_disponibles), backgroundColor:'rgba(107,15,43,0.75)', borderRadius:8 }],
-  };
-  const dataSolicitudes = {
-    labels: ['Aprobadas','Pendientes','Rechazadas'],
-    datasets: [{ data:[tot.solicitudes_aprobadas||0, tot.solicitudes_pendientes||0, 0], backgroundColor:['rgba(39,174,96,0.8)','rgba(230,81,0,0.8)','rgba(183,28,28,0.8)'], borderWidth:0 }],
-  };
 
   return (
     <div className="fade-in">
@@ -607,18 +577,47 @@ export default function Reportes() {
         ))}
       </div>
 
-      {/* Gráficas */}
-      <div className="grid-2" style={{ marginBottom:28 }}>
-        <div className="card"><h3 style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16 }}>📊 Por Departamento</h3>{resumen.por_departamento.length>0?<Bar data={dataBarDepto} options={chartOpts}/>:<p style={{textAlign:'center',color:'var(--g60)',padding:40}}>Sin datos</p>}</div>
-        <div className="card"><h3 style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16 }}>🍩 Uso General</h3><div style={{maxWidth:260,margin:'0 auto'}}><Doughnut data={dataDonut} options={{...chartOpts,scales:undefined}}/></div></div>
+      {/* Gráficas Pro */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',gap:20,marginBottom:24}}>
+        <GraficaBarras3D
+          titulo="📊 Días por Departamento"
+          datos={resumen.por_departamento.map(d=>({
+            label: d.departamento,
+            tomados: parseInt(d.dias_tomados)||0,
+            disponibles: parseInt(d.dias_disponibles)||0,
+          }))}
+        />
+        <GraficaDonut3D
+          titulo="🍩 Uso General de Días"
+          datos={[
+            {label:'Días Tomados', valor:tot.total_dias_tomados||0, color:'#6B0F2B'},
+            {label:'Días Disponibles', valor:tot.total_dias_disponibles||0, color:'#C9A84C'},
+          ]}
+        />
       </div>
-      <div className="grid-2" style={{ marginBottom:28 }}>
-        <div className="card"><h3 style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16 }}>🏆 Top 5 — Más Días Disponibles</h3>{top5.length>0?<Bar data={dataTop5} options={{...chartOpts,indexAxis:'y'}}/>:<p style={{textAlign:'center',color:'var(--g60)',padding:40}}>Sin datos</p>}</div>
-        <div className="card"><h3 style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16 }}>📋 Solicitudes por Estatus</h3><div style={{maxWidth:260,margin:'0 auto'}}><Doughnut data={dataSolicitudes} options={{...chartOpts,scales:undefined}}/></div></div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',gap:20,marginBottom:24}}>
+        <GraficaBarrasH3D
+          titulo="🏆 Top Empleados — Días Disponibles"
+          datos={top5.map(e=>({
+            label: `${e.nombre} ${e.apellido_paterno}`,
+            tomados: e.dias_tomados||0,
+            disponibles: e.dias_disponibles||0,
+          }))}
+        />
+        <GraficaDonut3D
+          titulo="📋 Solicitudes por Estatus"
+          datos={[
+            {label:'Aprobadas', valor:tot.solicitudes_aprobadas||0, color:'#27ae60'},
+            {label:'Pendientes', valor:tot.solicitudes_pendientes||0, color:'#F59E0B'},
+          ]}
+        />
       </div>
-      <div className="card" style={{ marginBottom:28 }}>
-        <h3 style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16 }}>📈 Días Aprobados por Mes — {anio}</h3>
-        <Line data={dataLine} options={chartOpts}/>
+      <div className="card" style={{marginBottom:24}}>
+        <GraficaLinea
+          titulo={`📈 Días Aprobados por Mes — ${anio}`}
+          datos={mesesData}
+          meses={MESES}
+        />
       </div>
 
       {/* Tabla */}
@@ -660,6 +659,376 @@ export default function Reportes() {
           onGenerar={(cfg) => { setShowConfig(false); exportarPDF(cfg); }}
         />
       )}
+    </div>
+  );
+}
+
+// ── Gráfica Barras 3D ─────────────────────────────────────
+function GraficaBarras3D({ titulo, datos }) {
+  const [tooltip, setTooltip] = useState(null);
+  const [animPct, setAnimPct] = useState(0);
+
+  useEffect(() => {
+    setAnimPct(0);
+    const t = setTimeout(() => {
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct += 3;
+        setAnimPct(Math.min(pct, 100));
+        if (pct >= 100) clearInterval(interval);
+      }, 16);
+      return () => clearInterval(interval);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [datos]);
+
+  if (!datos.length) return (
+    <div className="card" style={{padding:24}}>
+      <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:12}}>{titulo}</div>
+      <div style={{textAlign:'center',padding:40,color:'#718096'}}>Sin datos</div>
+    </div>
+  );
+
+  const maxVal = Math.max(...datos.map(d => d.tomados + d.disponibles), 1);
+
+  return (
+    <div className="card" style={{padding:24}}>
+      <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:20}}>{titulo}</div>
+      <div style={{display:'flex',alignItems:'flex-end',gap:12,height:200,paddingBottom:32,position:'relative'}}>
+        {/* Líneas guía */}
+        {[0,25,50,75,100].map(p=>(
+          <div key={p} style={{position:'absolute',left:0,right:0,bottom:`${32+p*1.68}px`,borderTop:'1px dashed rgba(107,15,43,0.1)',zIndex:0}}/>
+        ))}
+        {datos.map((d,i) => {
+          const total = d.tomados + d.disponibles;
+          const pctTom = (d.tomados / maxVal) * 160 * (animPct/100);
+          const pctDis = (d.disponibles / maxVal) * 160 * (animPct/100);
+          return (
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,position:'relative',zIndex:1}}>
+              <div style={{display:'flex',alignItems:'flex-end',gap:3,height:168}}>
+                {/* Barra tomados */}
+                <div style={{position:'relative'}} onMouseEnter={()=>setTooltip({...d,i})} onMouseLeave={()=>setTooltip(null)}>
+                  <div style={{
+                    width:22,height:pctTom,
+                    background:'linear-gradient(180deg,#9B1540,#6B0F2B)',
+                    borderRadius:'4px 4px 0 0',
+                    transition:'height 0.05s',
+                    cursor:'pointer',
+                    boxShadow:'4px 4px 0 rgba(107,15,43,0.3)',
+                    position:'relative',
+                  }}>
+                    {/* Cara superior 3D */}
+                    <div style={{position:'absolute',top:-6,left:0,width:22,height:6,background:'#B8244A',transform:'skewX(-45deg) translateX(3px)',borderRadius:'2px 2px 0 0'}}/>
+                    <div style={{position:'absolute',top:-6,right:-6,width:6,height:'calc(100% + 6px)',background:'rgba(0,0,0,0.2)',transform:'skewY(-45deg) translateY(3px)'}}/>
+                  </div>
+                </div>
+                {/* Barra disponibles */}
+                <div style={{position:'relative'}} onMouseEnter={()=>setTooltip({...d,i})} onMouseLeave={()=>setTooltip(null)}>
+                  <div style={{
+                    width:22,height:pctDis,
+                    background:'linear-gradient(180deg,#D4A84C,#C9A84C)',
+                    borderRadius:'4px 4px 0 0',
+                    transition:'height 0.05s',
+                    cursor:'pointer',
+                    boxShadow:'4px 4px 0 rgba(201,168,76,0.3)',
+                    position:'relative',
+                  }}>
+                    <div style={{position:'absolute',top:-6,left:0,width:22,height:6,background:'#E8C060',transform:'skewX(-45deg) translateX(3px)',borderRadius:'2px 2px 0 0'}}/>
+                    <div style={{position:'absolute',top:-6,right:-6,width:6,height:'calc(100% + 6px)',background:'rgba(0,0,0,0.15)',transform:'skewY(-45deg) translateY(3px)'}}/>
+                  </div>
+                </div>
+              </div>
+              <div style={{fontSize:9,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#718096',textAlign:'center',lineHeight:1.2,maxWidth:60,wordBreak:'break-word'}}>{d.label}</div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Leyenda */}
+      <div style={{display:'flex',gap:20,justifyContent:'center',marginTop:8}}>
+        <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:14,height:14,background:'#6B0F2B',borderRadius:3}}/><span style={{fontSize:11,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#4A5568'}}>Días tomados</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:14,height:14,background:'#C9A84C',borderRadius:3}}/><span style={{fontSize:11,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#4A5568'}}>Días disponibles</span></div>
+      </div>
+      {/* Tooltip */}
+      {tooltip && (
+        <div style={{position:'absolute',background:'#1a1a2e',color:'#fff',padding:'10px 14px',borderRadius:10,fontSize:12,fontFamily:'Montserrat,sans-serif',boxShadow:'0 8px 24px rgba(0,0,0,0.3)',zIndex:100,pointerEvents:'none',whiteSpace:'nowrap'}}>
+          <div style={{fontWeight:800,marginBottom:4}}>{tooltip.label}</div>
+          <div style={{color:'#C9A84C'}}>⏱️ Tomados: <strong>{tooltip.tomados}</strong> días</div>
+          <div style={{color:'#66BB6A'}}>✅ Disponibles: <strong>{tooltip.disponibles}</strong> días</div>
+          <div style={{color:'rgba(255,255,255,0.5)',marginTop:4,fontSize:10}}>Total: {tooltip.tomados+tooltip.disponibles} días</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Gráfica Barras Horizontales 3D ────────────────────────
+function GraficaBarrasH3D({ titulo, datos }) {
+  const [tooltip, setTooltip] = useState(null);
+  const [animPct, setAnimPct] = useState(0);
+
+  useEffect(() => {
+    setAnimPct(0);
+    const t = setTimeout(() => {
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct += 3;
+        setAnimPct(Math.min(pct, 100));
+        if (pct >= 100) clearInterval(interval);
+      }, 16);
+      return () => clearInterval(interval);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [datos]);
+
+  const maxVal = Math.max(...datos.map(d => d.tomados + d.disponibles), 1);
+
+  if (!datos.length) return (
+    <div className="card" style={{padding:24}}>
+      <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:12}}>{titulo}</div>
+      <div style={{textAlign:'center',padding:40,color:'#718096'}}>Sin datos</div>
+    </div>
+  );
+
+  return (
+    <div className="card" style={{padding:24,position:'relative'}}>
+      <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:20}}>{titulo}</div>
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        {datos.map((d,i)=>{
+          const total = d.tomados + d.disponibles;
+          const pctTom = (d.tomados / maxVal) * 100 * (animPct/100);
+          const pctDis = (d.disponibles / maxVal) * 100 * (animPct/100);
+          return (
+            <div key={i} onMouseEnter={()=>setTooltip({...d,i})} onMouseLeave={()=>setTooltip(null)} style={{cursor:'pointer'}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                <span style={{fontSize:12,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#1a1a2e'}}>{d.label}</span>
+                <span style={{fontSize:11,fontFamily:'Montserrat,sans-serif',color:'#718096'}}>{d.tomados}T · {d.disponibles}D</span>
+              </div>
+              <div style={{height:22,background:'#f0f0f0',borderRadius:6,overflow:'visible',position:'relative',display:'flex'}}>
+                {/* Barra tomados */}
+                <div style={{
+                  width:`${pctTom}%`,height:'100%',
+                  background:'linear-gradient(90deg,#6B0F2B,#9B1540)',
+                  borderRadius:'6px 0 0 6px',
+                  transition:'width 0.05s',
+                  position:'relative',
+                  boxShadow:'0 4px 8px rgba(107,15,43,0.3)',
+                }}>
+                  {/* Brillo 3D */}
+                  <div style={{position:'absolute',top:0,left:0,right:0,height:'50%',background:'rgba(255,255,255,0.15)',borderRadius:'6px 0 0 0'}}/>
+                  {/* Cara inferior 3D */}
+                  <div style={{position:'absolute',bottom:-4,left:0,right:0,height:4,background:'rgba(107,15,43,0.5)',transform:'skewX(0deg)',borderRadius:'0 0 2px 2px'}}/>
+                </div>
+                {/* Barra disponibles */}
+                <div style={{
+                  width:`${pctDis}%`,height:'100%',
+                  background:'linear-gradient(90deg,#C9A84C,#E8C060)',
+                  transition:'width 0.05s',
+                  position:'relative',
+                  boxShadow:'0 4px 8px rgba(201,168,76,0.3)',
+                }}>
+                  <div style={{position:'absolute',top:0,left:0,right:0,height:'50%',background:'rgba(255,255,255,0.2)'}}/>
+                  <div style={{position:'absolute',bottom:-4,left:0,right:0,height:4,background:'rgba(201,168,76,0.5)',borderRadius:'0 0 2px 2px'}}/>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{display:'flex',gap:20,justifyContent:'center',marginTop:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:14,height:10,background:'#6B0F2B',borderRadius:3}}/><span style={{fontSize:11,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#4A5568'}}>Días tomados</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:14,height:10,background:'#C9A84C',borderRadius:3}}/><span style={{fontSize:11,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#4A5568'}}>Días disponibles</span></div>
+      </div>
+      {tooltip && (
+        <div style={{position:'absolute',right:16,top:60,background:'#1a1a2e',color:'#fff',padding:'10px 14px',borderRadius:10,fontSize:12,fontFamily:'Montserrat,sans-serif',boxShadow:'0 8px 24px rgba(0,0,0,0.3)',zIndex:100}}>
+          <div style={{fontWeight:800,marginBottom:4,color:'#C9A84C'}}>{tooltip.label}</div>
+          <div>⏱️ Tomados: <strong>{tooltip.tomados}</strong> días</div>
+          <div>✅ Disponibles: <strong>{tooltip.disponibles}</strong> días</div>
+          <div style={{borderTop:'1px solid rgba(255,255,255,0.1)',marginTop:6,paddingTop:6,color:'rgba(255,255,255,0.5)',fontSize:10}}>Total: {tooltip.tomados+tooltip.disponibles} días</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Gráfica Donut 3D ──────────────────────────────────────
+function GraficaDonut3D({ titulo, datos }) {
+  const [hover, setHover] = useState(null);
+  const [animPct, setAnimPct] = useState(0);
+
+  useEffect(() => {
+    setAnimPct(0);
+    const t = setTimeout(() => {
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct += 2;
+        setAnimPct(Math.min(pct, 100));
+        if (pct >= 100) clearInterval(interval);
+      }, 16);
+      return () => clearInterval(interval);
+    }, 100);
+    return () => clearTimeout(t);
+  }, [datos]);
+
+  const total = datos.reduce((s,d) => s + d.valor, 0) || 1;
+  const size = 180;
+  const r = 65, r2 = 38;
+  const cx = size/2, cy = size/2;
+
+  let startAngle = -Math.PI/2;
+  const slices = datos.map((d,i) => {
+    const pct = (d.valor / total) * (animPct/100);
+    const angle = pct * 2 * Math.PI;
+    const slice = { ...d, startAngle, endAngle: startAngle + angle, i };
+    startAngle += angle;
+    return slice;
+  });
+
+  const arc = (cx, cy, r, a1, a2) => {
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const x2 = cx + r*Math.cos(a2), y2 = cy + r*Math.sin(a2);
+    const large = a2 - a1 > Math.PI ? 1 : 0;
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+  };
+
+  return (
+    <div className="card" style={{padding:24}}>
+      <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16}}>{titulo}</div>
+      <div style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+        <div style={{position:'relative',flexShrink:0}}>
+          {/* Sombra 3D */}
+          <svg width={size} height={size+16} style={{filter:'drop-shadow(0 12px 20px rgba(0,0,0,0.15))'}}>
+            {/* Sombra inferior */}
+            {slices.map((s,i) => {
+              const mid = (s.startAngle+s.endAngle)/2;
+              const depth = 10;
+              const p1o = arc(cx, cy+depth, r, s.startAngle, s.endAngle);
+              const p1i = arc(cx, cy+depth, r2, s.endAngle, s.startAngle);
+              return <path key={`sh${i}`} d={`${p1o} L ${cx+r2*Math.cos(s.endAngle)} ${cy+depth+r2*Math.sin(s.endAngle)} ${p1i} Z`} fill={s.color} opacity="0.3"/>;
+            })}
+            {/* Arcos principales */}
+            {slices.map((s,i) => {
+              const isHover = hover===i;
+              const offset = isHover ? 8 : 0;
+              const mid = (s.startAngle+s.endAngle)/2;
+              const ox = Math.cos(mid)*offset, oy = Math.sin(mid)*offset;
+              const outer = arc(cx+ox, cy+oy, r+(isHover?6:0), s.startAngle, s.endAngle);
+              const inner = arc(cx+ox, cy+oy, r2, s.endAngle, s.startAngle);
+              return (
+                <path key={i}
+                  d={`${outer} L ${cx+ox+r2*Math.cos(s.endAngle)} ${cy+oy+r2*Math.sin(s.endAngle)} ${inner} Z`}
+                  fill={s.color}
+                  style={{transition:'all 0.2s',cursor:'pointer',filter:isHover?`drop-shadow(0 0 8px ${s.color})`:'none'}}
+                  onMouseEnter={()=>setHover(i)}
+                  onMouseLeave={()=>setHover(null)}
+                />
+              );
+            })}
+            {/* Centro */}
+            <circle cx={cx} cy={cy} r={r2-4} fill="#fff" style={{filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.1))'}}/>
+            <text x={cx} y={cy-6} textAnchor="middle" fontSize="20" fontWeight="900" fontFamily="Playfair Display" fill="#1a1a2e">{total}</text>
+            <text x={cx} y={cy+12} textAnchor="middle" fontSize="9" fontWeight="700" fontFamily="Montserrat" fill="#718096">TOTAL</text>
+          </svg>
+        </div>
+        {/* Leyenda detallada */}
+        <div style={{flex:1,minWidth:120}}>
+          {datos.map((d,i) => {
+            const pct = total > 0 ? Math.round(d.valor/total*100) : 0;
+            return (
+              <div key={i} onMouseEnter={()=>setHover(i)} onMouseLeave={()=>setHover(null)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:10,marginBottom:8,background:hover===i?`${d.color}12`:'#f7f8fc',cursor:'pointer',border:`1px solid ${hover===i?d.color+'40':'transparent'}`,transition:'all 0.2s'}}>
+                <div style={{width:16,height:16,borderRadius:4,background:d.color,flexShrink:0,boxShadow:`0 2px 6px ${d.color}60`}}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:800,color:'#1a1a2e',fontFamily:'Montserrat,sans-serif'}}>{d.label}</div>
+                  <div style={{fontSize:10,color:'#718096',fontFamily:'Montserrat,sans-serif'}}>{d.valor} días · {pct}%</div>
+                </div>
+                <div style={{fontSize:16,fontWeight:900,color:d.color,fontFamily:'Playfair Display,serif'}}>{pct}%</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Gráfica Línea animada ─────────────────────────────────
+function GraficaLinea({ titulo, datos, meses }) {
+  const [tooltip, setTooltip] = useState(null);
+  const [animPct, setAnimPct] = useState(0);
+
+  useEffect(() => {
+    setAnimPct(0);
+    const t = setTimeout(() => {
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct += 2;
+        setAnimPct(Math.min(pct, 100));
+        if (pct >= 100) clearInterval(interval);
+      }, 16);
+      return () => clearInterval(interval);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [datos]);
+
+  const W = 700, H = 180, PL = 40, PR = 20, PT = 20, PB = 40;
+  const maxV = Math.max(...datos, 1);
+  const stepX = (W - PL - PR) / (meses.length - 1);
+
+  const pts = datos.map((v,i) => ({
+    x: PL + i * stepX,
+    y: H - PB - ((v / maxV) * (H - PT - PB)) * (animPct/100),
+    v,
+  }));
+
+  const pathD = pts.map((p,i) => i===0?`M${p.x},${p.y}`:`C${pts[i-1].x+stepX*0.4},${pts[i-1].y} ${p.x-stepX*0.4},${p.y} ${p.x},${p.y}`).join(' ');
+  const areaD = `${pathD} L${pts[pts.length-1].x},${H-PB} L${pts[0].x},${H-PB} Z`;
+
+  return (
+    <div>
+      <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16}}>{titulo}</div>
+      <div style={{overflowX:'auto'}}>
+        <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{minWidth:300}}>
+          {/* Grid */}
+          {[0,25,50,75,100].map(p=>{
+            const y = H - PB - (p/100)*(H-PT-PB);
+            return <g key={p}>
+              <line x1={PL} y1={y} x2={W-PR} y2={y} stroke="rgba(107,15,43,0.08)" strokeWidth="1" strokeDasharray="4"/>
+              <text x={PL-6} y={y+4} fontSize="9" fill="#718096" textAnchor="end" fontFamily="Montserrat">{Math.round(maxV*p/100)}</text>
+            </g>;
+          })}
+
+          {/* Área */}
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6B0F2B" stopOpacity="0.3"/>
+              <stop offset="100%" stopColor="#6B0F2B" stopOpacity="0.02"/>
+            </linearGradient>
+          </defs>
+          <path d={areaD} fill="url(#lineGrad)"/>
+          <path d={pathD} fill="none" stroke="#6B0F2B" strokeWidth="3" strokeLinecap="round" style={{filter:'drop-shadow(0 2px 8px rgba(107,15,43,0.4))'}}/>
+
+          {/* Puntos */}
+          {pts.map((p,i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r={tooltip?.i===i?8:5} fill="#C9A84C" stroke="#fff" strokeWidth="2"
+                style={{cursor:'pointer',filter:'drop-shadow(0 2px 6px rgba(201,168,76,0.5))',transition:'r 0.2s'}}
+                onMouseEnter={()=>setTooltip({...p,i,mes:meses[i]})}
+                onMouseLeave={()=>setTooltip(null)}/>
+              {p.v > 0 && <text x={p.x} y={p.y-12} fontSize="10" fontWeight="800" fill="#6B0F2B" textAnchor="middle" fontFamily="Montserrat">{p.v}</text>}
+              <text x={p.x} y={H-PB+16} fontSize="9" fill="#718096" textAnchor="middle" fontFamily="Montserrat">{meses[i]}</text>
+            </g>
+          ))}
+
+          {/* Tooltip */}
+          {tooltip && tooltip.v > 0 && (
+            <g>
+              <rect x={tooltip.x-50} y={tooltip.y-52} width={100} height={40} rx="8" fill="#1a1a2e"/>
+              <text x={tooltip.x} y={tooltip.y-36} fontSize="11" fontWeight="800" fill="#C9A84C" textAnchor="middle" fontFamily="Montserrat">{tooltip.mes}</text>
+              <text x={tooltip.x} y={tooltip.y-20} fontSize="10" fill="#fff" textAnchor="middle" fontFamily="Montserrat">{tooltip.v} días aprobados</text>
+            </g>
+          )}
+        </svg>
+      </div>
     </div>
   );
 }
