@@ -511,6 +511,7 @@ export default function Reportes() {
 
   const tot = resumen.totales;
   const top5 = [...detalle].sort((a,b) => b.dias_disponibles - a.dias_disponibles).slice(0,5);
+  const [modalGrafica, setModalGrafica] = useState(null);
   const mesesData = Array(12).fill(0);
   resumen.solicitudes_por_mes.forEach(m => { mesesData[parseInt(m.mes)-1] = parseInt(m.dias||0); });
 
@@ -585,6 +586,17 @@ export default function Reportes() {
             tomados: parseInt(d.dias_tomados)||0,
             disponibles: parseInt(d.dias_disponibles)||0,
           }))}
+          onClic={d=>setModalGrafica({
+            titulo:`Departamento: ${d.label}`,
+            filas:[
+              ['Departamento', d.label],
+              ['Días tomados', `${d.tomados} días`],
+              ['Días disponibles', `${d.disponibles} días`],
+              ['Total asignados', `${d.tomados+d.disponibles} días`],
+              ['% Utilizado', `${d.tomados+d.disponibles>0?Math.round(d.tomados/(d.tomados+d.disponibles)*100):0}%`],
+            ],
+            empleados: detalle.filter(e=>e.departamento===d.label),
+          })}
         />
       </div>
 
@@ -593,15 +605,27 @@ export default function Reportes() {
         <GraficaBarras3D
           titulo="👥 Días por Empleado"
           datos={[...detalle]
-            .filter(e => e.dias_correspondientes > 0)
+            .filter(e=>e.dias_correspondientes>0)
             .sort((a,b)=>b.dias_disponibles-a.dias_disponibles)
             .map(e=>({
-              label: `${e.nombre} ${e.apellido_paterno}`,
-              tomados: e.dias_tomados||0,
-              disponibles: e.dias_disponibles||0,
-              detalle: e,
+              label:`${e.nombre} ${e.apellido_paterno}`,
+              tomados:e.dias_tomados||0,
+              disponibles:e.dias_disponibles||0,
+              detalle:e,
             }))}
-          onClic={(d)=>setEmpleadoFiltro(d.detalle?.id||'')}
+          onClic={d=>setModalGrafica({
+            titulo:`${d.label}`,
+            filas:[
+              ['Nombre', d.label],
+              ['Departamento', d.detalle?.departamento||'—'],
+              ['Puesto', d.detalle?.puesto||'—'],
+              ['Días correspondientes', `${d.detalle?.dias_correspondientes||0} días`],
+              ['Días tomados', `${d.tomados} días`],
+              ['Días disponibles', `${d.disponibles} días`],
+              ['% Utilizado', `${d.tomados+d.disponibles>0?Math.round(d.tomados/(d.tomados+d.disponibles)*100):0}%`],
+            ],
+            foto: d.detalle?.foto_url,
+          })}
         />
       </div>
 
@@ -613,6 +637,16 @@ export default function Reportes() {
             {label:'Días Tomados', valor:tot.total_dias_tomados||0, color:'#6B0F2B'},
             {label:'Días Disponibles', valor:tot.total_dias_disponibles||0, color:'#C9A84C'},
           ]}
+          onClic={d=>setModalGrafica({
+            titulo:'Uso General de Días',
+            filas:[
+              ['Total empleados', tot.total_empleados],
+              ['Días asignados', tot.total_dias_asignados],
+              ['Días tomados', `${tot.total_dias_tomados} días`],
+              ['Días disponibles', `${tot.total_dias_disponibles} días`],
+              ['% Utilizado', `${tot.total_dias_asignados>0?Math.round(tot.total_dias_tomados/tot.total_dias_asignados*100):0}%`],
+            ],
+          })}
         />
         <GraficaDonut3D
           titulo="📋 Solicitudes por Estatus"
@@ -620,17 +654,73 @@ export default function Reportes() {
             {label:'Aprobadas', valor:tot.solicitudes_aprobadas||0, color:'#27ae60'},
             {label:'Pendientes', valor:tot.solicitudes_pendientes||0, color:'#F59E0B'},
           ]}
+          onClic={d=>setModalGrafica({
+            titulo:'Solicitudes de Vacaciones',
+            filas:[
+              ['Aprobadas', tot.solicitudes_aprobadas],
+              ['Pendientes', tot.solicitudes_pendientes],
+              ['Total', (tot.solicitudes_aprobadas||0)+(tot.solicitudes_pendientes||0)],
+            ],
+          })}
         />
       </div>
 
       {/* Línea */}
-      <div className="card" style={{marginBottom:24}}>
+      <div className="card" style={{marginBottom:24,overflow:'visible'}}>
         <GraficaLinea
           titulo={`📈 Días Aprobados por Mes — ${anio}`}
           datos={mesesData}
           meses={MESES}
+          onClic={(mes,val)=>setModalGrafica({
+            titulo:`${mes} ${anio} — Días aprobados`,
+            filas:[['Mes',mes],['Días aprobados',val]],
+          })}
         />
       </div>
+
+      {/* Modal detalle gráfica */}
+      {modalGrafica && (
+        <div className="modal-overlay" onClick={()=>setModalGrafica(null)}>
+          <div className="modal" style={{maxWidth:480}} onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📊 {modalGrafica.titulo}</h2>
+              <button className="modal-close" onClick={()=>setModalGrafica(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {modalGrafica.foto && (
+                <div style={{textAlign:'center',marginBottom:16}}>
+                  <img src={modalGrafica.foto} alt="" style={{width:72,height:72,borderRadius:'50%',objectFit:'cover',border:'3px solid var(--g)'}}/>
+                </div>
+              )}
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {modalGrafica.filas?.map(([l,v])=>(
+                  <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'8px 12px',background:'#f7f8fc',borderRadius:8}}>
+                    <span style={{fontWeight:700,fontSize:13,color:'#4A5568'}}>{l}</span>
+                    <span style={{fontWeight:800,fontSize:13,color:'var(--g)'}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              {modalGrafica.empleados?.length > 0 && (
+                <div style={{marginTop:16}}>
+                  <div style={{fontWeight:800,fontSize:12,color:'var(--g)',marginBottom:8,textTransform:'uppercase',letterSpacing:1}}>Empleados en este departamento</div>
+                  {modalGrafica.empleados.map(e=>(
+                    <div key={e.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',background:'#f7f8fc',borderRadius:8,marginBottom:6}}>
+                      {e.foto_url&&<img src={e.foto_url} alt="" style={{width:32,height:32,borderRadius:'50%',objectFit:'cover'}}/>}
+                      <div>
+                        <div style={{fontWeight:800,fontSize:12}}>{e.nombre} {e.apellido_paterno}</div>
+                        <div style={{fontSize:11,color:'#718096'}}>{e.dias_tomados}T · {e.dias_disponibles}D</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-institucional btn-sm" onClick={()=>setModalGrafica(null)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabla */}
       <div className="card">
@@ -863,7 +953,7 @@ function GraficaBarrasH3D({ titulo, datos }) {
 }
 
 // ── Gráfica Donut 3D ──────────────────────────────────────
-function GraficaDonut3D({ titulo, datos }) {
+function GraficaDonut3D({ titulo, datos, onClic }) {
   const [hover, setHover] = useState(null);
   const [animPct, setAnimPct] = useState(0);
 
@@ -930,6 +1020,7 @@ function GraficaDonut3D({ titulo, datos }) {
                 style={{cursor:'pointer',transition:'all 0.2s',filter:hover===i?`drop-shadow(0 0 10px ${s.color})`:'none'}}
                 onMouseEnter={()=>setHover(i)}
                 onMouseLeave={()=>setHover(null)}
+                onClick={()=>onClic&&onClic(datos[i])}
               />
             );
           })}
@@ -964,7 +1055,7 @@ function GraficaDonut3D({ titulo, datos }) {
 }
 
 // ── Gráfica Línea animada ─────────────────────────────────
-function GraficaLinea({ titulo, datos, meses }) {
+function GraficaLinea({ titulo, datos, meses, onClic }) {
   const [tooltip, setTooltip] = useState(null);
   const [animPct, setAnimPct] = useState(0);
 
@@ -982,7 +1073,7 @@ function GraficaLinea({ titulo, datos, meses }) {
     return () => clearTimeout(t);
   }, [datos]);
 
-  const W = 700, H = 180, PL = 40, PR = 20, PT = 20, PB = 40;
+  const W = 700, H = 200, PL = 44, PR = 30, PT = 30, PB = 44;
   const maxV = Math.max(...datos, 1);
   const stepX = (W - PL - PR) / (meses.length - 1);
 
@@ -1025,7 +1116,8 @@ function GraficaLinea({ titulo, datos, meses }) {
               <circle cx={p.x} cy={p.y} r={tooltip?.i===i?8:5} fill="#C9A84C" stroke="#fff" strokeWidth="2"
                 style={{cursor:'pointer',filter:'drop-shadow(0 2px 6px rgba(201,168,76,0.5))',transition:'r 0.2s'}}
                 onMouseEnter={()=>setTooltip({...p,i,mes:meses[i]})}
-                onMouseLeave={()=>setTooltip(null)}/>
+                onMouseLeave={()=>setTooltip(null)}
+                onClick={()=>onClic&&p.v>0&&onClic(meses[i],p.v)}/>
               {p.v > 0 && <text x={p.x} y={p.y-12} fontSize="10" fontWeight="800" fill="#6B0F2B" textAnchor="middle" fontFamily="Montserrat">{p.v}</text>}
               <text x={p.x} y={H-PB+16} fontSize="9" fill="#718096" textAnchor="middle" fontFamily="Montserrat">{meses[i]}</text>
             </g>
