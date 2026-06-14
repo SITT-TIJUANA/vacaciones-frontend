@@ -640,11 +640,11 @@ export default function Reportes() {
           onClic={d=>setModalGrafica({
             titulo:'Uso General de Días',
             filas:[
-              ['Total empleados', tot.total_empleados],
-              ['Días asignados', tot.total_dias_asignados],
-              ['Días tomados', `${tot.total_dias_tomados} días`],
-              ['Días disponibles', `${tot.total_dias_disponibles} días`],
-              ['% Utilizado', `${tot.total_dias_asignados>0?Math.round(tot.total_dias_tomados/tot.total_dias_asignados*100):0}%`],
+              ['Total empleados', `${tot.total_empleados||0} empleados`],
+              ['Días asignados', `${tot.total_dias_asignados||0} días`],
+              ['Días tomados', `${tot.total_dias_tomados||0} días`],
+              ['Días disponibles', `${tot.total_dias_disponibles||0} días`],
+              ['% Utilizado', `${tot.total_dias_asignados>0?Math.round((tot.total_dias_tomados/tot.total_dias_asignados)*100):0}%`],
             ],
           })}
         />
@@ -657,9 +657,9 @@ export default function Reportes() {
           onClic={d=>setModalGrafica({
             titulo:'Solicitudes de Vacaciones',
             filas:[
-              ['Aprobadas', tot.solicitudes_aprobadas],
-              ['Pendientes', tot.solicitudes_pendientes],
-              ['Total', (tot.solicitudes_aprobadas||0)+(tot.solicitudes_pendientes||0)],
+              ['Solicitudes aprobadas', `${tot.solicitudes_aprobadas||0}`],
+              ['Solicitudes pendientes', `${tot.solicitudes_pendientes||0}`],
+              ['Total solicitudes', `${(tot.solicitudes_aprobadas||0)+(tot.solicitudes_pendientes||0)}`],
             ],
           })}
         />
@@ -1026,7 +1026,7 @@ function GraficaDonut3D({ titulo, datos, onClic }) {
           })}
           {/* Centro blanco */}
           <circle cx={CX} cy={CY} r={R_IN-2} fill="white"/>
-          <text x={CX} y={CY-5} textAnchor="middle" fontSize="18" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e">{total}</text>
+          <text x={CX} y={CY-5} textAnchor="middle" fontSize="18" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e">{datos.reduce((s,d)=>s+(d.valor||0),0)}</text>
           <text x={CX} y={CY+12} textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="Montserrat" fill="#718096">TOTAL</text>
         </svg>
 
