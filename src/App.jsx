@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import MenuModulos from './pages/MenuModulos';
 import PersonalPage from './pages/personal/PersonalPage';
 import OrganigramaPage from './pages/OrganigramaPage';
+import IncapacidadesPage from './pages/incapacidades/IncapacidadesPage';
 import PermisosPage from './pages/permisos/PermisosPage';
 import './assets/styles/global.css';
 import './assets/styles/mobile.css';
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/menu" element={<ProtectedRoute><MenuModulos /></ProtectedRoute>} />
             <Route path="/personal" element={<ProtectedRoute><PersonalPage /></ProtectedRoute>} />
             <Route path="/organigrama" element={<ProtectedRoute><OrganigramaPage /></ProtectedRoute>} />
+            <Route path="/incapacidades" element={<ProtectedRoute><IncapacidadesPage /></ProtectedRoute>} />
             <Route path="/permisos" element={<ProtectedRoute><PermisosPage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
