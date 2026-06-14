@@ -790,7 +790,8 @@ function Estadisticas({ stats }) {
   const total = parseInt(stats.aprobados)+parseInt(stats.rechazados)+parseInt(stats.pendientes);
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:14 }}>
+      {/* Cards */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14 }}>
         {[
           { label:'Total', value:total, color:'#0a1f3d', icon:'📋' },
           { label:'Pendientes', value:stats.pendientes, color:'#F59E0B', icon:'⏳' },
@@ -806,22 +807,64 @@ function Estadisticas({ stats }) {
           </div>
         ))}
       </div>
+
+      {/* Gráfica estatus */}
+      <div style={{ background:'#fff', borderRadius:14, padding:'20px 24px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div style={{ fontWeight:800, color:'#0a1f3d', marginBottom:14, fontSize:14 }}>Estatus de solicitudes</div>
+        {[
+          {label:'Aprobados',val:parseInt(stats.aprobados)||0,color:'#27ae60',icon:'✅'},
+          {label:'Pendientes',val:parseInt(stats.pendientes)||0,color:'#F59E0B',icon:'⏳'},
+          {label:'Rechazados',val:parseInt(stats.rechazados)||0,color:'#E53E3E',icon:'❌'},
+        ].map(s=>{
+          const pct = total>0?Math.round(s.val/total*100):0;
+          return (
+            <div key={s.label} style={{marginBottom:12}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,alignItems:'center'}}>
+                <span style={{fontSize:13,fontWeight:700,color:'#4A5568'}}>{s.icon} {s.label}</span>
+                <span style={{fontSize:13,fontWeight:800,color:s.color}}>{s.val} ({pct}%)</span>
+              </div>
+              <div style={{height:10,background:'#f0f0f0',borderRadius:5,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${pct}%`,background:s.color,borderRadius:5,transition:'width 0.6s ease'}}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Gráfica tipos */}
       <div style={{ background:'#fff', borderRadius:14, padding:'20px 24px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
         <div style={{ fontWeight:800, color:'#0a1f3d', marginBottom:14, fontSize:14 }}>Por tipo de permiso</div>
         {Object.entries({ medico:stats.medico, escolar:stats.escolar, personal:stats.personal, emergencia:stats.emergencia, legal:stats.legal, otro:stats.otro }).map(([k,v])=>{
           const t = TIPOS[k]; const pct = total>0?Math.round(parseInt(v)/total*100):0;
           return (
             <div key={k} style={{ marginBottom:12 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5, alignItems:'center' }}>
                 <span style={{ fontSize:13, fontWeight:700, color:'#4A5568' }}>{t.icon} {t.label}</span>
                 <span style={{ fontSize:13, fontWeight:800, color:t.color }}>{v} ({pct}%)</span>
               </div>
-              <div style={{ height:8, background:'#f0f0f0', borderRadius:4, overflow:'hidden' }}>
-                <div style={{ height:'100%', width:`${pct}%`, background:t.color, borderRadius:4, transition:'width 0.5s' }}/>
+              <div style={{ height:10, background:'#f0f0f0', borderRadius:5, overflow:'hidden' }}>
+                <div style={{ height:'100%', width:`${pct}%`, background:t.color, borderRadius:5, transition:'width 0.6s ease' }}/>
               </div>
             </div>
           );
         })}
+      </div>
+
+      {/* Gráfica goce */}
+      <div style={{background:'#fff',borderRadius:14,padding:'20px 24px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
+        <div style={{fontWeight:800,color:'#0a1f3d',marginBottom:14,fontSize:14}}>Con goce vs Sin goce</div>
+        <div style={{display:'flex',gap:12,alignItems:'center'}}>
+          <div style={{flex:parseInt(stats.con_goce)||1,height:32,background:'linear-gradient(90deg,#2a5298,#4A90D9)',borderRadius:'8px 0 0 8px',display:'flex',alignItems:'center',paddingLeft:10,color:'#fff',fontSize:11,fontWeight:800,minWidth:40}}>
+            💰 {stats.con_goce}
+          </div>
+          <div style={{flex:parseInt(stats.sin_goce)||1,height:32,background:'linear-gradient(90deg,#6B7280,#9CA3AF)',borderRadius:'0 8px 8px 0',display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:10,color:'#fff',fontSize:11,fontWeight:800,minWidth:40}}>
+            {stats.sin_goce} 🚫
+          </div>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:8}}>
+          <span style={{fontSize:11,color:'#2a5298',fontWeight:700}}>Con goce de sueldo</span>
+          <span style={{fontSize:11,color:'#6B7280',fontWeight:700}}>Sin goce de sueldo</span>
+        </div>
       </div>
     </div>
   );
