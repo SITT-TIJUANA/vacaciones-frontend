@@ -37,7 +37,7 @@ const MODULOS = [
     color2: '#27ae60',
     glow: 'rgba(39,174,96,0.4)',
     ruta: '/incapacidades',
-    disponible: false,
+    disponible: true,
   },
   {
     id: 'organigrama',
