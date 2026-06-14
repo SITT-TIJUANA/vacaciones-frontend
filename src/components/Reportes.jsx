@@ -576,8 +576,8 @@ export default function Reportes() {
         ))}
       </div>
 
-      {/* Gráficas Pro */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',gap:20,marginBottom:24}}>
+      {/* Gráfica Departamentos */}
+      <div style={{marginBottom:24}}>
         <GraficaBarras3D
           titulo="📊 Días por Departamento"
           datos={resumen.por_departamento.map(d=>({
@@ -586,22 +586,33 @@ export default function Reportes() {
             disponibles: parseInt(d.dias_disponibles)||0,
           }))}
         />
+      </div>
+
+      {/* Gráfica Empleados */}
+      <div style={{marginBottom:24}}>
+        <GraficaBarras3D
+          titulo="👥 Días por Empleado"
+          datos={[...detalle]
+            .filter(e => e.dias_correspondientes > 0)
+            .sort((a,b)=>b.dias_disponibles-a.dias_disponibles)
+            .map(e=>({
+              label: `${e.nombre} ${e.apellido_paterno}`,
+              tomados: e.dias_tomados||0,
+              disponibles: e.dias_disponibles||0,
+              detalle: e,
+            }))}
+          onClic={(d)=>setEmpleadoFiltro(d.detalle?.id||'')}
+        />
+      </div>
+
+      {/* Donut + Solicitudes */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:20,marginBottom:24}}>
         <GraficaDonut3D
           titulo="🍩 Uso General de Días"
           datos={[
             {label:'Días Tomados', valor:tot.total_dias_tomados||0, color:'#6B0F2B'},
             {label:'Días Disponibles', valor:tot.total_dias_disponibles||0, color:'#C9A84C'},
           ]}
-        />
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',gap:20,marginBottom:24}}>
-        <GraficaBarrasH3D
-          titulo="🏆 Top Empleados — Días Disponibles"
-          datos={top5.map(e=>({
-            label: `${e.nombre} ${e.apellido_paterno}`,
-            tomados: e.dias_tomados||0,
-            disponibles: e.dias_disponibles||0,
-          }))}
         />
         <GraficaDonut3D
           titulo="📋 Solicitudes por Estatus"
@@ -611,6 +622,8 @@ export default function Reportes() {
           ]}
         />
       </div>
+
+      {/* Línea */}
       <div className="card" style={{marginBottom:24}}>
         <GraficaLinea
           titulo={`📈 Días Aprobados por Mes — ${anio}`}
@@ -663,7 +676,7 @@ export default function Reportes() {
 }
 
 // ── Gráfica Barras 3D ─────────────────────────────────────
-function GraficaBarras3D({ titulo, datos }) {
+function GraficaBarras3D({ titulo, datos, onClic }) {
   const [tooltip, setTooltip] = useState(null);
   const [animPct, setAnimPct] = useState(0);
 
@@ -858,89 +871,89 @@ function GraficaDonut3D({ titulo, datos }) {
     setAnimPct(0);
     const t = setTimeout(() => {
       let pct = 0;
-      const interval = setInterval(() => {
-        pct += 2;
-        setAnimPct(Math.min(pct, 100));
-        if (pct >= 100) clearInterval(interval);
-      }, 16);
-      return () => clearInterval(interval);
-    }, 100);
+      const iv = setInterval(() => {
+        pct = Math.min(pct + 2, 100);
+        setAnimPct(pct);
+        if (pct >= 100) clearInterval(iv);
+      }, 14);
+      return () => clearInterval(iv);
+    }, 150);
     return () => clearTimeout(t);
   }, [datos]);
 
-  const total = datos.reduce((s,d) => s + d.valor, 0) || 1;
-  const size = 180;
-  const r = 65, r2 = 38;
-  const cx = size/2, cy = size/2;
+  const total = datos.reduce((s,d)=>s+(d.valor||0),0)||1;
+  const SIZE = 180, CX = 90, CY = 90, R_OUT = 70, R_IN = 38, DEPTH = 10;
 
-  let startAngle = -Math.PI/2;
-  const slices = datos.map((d,i) => {
-    const pct = (d.valor / total) * (animPct/100);
-    const angle = pct * 2 * Math.PI;
-    const slice = { ...d, startAngle, endAngle: startAngle + angle, i };
-    startAngle += angle;
-    return slice;
+  const getCoords = (angle, r) => ({
+    x: CX + r * Math.cos(angle),
+    y: CY + r * Math.sin(angle),
   });
 
-  const arc = (cx, cy, r, a1, a2) => {
-    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
-    const x2 = cx + r*Math.cos(a2), y2 = cy + r*Math.sin(a2);
-    const large = a2 - a1 > Math.PI ? 1 : 0;
-    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+  const slices = [];
+  let a = -Math.PI / 2;
+  datos.forEach((d,i) => {
+    const span = (d.valor / total) * 2 * Math.PI * (animPct/100);
+    slices.push({ ...d, a1:a, a2:a+span, i });
+    a += span;
+  });
+
+  const arcPath = (cx, cy, r1, r2, a1, a2) => {
+    if (Math.abs(a2-a1) < 0.001) return '';
+    const large = a2-a1 > Math.PI ? 1 : 0;
+    const p1 = getCoords(a1, r1); p1.x += cx-CX; p1.y += cy-CY;
+    const p2 = getCoords(a2, r1); p2.x += cx-CX; p2.y += cy-CY;
+    const p3 = getCoords(a2, r2); p3.x += cx-CX; p3.y += cy-CY;
+    const p4 = getCoords(a1, r2); p4.x += cx-CX; p4.y += cy-CY;
+    return `M${p1.x},${p1.y} A${r1},${r1} 0 ${large} 1 ${p2.x},${p2.y} L${p3.x},${p3.y} A${r2},${r2} 0 ${large} 0 ${p4.x},${p4.y} Z`;
   };
 
   return (
     <div className="card" style={{padding:24}}>
       <div style={{fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'var(--g)',marginBottom:16}}>{titulo}</div>
       <div style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
-        <div style={{position:'relative',flexShrink:0}}>
+        <svg width={SIZE} height={SIZE+DEPTH} style={{flexShrink:0,filter:'drop-shadow(0 8px 16px rgba(0,0,0,0.15))'}}>
           {/* Sombra 3D */}
-          <svg width={size} height={size+16} style={{filter:'drop-shadow(0 12px 20px rgba(0,0,0,0.15))'}}>
-            {/* Sombra inferior */}
-            {slices.map((s,i) => {
-              const mid = (s.startAngle+s.endAngle)/2;
-              const depth = 10;
-              const p1o = arc(cx, cy+depth, r, s.startAngle, s.endAngle);
-              const p1i = arc(cx, cy+depth, r2, s.endAngle, s.startAngle);
-              return <path key={`sh${i}`} d={`${p1o} L ${cx+r2*Math.cos(s.endAngle)} ${cy+depth+r2*Math.sin(s.endAngle)} ${p1i} Z`} fill={s.color} opacity="0.3"/>;
-            })}
-            {/* Arcos principales */}
-            {slices.map((s,i) => {
-              const isHover = hover===i;
-              const offset = isHover ? 8 : 0;
-              const mid = (s.startAngle+s.endAngle)/2;
-              const ox = Math.cos(mid)*offset, oy = Math.sin(mid)*offset;
-              const outer = arc(cx+ox, cy+oy, r+(isHover?6:0), s.startAngle, s.endAngle);
-              const inner = arc(cx+ox, cy+oy, r2, s.endAngle, s.startAngle);
-              return (
-                <path key={i}
-                  d={`${outer} L ${cx+ox+r2*Math.cos(s.endAngle)} ${cy+oy+r2*Math.sin(s.endAngle)} ${inner} Z`}
-                  fill={s.color}
-                  style={{transition:'all 0.2s',cursor:'pointer',filter:isHover?`drop-shadow(0 0 8px ${s.color})`:'none'}}
-                  onMouseEnter={()=>setHover(i)}
-                  onMouseLeave={()=>setHover(null)}
-                />
-              );
-            })}
-            {/* Centro */}
-            <circle cx={cx} cy={cy} r={r2-4} fill="#fff" style={{filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.1))'}}/>
-            <text x={cx} y={cy-6} textAnchor="middle" fontSize="20" fontWeight="900" fontFamily="Playfair Display" fill="#1a1a2e">{total}</text>
-            <text x={cx} y={cy+12} textAnchor="middle" fontSize="9" fontWeight="700" fontFamily="Montserrat" fill="#718096">TOTAL</text>
-          </svg>
-        </div>
-        {/* Leyenda detallada */}
-        <div style={{flex:1,minWidth:120}}>
-          {datos.map((d,i) => {
-            const pct = total > 0 ? Math.round(d.valor/total*100) : 0;
+          {slices.map((s,i) => (
+            <path key={`d${i}`}
+              d={arcPath(CX, CY+DEPTH, R_OUT, R_IN, s.a1, s.a2)}
+              fill={s.color} opacity="0.25"/>
+          ))}
+          {/* Slices principales */}
+          {slices.map((s,i) => {
+            const mid = (s.a1+s.a2)/2;
+            const off = hover===i ? 8 : 0;
+            const ox = Math.cos(mid)*off, oy = Math.sin(mid)*off;
             return (
-              <div key={i} onMouseEnter={()=>setHover(i)} onMouseLeave={()=>setHover(null)}
-                style={{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:10,marginBottom:8,background:hover===i?`${d.color}12`:'#f7f8fc',cursor:'pointer',border:`1px solid ${hover===i?d.color+'40':'transparent'}`,transition:'all 0.2s'}}>
-                <div style={{width:16,height:16,borderRadius:4,background:d.color,flexShrink:0,boxShadow:`0 2px 6px ${d.color}60`}}/>
+              <path key={i}
+                d={arcPath(CX+ox, CY+oy, R_OUT+(hover===i?6:0), R_IN, s.a1, s.a2)}
+                fill={s.color}
+                style={{cursor:'pointer',transition:'all 0.2s',filter:hover===i?`drop-shadow(0 0 10px ${s.color})`:'none'}}
+                onMouseEnter={()=>setHover(i)}
+                onMouseLeave={()=>setHover(null)}
+              />
+            );
+          })}
+          {/* Centro blanco */}
+          <circle cx={CX} cy={CY} r={R_IN-2} fill="white"/>
+          <text x={CX} y={CY-5} textAnchor="middle" fontSize="18" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e">{total}</text>
+          <text x={CX} y={CY+12} textAnchor="middle" fontSize="8" fontWeight="700" fontFamily="Montserrat" fill="#718096">TOTAL</text>
+        </svg>
+
+        {/* Leyenda */}
+        <div style={{flex:1,minWidth:120,display:'flex',flexDirection:'column',gap:8}}>
+          {datos.map((d,i) => {
+            const pct = Math.round((d.valor||0)/total*100);
+            return (
+              <div key={i}
+                onMouseEnter={()=>setHover(i)}
+                onMouseLeave={()=>setHover(null)}
+                style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',borderRadius:10,background:hover===i?`${d.color}15`:'#f7f8fc',border:`1.5px solid ${hover===i?d.color+'50':'transparent'}`,cursor:'pointer',transition:'all 0.2s'}}>
+                <div style={{width:14,height:14,borderRadius:4,background:d.color,flexShrink:0,boxShadow:`0 2px 6px ${d.color}60`}}/>
                 <div style={{flex:1}}>
                   <div style={{fontSize:12,fontWeight:800,color:'#1a1a2e',fontFamily:'Montserrat,sans-serif'}}>{d.label}</div>
-                  <div style={{fontSize:10,color:'#718096',fontFamily:'Montserrat,sans-serif'}}>{d.valor} días · {pct}%</div>
+                  <div style={{fontSize:10,color:'#718096'}}>{d.valor} · {pct}%</div>
                 </div>
-                <div style={{fontSize:16,fontWeight:900,color:d.color,fontFamily:'Playfair Display,serif'}}>{pct}%</div>
+                <div style={{fontSize:18,fontWeight:900,color:d.color,fontFamily:'Playfair Display,serif'}}>{pct}%</div>
               </div>
             );
           })}
