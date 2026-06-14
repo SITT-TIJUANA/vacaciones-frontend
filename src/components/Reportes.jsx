@@ -105,6 +105,7 @@ export default function Reportes() {
   const [empleadoFiltro, setEmpleadoFiltro] = useState('');
   const [exportando, setExportando] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [modalGrafica, setModalGrafica] = useState(null);
 
   const cargar = () => {
     setCargando(true);
@@ -511,7 +512,6 @@ export default function Reportes() {
 
   const tot = resumen.totales;
   const top5 = [...detalle].sort((a,b) => b.dias_disponibles - a.dias_disponibles).slice(0,5);
-  const [modalGrafica, setModalGrafica] = useState(null);
   const mesesData = Array(12).fill(0);
   resumen.solicitudes_por_mes.forEach(m => { mesesData[parseInt(m.mes)-1] = parseInt(m.dias||0); });
 
