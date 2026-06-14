@@ -181,23 +181,64 @@ export default function IncapacidadesPage() {
 
         {/* ESTADÍSTICAS */}
         {tab==='estadisticas' && esAdmin && stats && (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:14}}>
-            {[
-              {label:'Total',val:stats.total,color:'#1B5E20',icon:'🏥'},
-              {label:'Días totales',val:stats.total_dias||0,color:'#2563EB',icon:'📅'},
-              {label:'Con goce',val:stats.con_goce,color:'#059669',icon:'💰'},
-              {label:'Sin goce',val:stats.sin_goce,color:'#6B7280',icon:'🚫'},
-              {label:'IMSS General',val:stats.imss_general,color:'#2563EB',icon:'🏥'},
-              {label:'Maternidad',val:stats.maternidad,color:'#DB2777',icon:'🤱'},
-              {label:'Riesgo Trabajo',val:stats.riesgo_trabajo,color:'#D97706',icon:'⚠️'},
-              {label:'Enf. Profesional',val:stats.enfermedad_profesional,color:'#7C3AED',icon:'🧬'},
-            ].map(k=>(
-              <div key={k.label} style={{background:'#fff',borderRadius:14,padding:'16px 20px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)',borderTop:`3px solid ${k.color}`}}>
-                <div style={{fontSize:24,marginBottom:6}}>{k.icon}</div>
-                <div style={{fontSize:32,fontWeight:900,color:k.color,fontFamily:'Playfair Display,serif',fontStyle:'italic'}}>{k.val||0}</div>
-                <div style={{fontSize:11,color:'#718096',fontWeight:700,textTransform:'uppercase',marginTop:4}}>{k.label}</div>
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            {/* Cards resumen */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:14}}>
+              {[
+                {label:'Total',val:stats.total,color:'#1B5E20',icon:'🏥'},
+                {label:'Días totales',val:stats.total_dias||0,color:'#2563EB',icon:'📅'},
+                {label:'Con goce',val:stats.con_goce,color:'#059669',icon:'💰'},
+                {label:'Sin goce',val:stats.sin_goce,color:'#6B7280',icon:'🚫'},
+              ].map(k=>(
+                <div key={k.label} style={{background:'#fff',borderRadius:14,padding:'16px 20px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)',borderTop:`3px solid ${k.color}`}}>
+                  <div style={{fontSize:24,marginBottom:6}}>{k.icon}</div>
+                  <div style={{fontSize:32,fontWeight:900,color:k.color,fontFamily:'Playfair Display,serif',fontStyle:'italic'}}>{k.val||0}</div>
+                  <div style={{fontSize:11,color:'#718096',fontWeight:700,textTransform:'uppercase',marginTop:4}}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Gráfica por tipo */}
+            <div style={{background:'#fff',borderRadius:16,padding:'20px 24px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
+              <div style={{fontWeight:800,color:'#1a1a2e',marginBottom:16,fontSize:14}}>Por tipo de incapacidad</div>
+              {[
+                {label:'IMSS General',val:parseInt(stats.imss_general)||0,color:'#2563EB',icon:'🏥'},
+                {label:'Maternidad',val:parseInt(stats.maternidad)||0,color:'#DB2777',icon:'🤱'},
+                {label:'Riesgo de Trabajo',val:parseInt(stats.riesgo_trabajo)||0,color:'#D97706',icon:'⚠️'},
+                {label:'Enf. Profesional',val:parseInt(stats.enfermedad_profesional)||0,color:'#7C3AED',icon:'🧬'},
+              ].map(t=>{
+                const total = parseInt(stats.total)||1;
+                const pct = Math.round(t.val/total*100);
+                return (
+                  <div key={t.label} style={{marginBottom:14}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,alignItems:'center'}}>
+                      <span style={{fontSize:13,fontWeight:700,color:'#4A5568'}}>{t.icon} {t.label}</span>
+                      <span style={{fontSize:13,fontWeight:800,color:t.color}}>{t.val} ({pct}%)</span>
+                    </div>
+                    <div style={{height:10,background:'#f0f0f0',borderRadius:5,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${pct}%`,background:t.color,borderRadius:5,transition:'width 0.6s ease'}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Gráfica goce */}
+            <div style={{background:'#fff',borderRadius:16,padding:'20px 24px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
+              <div style={{fontWeight:800,color:'#1a1a2e',marginBottom:16,fontSize:14}}>Con goce vs Sin goce</div>
+              <div style={{display:'flex',gap:12,alignItems:'center'}}>
+                <div style={{flex:parseInt(stats.con_goce)||1,height:32,background:'linear-gradient(90deg,#059669,#10b981)',borderRadius:'8px 0 0 8px',display:'flex',alignItems:'center',paddingLeft:10,color:'#fff',fontSize:11,fontWeight:800,minWidth:40}}>
+                  💰 {stats.con_goce}
+                </div>
+                <div style={{flex:parseInt(stats.sin_goce)||1,height:32,background:'linear-gradient(90deg,#6B7280,#9CA3AF)',borderRadius:'0 8px 8px 0',display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:10,color:'#fff',fontSize:11,fontWeight:800,minWidth:40}}>
+                  {stats.sin_goce} 🚫
+                </div>
               </div>
-            ))}
+              <div style={{display:'flex',justifyContent:'space-between',marginTop:8}}>
+                <span style={{fontSize:11,color:'#059669',fontWeight:700}}>Con goce de sueldo</span>
+                <span style={{fontSize:11,color:'#6B7280',fontWeight:700}}>Sin goce de sueldo</span>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -505,7 +546,7 @@ function ModalSubirReceta({ incapacidades, onClose, onGuardado }) {
             </label>
             <label style={{flex:1,padding:'14px',borderRadius:12,background:'#EEF2FF',border:'2px dashed #2563EB',cursor:'pointer',textAlign:'center',fontWeight:700,fontSize:13,color:'#2563EB',fontFamily:'Montserrat,sans-serif'}}>
               📸 Tomar foto
-              <input type="file" accept="image/*" capture="environment" style={{display:'none'}} onChange={e=>onFile(e.target.files[0])}/>
+              <input type="file" accept="image/*;capture=camera" capture="environment" style={{display:'none'}} onChange={e=>onFile(e.target.files[0])}/>
             </label>
           </div>
 
