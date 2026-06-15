@@ -13,6 +13,11 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
 
   // Estados editar perfil
   const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [modalBienvenida, setModalBienvenida] = useState(false);
+  const [enviandoBienvenida, setEnviandoBienvenida] = useState(false);
+  const [passB, setPassB] = useState('');
+  const [okBienvenida, setOkBienvenida] = useState(false);
+  const [errBienvenida, setErrBienvenida] = useState('');
   const [formPerfil, setFormPerfil] = useState({});
   const [nuevaFoto, setNuevaFoto] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
@@ -254,6 +259,19 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
                     <div style={{ fontWeight:600,color:'var(--txt)',fontSize:14 }}>{value||'—'}</div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ── BOTÓN ENVIAR BIENVENIDA ── */}
+            {tab === 'info' && empleado?.email && (
+              <div style={{ marginTop:8 }}>
+                <button
+                  className="btn-institucional"
+                  style={{ width:'100%', fontSize:13, padding:'12px', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'linear-gradient(135deg,#0a1f3d,#1a3a6b)', color:'#fff', border:'none' }}
+                  onClick={() => setModalBienvenida(true)}>
+                  <span style={{ fontSize:18 }}>📧</span>
+                  <span>Enviar correo de bienvenida</span>
+                </button>
               </div>
             )}
 
