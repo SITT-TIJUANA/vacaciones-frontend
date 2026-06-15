@@ -232,21 +232,6 @@ export default function Bajas() {
                   style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, resize:'vertical', boxSizing:'border-box' }}/>
               </div>
 
-              <div>
-                <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:8, textTransform:'uppercase' }}>¿Qué hacer con el historial?</label>
-                <div style={{ display:'flex', gap:10 }}>
-                  {[{val:true,label:'📋 Conservar historial'},{val:false,label:'🗑️ Borrar historial'}].map(o => (
-                    <button key={String(o.val)} onClick={() => setConservarHistorial(o.val)}
-                      style={{ flex:1, padding:'10px', borderRadius:10, border:`1.5px solid ${conservarHistorial===o.val?'#6B0F2B':'#e2e8f0'}`, background:conservarHistorial===o.val?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:conservarHistorial===o.val?'#6B0F2B':'#718096', transition:'all 0.2s' }}>
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-                <p style={{ fontSize:11, color:'#718096', marginTop:6 }}>
-                  {conservarHistorial ? 'El historial de actividad se conservará en el sistema.' : 'El historial de actividad se eliminará permanentemente.'}
-                </p>
-              </div>
-
               <div style={{ padding:'10px 12px', background:'rgba(183,28,28,0.08)', borderRadius:10, border:'1px solid rgba(183,28,28,0.2)', fontSize:12, color:'#B71C1C', fontFamily:'Montserrat,sans-serif', fontWeight:600 }}>
                 ⚠️ El empleado quedará inactivo y no podrá acceder al sistema.
               </div>
