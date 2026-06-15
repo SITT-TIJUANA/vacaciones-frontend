@@ -599,7 +599,7 @@ function ModalSubirReceta({ incapacidades, onClose, onGuardado }) {
             </label>
             <label style={{flex:1,padding:'14px',borderRadius:12,background:'#EEF2FF',border:'2px dashed #2563EB',cursor:'pointer',textAlign:'center',fontWeight:700,fontSize:13,color:'#2563EB',fontFamily:'Montserrat,sans-serif'}}>
               📸 Tomar foto
-              <input type="file" accept="image/*" capture style={{display:'none'}} onChange={e=>onFile(e.target.files[0])}/>
+              <input type="file" accept="image/*" capture="user" style={{display:'none'}} onChange={e=>{ if(e.target.files[0]) onFile(e.target.files[0]); e.target.value=''; }}/>
             </label>
           </div>
 
@@ -621,6 +621,14 @@ function ModalPDFIncapacidad({ inc, onClose }) {
   const [recetaVinculada, setRecetaVinculada] = useState(null);
   const [incluirReceta, setIncluirReceta] = useState(true);
   const [generando, setGenerando] = useState(false);
+  const [config, setConfig] = useState({
+    color: {nombre:'Verde SITT', c1:[27,94,32], c2:[46,125,50], hex:'#1B5E20'},
+    titulo: 'CONSTANCIA DE INCAPACIDAD MÉDICA',
+    subtitulo: 'Sistema Integral de Transporte de Tijuana — SITT',
+    firma1: 'Firma del Empleado',
+    firma2: 'Vo.Bo. Recursos Humanos',
+    firma3: 'Vo.Bo. Administración',
+  });
 
   useEffect(()=>{
     api.get('/api/incapacidades/recetas').then(r=>{
@@ -643,7 +651,7 @@ function ModalPDFIncapacidad({ inc, onClose }) {
       const hoy = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
 
       // Header verde
-      doc.setFillColor(27,94,32); doc.rect(0,0,pW,50,'F');
+      doc.setFillColor(...config.color.c1); doc.rect(0,0,pW,50,'F');
       doc.setFillColor(201,168,76); doc.rect(0,50,pW,2.5,'F');
 
       // Logo
@@ -670,10 +678,10 @@ function ModalPDFIncapacidad({ inc, onClose }) {
       doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11);
       doc.text('H. XXV Ayuntamiento de Tijuana', 42,14);
       doc.setFontSize(9); doc.setFont('helvetica','normal');
-      doc.text('Sistema Integral de Transporte de Tijuana — SITT',42,21);
+      doc.text(config.subtitulo,42,21);
       doc.setFont('helvetica','bold'); doc.setFontSize(10);
       doc.setTextColor(201,168,76);
-      doc.text('CONSTANCIA DE INCAPACIDAD MÉDICA',42,30);
+      doc.text(config.titulo,42,30);
       doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','normal');
       doc.text(`Expedida el: ${hoy}`,42,37);
 
@@ -701,7 +709,7 @@ function ModalPDFIncapacidad({ inc, onClose }) {
 
       // Detalles incapacidad
       y += 48;
-      doc.setFillColor(27,94,32); doc.roundedRect(14,y,pW-28,10,2,2,'F');
+      doc.setFillColor(...config.color.c1); doc.roundedRect(14,y,pW-28,10,2,2,'F');
       doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10);
       doc.text('DETALLES DE LA INCAPACIDAD',pW/2,y+7,{align:'center'});
 
@@ -769,9 +777,9 @@ function ModalPDFIncapacidad({ inc, onClose }) {
       // Firmas
       y = Math.max(y, 200);
       const firmas = [
-        {label:'Firma del Empleado', nombre:`${inc.nombre||''} ${inc.apellido_paterno||''}`},
-        {label:'Vo.Bo. Recursos Humanos', nombre:'Recursos Humanos'},
-        {label:'Vo.Bo. Administración', nombre:'Administración'},
+        {label:config.firma1, nombre:`${inc.nombre||''} ${inc.apellido_paterno||''}`},
+        {label:config.firma2, nombre:'Recursos Humanos'},
+        {label:config.firma3, nombre:'Administración'},
       ];
       const fw = (pW-28)/3;
       firmas.forEach((f,i)=>{
@@ -786,7 +794,7 @@ function ModalPDFIncapacidad({ inc, onClose }) {
 
       // Footer
       const pH = 279.4;
-      doc.setFillColor(27,94,32); doc.rect(0,pH-12,pW,12,'F');
+      doc.setFillColor(...config.color.c1); doc.rect(0,pH-12,pW,12,'F');
       doc.setFillColor(201,168,76); doc.rect(0,pH-14,pW,2,'F');
       doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(7);
       doc.text('Sistema de Incapacidades — SITT · H. XXV Ayuntamiento de Tijuana',pW/2,pH-4,{align:'center'});
@@ -805,10 +813,53 @@ function ModalPDFIncapacidad({ inc, onClose }) {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body" style={{display:'flex',flexDirection:'column',gap:14}}>
+          {/* Preview */}
           <div style={{background:'#F0FFF4',borderRadius:12,padding:'12px 16px'}}>
             <div style={{fontWeight:800,color:'#1B5E20',fontSize:14}}>{inc.nombre} {inc.apellido_paterno}</div>
             <div style={{fontSize:13,color:'#4A5568',marginTop:4}}>{tipo.icon} {tipo.label} · {inc.dias} días</div>
             <div style={{fontSize:12,color:'#718096',marginTop:2}}>{fmtFecha(inc.fecha_inicio)} → {fmtFecha(inc.fecha_fin)}</div>
+          </div>
+
+          {/* Opciones de color */}
+          <div>
+            <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:8,textTransform:'uppercase',letterSpacing:0.5}}>Color del PDF</label>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {[
+                {nombre:'Verde SITT', c1:[27,94,32], c2:[46,125,50], hex:'#1B5E20'},
+                {nombre:'Guinda', c1:[107,15,43], c2:[155,21,64], hex:'#6B0F2B'},
+                {nombre:'Azul marino', c1:[10,31,61], c2:[26,58,107], hex:'#0a1f3d'},
+                {nombre:'Morado', c1:[74,29,150], c2:[109,40,217], hex:'#4A1D96'},
+                {nombre:'Negro', c1:[30,30,30], c2:[60,60,60], hex:'#1e1e1e'},
+              ].map(c=>(
+                <div key={c.nombre} onClick={()=>setConfig(f=>({...f,color:c}))}
+                  style={{width:32,height:32,borderRadius:'50%',background:c.hex,cursor:'pointer',border:`3px solid ${config.color.hex===c.hex?'#C9A84C':'transparent'}`,boxShadow:config.color.hex===c.hex?'0 0 0 2px #C9A84C40':'none',transition:'all 0.2s'}}
+                  title={c.nombre}/>
+              ))}
+            </div>
+          </div>
+
+          {/* Títulos y firmantes */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            <div>
+              <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:5,textTransform:'uppercase'}}>Título del documento</label>
+              <input value={config.titulo} onChange={e=>setConfig(f=>({...f,titulo:e.target.value}))}
+                style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+            </div>
+            <div>
+              <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:5,textTransform:'uppercase'}}>Subtítulo</label>
+              <input value={config.subtitulo} onChange={e=>setConfig(f=>({...f,subtitulo:e.target.value}))}
+                style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+            </div>
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+            {['firma1','firma2','firma3'].map((k,i)=>(
+              <div key={k}>
+                <label style={{display:'block',fontWeight:700,fontSize:10,color:'#4A5568',marginBottom:4,textTransform:'uppercase'}}>Firma {i+1}</label>
+                <input value={config[k]} onChange={e=>setConfig(f=>({...f,[k]:e.target.value}))}
+                  style={{width:'100%',padding:'6px 8px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:11,boxSizing:'border-box'}}/>
+              </div>
+            ))}
           </div>
 
           {recetaVinculada ? (
