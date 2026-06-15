@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { BtnRegresar, BtnCerrarSesion } from '../components/BotonesNav';
 import api from '../services/api';
+import { useTema } from '../hooks/useTema';
 
 const DEPT_COLORS = {
   'direccion general': { bg:'#6B0F2B', text:'#fff', border:'#9B1540', light:'#fff0f3' },
@@ -24,6 +25,7 @@ export default function OrganigramaPage() {
   const [sel, setSel] = useState(null);
   const [panelId, setPanelId] = useState(null);
   const [toast, setToast] = useState(null);
+  const { headerStyle } = useTema();
   const { rolEfectivo } = useAuth();
   const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
 
