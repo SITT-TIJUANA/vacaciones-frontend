@@ -93,6 +93,7 @@ export default function AltaPersonal({ onCreado }) {
   })() : null;
 
   return (
+    <>
     <div className="fade-in">
       <div className="section-header">
         <h2 className="section-title">Alta de Personal</h2>
@@ -250,5 +251,6 @@ export default function AltaPersonal({ onCreado }) {
         onCancelar={() => setCropArchivo(null)}
       />
     )}
+    </>
   );
 }
