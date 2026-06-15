@@ -30,6 +30,7 @@ function fmtHora(h) {
 
 // ── Componente principal ──────────────────────────────────
 export default function PermisosPage() {
+  const { headerStyle } = useTema();
   const { usuario, rolEfectivo } = useAuth();
   const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
   const [permisos, setPermisos] = useState([]);
