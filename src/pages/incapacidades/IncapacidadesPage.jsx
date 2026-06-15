@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { BtnRegresar, BtnCerrarSesion } from '../../components/BotonesNav';
+import Notificaciones from '../../components/Notificaciones';
 import api from '../../services/api';
 import { useTema } from '../../hooks/useTema';
 import jsPDF from 'jspdf';
@@ -92,6 +93,7 @@ export default function IncapacidadesPage() {
             </button>
           )}
           <BtnRegresar />
+          <Notificaciones />
           <BtnCerrarSesion />
         </div>
       </div>
