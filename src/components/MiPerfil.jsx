@@ -137,43 +137,10 @@ export default function MiPerfil({ onVerPeriodos }) {
         </div>
       ) : null}
 
-      {/* Modal cambiar contraseña */}
-      {modalPass && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>🔑 Cambiar Contraseña</h2>
-              <button className="modal-close" onClick={() => { setModalPass(false); setErrPass(''); setMsgPass(''); }}>✕</button>
-            </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {errPass && <div style={{ background: '#FFF3CD', border: '1px solid #FFEEBA', borderLeft: '4px solid #856404', padding: '10px 14px', borderRadius: 8, fontSize: 13, color: '#856404', fontWeight: 600 }}>⚠️ {errPass}</div>}
-              {msgPass && <div style={{ background: '#D4EDDA', border: '1px solid #C3E6CB', borderLeft: '4px solid #155724', padding: '10px 14px', borderRadius: 8, fontSize: 13, color: '#155724', fontWeight: 600 }}>{msgPass}</div>}
-              <div className="form-group">
-                <label>Contraseña actual</label>
-                <input type="password" className="form-control" placeholder="••••••••" value={formPass.password_actual} onChange={e => setFormPass({ ...formPass, password_actual: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>Nueva contraseña</label>
-                <input type="password" className="form-control" placeholder="Mínimo 6 caracteres" value={formPass.password_nuevo} onChange={e => setFormPass({ ...formPass, password_nuevo: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>Confirmar nueva contraseña</label>
-                <input type="password" className="form-control" placeholder="Repite la contraseña" value={formPass.confirmar} onChange={e => setFormPass({ ...formPass, confirmar: e.target.value })} />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-institucional btn-sm" onClick={() => { setModalPass(false); setErrPass(''); setMsgPass(''); }}>Cancelar</button>
-              <button className="btn-institucional filled btn-sm" onClick={cambiarPassword} disabled={enviando}>
-                {enviando ? '⏳...' : '🔑 Cambiar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {verPerfil && usuario?.empleado_id && (
-        <PerfilModal empleadoId={usuario.empleado_id} onClose={() => setVerPerfil(false)} onActualizar={() => {}} onVerPeriodos={onVerPeriodos} />
-      )}
-    </div>
+      {/* Cambiar contraseña — disponible en el monograma flotante */}
+      <div style={{background:'#EEF2FF',borderRadius:14,padding:'14px 18px',textAlign:'center'}}>
+        <div style={{fontSize:13,color:'#3730a3',fontWeight:700}}>🔑 Para cambiar tu contraseña usa el monograma flotante</div>
+        <div style={{fontSize:11,color:'#718096',marginTop:4}}>Da clic en tu círculo con iniciales → "Cambiar contraseña"</div>
+      </div>    </div>
   );
 }
