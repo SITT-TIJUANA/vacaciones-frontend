@@ -93,6 +93,7 @@ export default function Usuarios() {
   };
 
   return (
+    <>
     <div className="fade-in">
       <div className="section-header">
         <h2 className="section-title">Gestión de Usuarios</h2>
@@ -215,10 +216,10 @@ export default function Usuarios() {
         </div>
       )}
     </div>
-    {/* Modal cambiar contraseña */}
     {modalPassword && (
       <ModalCambiarPassword usuario={modalPassword} onClose={()=>setModalPassword(null)}/>
     )}
+    </>
   );
 }
 
