@@ -7,6 +7,7 @@ import Historial from '../../components/Historial';
 import Usuarios from '../../components/Usuarios';
 import PerfilModal from '../../components/PerfilModal';
 import api from '../../services/api';
+import { useTema } from '../../hooks/useTema';
 
 const NAV_ITEMS = [
   { id:'directorio',  icon:'👥', label:'Directorio',  roles:['admin','rrhh'] },
@@ -17,13 +18,14 @@ const NAV_ITEMS = [
 ];
 
 export default function PersonalPage() {
+  const { headerStyle } = useTema();
   const { rolEfectivo } = useAuth();
   const [seccion, setSeccion] = useState(() => rolEfectivo==='empleado' ? 'organigrama' : 'directorio');
   const navItems = NAV_ITEMS.filter(i => i.roles.includes(rolEfectivo));
 
   return (
     <div style={{ minHeight:'100vh', background:'#F7F8FC', fontFamily:'Montserrat,sans-serif' }}>
-      <div className="modulo-header" style={{ background:'linear-gradient(135deg,#6B0F2B,#9B1540,#C9A84C)', padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+      <div className="modulo-header" style={{ ...headerStyle('linear-gradient(135deg,#6B0F2B,#9B1540,#C9A84C)'), padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
         <div>
           <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:2, textTransform:'uppercase' }}>SITT · Gestión de</div>
           <div style={{ fontSize:28, fontWeight:900, color:'#fff', fontFamily:'Playfair Display,serif', fontStyle:'italic' }}>Personal SITT</div>
@@ -173,6 +175,7 @@ function Organigrama() {
   const [sel, setSel] = useState(null);
   const [panelId, setPanelId] = useState(null);
   const [toast, setToast] = useState(null);
+  const { headerStyle } = useTema();
   const { rolEfectivo } = useAuth();
   const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
 
