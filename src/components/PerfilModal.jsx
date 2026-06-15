@@ -419,7 +419,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
                         : <span style={{ fontSize:48 }}>👤</span>
                     }
                   </div>
-                  <input ref={fotoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{const f=e.target.files[0];if(!f)return;setNuevaFoto(f);const r=new FileReader();r.onload=ev=>setPreviewFoto(ev.target.result);r.readAsDataURL(f);}} />
+                  <input ref={fotoRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{const f=e.target.files[0];if(!f)return;setCropArchivo(f);e.target.value='';}} />
                   <button className="btn-institucional dorado btn-sm" onClick={()=>fotoRef.current?.click()}>📷 Cambiar foto</button>
                   {(empleado.foto_url||previewFoto)&&previewFoto!=='BORRAR'&&<button className="btn-institucional peligro btn-sm" onClick={()=>{setNuevaFoto(null);setPreviewFoto('BORRAR');}}>🗑️ Quitar foto</button>}
                 </div>
@@ -532,7 +532,11 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
       {cropArchivo && (
         <CropFoto
           archivo={cropArchivo}
-          onConfirmar={file => { setNuevaFoto(file); setCropArchivo(null); }}
+          onConfirmar={file => {
+            setNuevaFoto(file);
+            const r=new FileReader();r.onload=ev=>setPreviewFoto(ev.target.result);r.readAsDataURL(file);
+            setCropArchivo(null);
+          }}
           onCancelar={() => setCropArchivo(null)}
         />
       )}
