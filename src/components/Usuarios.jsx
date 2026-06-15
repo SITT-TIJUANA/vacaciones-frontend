@@ -159,7 +159,6 @@ export default function Usuarios() {
                           {u.activo ? '🔒' : '🔓'}
                         </button>
                         <button style={{padding:"4px 8px",borderRadius:8,border:"1px solid #C9A84C",background:"rgba(201,168,76,0.1)",color:"#92400E",cursor:"pointer",fontWeight:700,fontSize:11}} onClick={()=>setModalPassword({id:u.id,username:u.username})}>🔑</button>
-                        <button style={{padding:"4px 8px",borderRadius:8,border:"1px solid #2563EB",background:"rgba(37,99,235,0.08)",color:"#1e40af",cursor:"pointer",fontWeight:700,fontSize:11}} onClick={()=>setModalBienvenida({id:u.id,username:u.username,email:u.email_empleado||u.email})}>📧</button>
                         <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(u.id)}>🗑️</button>
                       </div>
                     </td>
@@ -221,9 +220,6 @@ export default function Usuarios() {
     </div>
     {modalPassword && (
       <ModalCambiarPassword usuario={modalPassword} onClose={()=>setModalPassword(null)}/>
-    )}
-    {modalBienvenida && (
-      <ModalEnviarBienvenida usuario={modalBienvenida} onClose={()=>setModalBienvenida(null)}/>
     )}
     </>
   );
