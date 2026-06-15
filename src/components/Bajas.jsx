@@ -246,7 +246,7 @@ export default function Bajas() {
         </div>
       )}
 
-      {/* Modal reactivar */
+      {/* Modal reactivar */}
       {modalReactivar && (
         <div className="modal-overlay" onClick={() => setModalReactivar(null)}>
           <div className="modal" style={{ maxWidth:420 }} onClick={e => e.stopPropagation()}>
