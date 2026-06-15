@@ -50,6 +50,9 @@ export default function AltaPersonal({ onCreado }) {
     if (!form.nombre || !form.apellido_paterno || !form.fecha_ingreso) {
       setError('Nombre, apellido paterno y fecha de ingreso son requeridos'); return;
     }
+    if (!form.email) { setError('El correo electrónico es requerido'); return; }
+    if (!form.username) { setError('El usuario es requerido'); return; }
+    if (!form.password || form.password.length < 6) { setError('La contraseña es requerida (mínimo 6 caracteres)'); return; }
     setEnviando(true); setError('');
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v); });
@@ -204,14 +207,14 @@ export default function AltaPersonal({ onCreado }) {
             {/* Acceso sistema */}
             <div>
               <h3 style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,color:'var(--g)',fontSize:13,textTransform:'uppercase',letterSpacing:'0.8px',marginBottom:6,paddingBottom:10,borderBottom:'2px solid var(--g-soft)' }}>
-                🔐 Acceso al Sistema <span style={{ fontSize:11,fontWeight:400,opacity:.7,textTransform:'none' }}>(opcional)</span>
+                🔐 Acceso al Sistema
               </h3>
               <p style={{ fontSize:12,color:'var(--g60)',marginBottom:14 }}>
                 Si se proporcionan, el empleado podrá iniciar sesión y solicitar vacaciones.
               </p>
               <div className="form-grid">
-                <div className="form-group"><label>Usuario</label><input className="form-control" placeholder="usuario.apellido" value={form.username} onChange={e=>setForm({...form,username:e.target.value})} /></div>
-                <div className="form-group"><label>Contraseña temporal</label><input type="password" className="form-control" placeholder="Mínimo 6 caracteres" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} /></div>
+                <div className="form-group"><label>Usuario *</label><input className="form-control" placeholder="usuario.apellido" value={form.username} onChange={e=>setForm({...form,username:e.target.value})} /></div>
+                <div className="form-group"><label>Contraseña temporal *</label><input type="password" className="form-control" placeholder="Mínimo 6 caracteres" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} /></div>
               </div>
             </div>
           </div>
