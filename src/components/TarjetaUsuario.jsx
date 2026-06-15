@@ -10,6 +10,7 @@ export default function TarjetaUsuario() {
   const [rotY, setRotY] = useState(0);
   const [pos, setPos] = useState({ x: window.innerWidth - 70, y: 90 });
   const [modalPass, setModalPass] = useState(false);
+  const [panelFijo, setPanelFijo] = useState(false);
   const isDragging = useRef(false);
   const startRef = useRef({});
   const posRef = useRef(pos);
@@ -69,8 +70,9 @@ export default function TarjetaUsuario() {
         ref={cardRef}
         onMouseDown={e=>{e.preventDefault();startDrag(e.clientX,e.clientY);}}
         onTouchStart={e=>startDrag(e.touches[0].clientX,e.touches[0].clientY)}
-        onMouseEnter={()=>setHovered(true)}
-        onMouseLeave={()=>{setHovered(false);setRotX(0);setRotY(0);}}
+        onClick={()=>{ if(!isDragging.current){ setPanelFijo(f=>!f); setHovered(false); }}}
+        onMouseEnter={()=>{ if(!panelFijo) setHovered(true); }}
+        onMouseLeave={()=>{ if(!panelFijo){setHovered(false);setRotX(0);setRotY(0);} }}
         onMouseMove={e=>{
           if(isDragging.current)return;
           const rect=cardRef.current?.getBoundingClientRect();if(!rect)return;
@@ -104,7 +106,7 @@ export default function TarjetaUsuario() {
           </div>
 
           {/* Panel hover */}
-          {hovered && (
+          {(hovered || panelFijo) && (
             <div style={{
               position:'fixed',right:80,top:pos.y,
               background:`linear-gradient(135deg,${r.color}f0,${r.color}d0)`,
@@ -113,6 +115,7 @@ export default function TarjetaUsuario() {
               animation:'slideIn 0.2s ease',minWidth:160,maxWidth:'calc(100vw - 100px)',zIndex:9999,
             }}>
               <div style={{position:'absolute',right:-6,top:'50%',transform:'translateY(-50%)',width:12,height:12,background:r.color,borderRadius:2,rotate:'45deg',borderLeft:'none',borderBottom:'none',border:`1px solid ${r.accent}40`}}/>
+              {panelFijo && <button onClick={e=>{e.stopPropagation();setPanelFijo(false);}} style={{position:'absolute',top:6,right:6,background:'rgba(255,255,255,0.15)',border:'none',color:'#fff',width:18,height:18,borderRadius:'50%',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900}}>✕</button>}
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
                 <div style={{width:28,height:28,borderRadius:'50%',background:`${r.accent}25`,border:`1px solid ${r.accent}60`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:900,color:r.accent,fontFamily:'Playfair Display,serif',fontStyle:'italic'}}>
                   {iniciales}
@@ -126,7 +129,7 @@ export default function TarjetaUsuario() {
               <div style={{fontSize:9,fontWeight:800,color:r.accent,fontFamily:'Montserrat,sans-serif',letterSpacing:1.5,textTransform:'uppercase',marginBottom:2}}>{r.label}</div>
               {empleado?.puesto && <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',fontFamily:'Montserrat,sans-serif'}}>{empleado.puesto}</div>}
               {empleado?.departamento && <div style={{fontSize:8,color:'rgba(255,255,255,0.3)',fontFamily:'Montserrat,sans-serif',marginTop:1}}>{empleado.departamento}</div>}
-              <button onClick={e=>{e.stopPropagation();setModalPass(true);setHovered(false);}}
+              <button onClick={e=>{e.stopPropagation();setModalPass(true);setHovered(false);setPanelFijo(false);}}
                 style={{marginTop:10,padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.1)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:700,fontSize:10,width:'100%',textAlign:'center'}}>
                 🔑 Cambiar contraseña
               </button>
