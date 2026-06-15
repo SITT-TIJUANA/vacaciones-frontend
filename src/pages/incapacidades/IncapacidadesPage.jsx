@@ -546,7 +546,7 @@ function ModalSubirReceta({ incapacidades, onClose, onGuardado }) {
             </label>
             <label style={{flex:1,padding:'14px',borderRadius:12,background:'#EEF2FF',border:'2px dashed #2563EB',cursor:'pointer',textAlign:'center',fontWeight:700,fontSize:13,color:'#2563EB',fontFamily:'Montserrat,sans-serif'}}>
               📸 Tomar foto
-              <input type="file" accept="image/*;capture=camera" capture="environment" style={{display:'none'}} onChange={e=>onFile(e.target.files[0])}/>
+              <input type="file" accept="image/*" capture style={{display:'none'}} onChange={e=>onFile(e.target.files[0])}/>
             </label>
           </div>
 
