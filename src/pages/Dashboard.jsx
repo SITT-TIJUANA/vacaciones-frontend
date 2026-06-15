@@ -113,6 +113,7 @@ export default function Dashboard() {
         </div>
         <div className="dash-header-right" style={{gap:10}}>
           <BtnRegresar />
+          <Notificaciones />
           <BtnCerrarSesion />
           {esAdminRRHH && (
             <div style={{ display:'flex',alignItems:'center',gap:6 }}>
