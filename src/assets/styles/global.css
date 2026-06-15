@@ -503,6 +503,14 @@ body.tema-mexico .btn-institucional.dorado {
   border-color: #CE1126 !important;
   color: #CE1126 !important;
 }
+/* Tema México — headers de todos los módulos */
+body.tema-mexico .modulo-header {
+  background: linear-gradient(135deg,#004d35,#006847,#CE1126) !important;
+}
+body.tema-mexico .modulo-header * {
+  color: #fff !important;
+}
+
 body.tema-mexico {
   --g: #006847;
   --d: #CE1126;
