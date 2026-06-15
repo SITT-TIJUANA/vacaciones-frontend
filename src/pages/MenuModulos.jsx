@@ -71,7 +71,8 @@ const MODULOS = [
 
 export default function MenuModulos() {
   const navigate = useNavigate();
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, rolEfectivo } = useAuth();
+  const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
   const [visible, setVisible] = useState(false);
   const [hoverId, setHoverId] = useState(null);
 
@@ -79,8 +80,6 @@ export default function MenuModulos() {
     setTimeout(() => setVisible(true), 100);
   }, []);
 
-  const { rolEfectivo } = useAuth();
-  const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
 
   const entrar = (mod) => {
     if (!mod.disponible) return;
