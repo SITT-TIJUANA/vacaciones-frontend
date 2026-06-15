@@ -55,6 +55,8 @@ export default function MiPerfil({ onVerPeriodos }) {
             Rol: {usuario?.rol}
           </span>
         </div>
+      ) : cargando ? (
+        <div style={{ textAlign:'center', padding:60 }}><div className="loader"/></div>
       ) : perfil ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Card principal */}
@@ -114,7 +116,12 @@ export default function MiPerfil({ onVerPeriodos }) {
             </button>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="card" style={{ textAlign:'center', padding:60 }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>👤</div>
+          <p style={{ color:'var(--gris-texto)' }}>No se pudo cargar el perfil. Intenta recargar la página.</p>
+        </div>
+      )}
 
       {verPerfil && usuario?.empleado_id && (
         <PerfilModal
