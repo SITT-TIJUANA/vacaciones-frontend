@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { BtnRegresar, BtnCerrarSesion } from '../../components/BotonesNav';
+import Notificaciones from '../../components/Notificaciones';
 import AltaPersonal from '../../components/AltaPersonal';
 import Bajas from '../../components/Bajas';
 import Historial from '../../components/Historial';
@@ -32,6 +33,7 @@ export default function PersonalPage() {
         </div>
         <div style={{ display:'flex', gap:10, alignItems:'center' }}>
           <BtnRegresar />
+          <Notificaciones />
           <BtnCerrarSesion />
         </div>
       </div>
