@@ -157,6 +157,7 @@ export default function Usuarios() {
                         <button className={`btn-institucional btn-sm ${u.activo ? 'peligro' : 'dorado'}`} onClick={() => toggleActivo(u.id, u.activo)}>
                           {u.activo ? '🔒' : '🔓'}
                         </button>
+                        <button style={{padding:"4px 8px",borderRadius:8,border:"1px solid #C9A84C",background:"rgba(201,168,76,0.1)",color:"#92400E",cursor:"pointer",fontWeight:700,fontSize:11}} onClick={()=>setModalPassword({id:u.id,username:u.username})}>🔑</button>
                         <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(u.id)}>🗑️</button>
                       </div>
                     </td>
