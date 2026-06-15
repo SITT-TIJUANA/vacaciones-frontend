@@ -313,6 +313,16 @@ function TarjetaPortal({ mod, index, visible, hovered, onHover, onLeave, onClick
           )}
         </div>
       </div>
+
+      {/* Nota contraseña — solo empleado */}
+      {!esAdmin && (
+        <div style={{textAlign:'center',marginTop:24}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:20,padding:'8px 18px'}}>
+            <span style={{fontSize:14}}>🔑</span>
+            <span style={{fontSize:12,color:'rgba(255,255,255,0.7)',fontFamily:'Montserrat,sans-serif',fontWeight:600}}>Para cambiar tu contraseña da clic en tu círculo de iniciales</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
