@@ -123,6 +123,7 @@ export default function Reportes() {
           total_dias_disponibles: parseInt(res.totales.total_dias_disponibles)||0,
           solicitudes_pendientes: parseInt(res.totales.solicitudes_pendientes)||0,
           solicitudes_aprobadas: parseInt(res.totales.solicitudes_aprobadas)||0,
+          solicitudes_rechazadas: parseInt(res.totales.solicitudes_rechazadas)||0,
         };
       }
       if (res.por_departamento) {
@@ -681,15 +682,15 @@ export default function Reportes() {
           datos={[
             {label:'Aprobadas',  valor:parseInt(tot.solicitudes_aprobadas)||0,  color:'#27ae60'},
             {label:'Pendientes', valor:parseInt(tot.solicitudes_pendientes)||0, color:'#F59E0B'},
-            {label:'Rechazadas', valor:0, color:'#E53E3E'},
+            {label:'Rechazadas', valor:parseInt(tot.solicitudes_rechazadas)||0, color:'#E53E3E'},
           ]}
           onClicGlobal={()=>setModalGrafica({
             titulo:'📋 Solicitudes por Estatus',
             filas:[
               ['✅ Aprobadas',  `${parseInt(tot.solicitudes_aprobadas)||0}`],
               ['⏳ Pendientes', `${parseInt(tot.solicitudes_pendientes)||0}`],
-              ['❌ Rechazadas', '0'],
-              ['📋 Total',      `${(parseInt(tot.solicitudes_aprobadas)||0)+(parseInt(tot.solicitudes_pendientes)||0)}`],
+              ['❌ Rechazadas', `${parseInt(tot.solicitudes_rechazadas)||0}`],
+              ['📋 Total',      `${(parseInt(tot.solicitudes_aprobadas)||0)+(parseInt(tot.solicitudes_pendientes)||0)+(parseInt(tot.solicitudes_rechazadas)||0)}`],
             ],
           })}
         />
