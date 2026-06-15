@@ -7,18 +7,44 @@ export default function Bajas() {
   const [modalReactivar, setModalReactivar] = useState(null);
   const [modalEliminar, setModalEliminar] = useState(null);
   const [enviando, setEnviando] = useState(false);
+  const [empleadosActivos, setEmpleadosActivos] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [modalDarBaja, setModalDarBaja] = useState(null);
+  const [formBaja, setFormBaja] = useState({ motivo:'', notas:'' });
+  const [conservarHistorial, setConservarHistorial] = useState(true);
 
   const cargar = () => {
     setCargando(true);
     api.get('/api/bajas').then(r => setBajas(r.data)).catch(console.error).finally(() => setCargando(false));
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+    api.get('/api/empleados').then(r => setEmpleadosActivos(r.data)).catch(console.error);
+  }, []);
 
   const reactivar = async (id) => {
     setEnviando(true);
     try { await api.post(`/api/bajas/${id}/reactivar`); cargar(); setModalReactivar(null); }
     catch(e) { alert(e.response?.data?.error || 'Error'); }
+    finally { setEnviando(false); }
+  };
+
+  const darBaja = async () => {
+    if (!modalDarBaja) return;
+    setEnviando(true);
+    try {
+      await api.post(`/api/bajas/${modalDarBaja.id}`, {
+        motivo_baja: formBaja.motivo,
+        notas_baja: formBaja.notas,
+        borrar_historial: !conservarHistorial,
+      });
+      setModalDarBaja(null);
+      setFormBaja({ motivo:'', notas:'' });
+      setConservarHistorial(true);
+      cargar();
+      api.get('/api/empleados').then(r => setEmpleadosActivos(r.data)).catch(console.error);
+    } catch(e) { alert(e.response?.data?.error || 'Error al dar de baja'); }
     finally { setEnviando(false); }
   };
 
@@ -52,6 +78,41 @@ export default function Bajas() {
         <span style={{ background:'rgba(183,28,28,0.08)', color:'#B71C1C', padding:'8px 18px', borderRadius:30, fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, border:'1px solid rgba(183,28,28,0.2)' }}>
           {bajas.length} empleado{bajas.length !== 1 ? 's' : ''} dado{bajas.length !== 1 ? 's' : ''} de baja
         </span>
+      </div>
+
+      {/* Sección dar de baja */}
+      <div style={{ background:'#fff', borderRadius:16, padding:'20px 24px', marginBottom:24, boxShadow:'0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div style={{ fontWeight:800, fontSize:14, color:'#B71C1C', marginBottom:14, fontFamily:'Montserrat,sans-serif' }}>🚫 Dar de baja a un empleado</div>
+        <input
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          placeholder="🔍 Buscar empleado activo por nombre o puesto..."
+          style={{ width:'100%', padding:'10px 14px', borderRadius:12, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box', marginBottom:12 }}
+        />
+        {busqueda.length > 1 && (
+          <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:240, overflowY:'auto' }}>
+            {empleadosActivos
+              .filter(e => `${e.nombre} ${e.apellido_paterno} ${e.puesto||''}`.toLowerCase().includes(busqueda.toLowerCase()))
+              .slice(0, 8)
+              .map(e => (
+                <div key={e.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'#f7f8fc', borderRadius:10, border:'1px solid #e2e8f0' }}>
+                  {e.foto_url
+                    ? <img src={e.foto_url} alt="" style={{ width:40, height:40, borderRadius:'50%', objectFit:'cover', border:'2px solid #e2e8f0' }}/>
+                    : <div style={{ width:40, height:40, borderRadius:'50%', background:'var(--g10)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>👤</div>
+                  }
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:800, fontSize:13, color:'#1a1a2e' }}>{e.nombre} {e.apellido_paterno}</div>
+                    <div style={{ fontSize:11, color:'#718096' }}>{e.puesto||'—'} · {e.departamento||'—'}</div>
+                  </div>
+                  <button onClick={() => { setModalDarBaja(e); setBusqueda(''); }}
+                    style={{ padding:'6px 14px', borderRadius:20, border:'none', background:'#B71C1C', color:'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12 }}>
+                    🚫 Dar de baja
+                  </button>
+                </div>
+              ))
+            }
+          </div>
+        )}
       </div>
 
       {cargando ? (
@@ -135,7 +196,72 @@ export default function Bajas() {
         </div>
       )}
 
-      {/* Modal reactivar */}
+      {/* Modal dar de baja */}
+      {modalDarBaja && (
+        <div className="modal-overlay" onClick={() => setModalDarBaja(null)}>
+          <div className="modal" style={{ maxWidth:440 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ background:'linear-gradient(135deg,#7F0000,#B71C1C)' }}>
+              <h2>🚫 Dar de Baja</h2>
+              <button className="modal-close" onClick={() => setModalDarBaja(null)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:14, padding:'12px 14px', background:'rgba(183,28,28,0.06)', borderRadius:12, border:'1px solid rgba(183,28,28,0.15)' }}>
+                {modalDarBaja.foto_url
+                  ? <img src={modalDarBaja.foto_url} alt="" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:'3px solid #E53935' }}/>
+                  : <div style={{ width:52, height:52, borderRadius:'50%', background:'var(--g10)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>👤</div>
+                }
+                <div>
+                  <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:16, color:'var(--g)' }}>{modalDarBaja.nombre} {modalDarBaja.apellido_paterno}</div>
+                  <div style={{ fontSize:12, color:'var(--g60)' }}>{modalDarBaja.puesto||'—'} · {modalDarBaja.departamento||'—'}</div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase' }}>Motivo de baja</label>
+                <select value={formBaja.motivo} onChange={e => setFormBaja({...formBaja, motivo:e.target.value})}
+                  style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box' }}>
+                  <option value="">Seleccionar motivo...</option>
+                  {['Renuncia voluntaria','Término de contrato','Jubilación','Despido','Fallecimiento','Otro'].map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase' }}>Notas adicionales</label>
+                <textarea value={formBaja.notas} onChange={e => setFormBaja({...formBaja, notas:e.target.value})}
+                  rows={2} placeholder="Observaciones opcionales..."
+                  style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, resize:'vertical', boxSizing:'border-box' }}/>
+              </div>
+
+              <div>
+                <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:8, textTransform:'uppercase' }}>¿Qué hacer con el historial?</label>
+                <div style={{ display:'flex', gap:10 }}>
+                  {[{val:true,label:'📋 Conservar historial'},{val:false,label:'🗑️ Borrar historial'}].map(o => (
+                    <button key={String(o.val)} onClick={() => setConservarHistorial(o.val)}
+                      style={{ flex:1, padding:'10px', borderRadius:10, border:`1.5px solid ${conservarHistorial===o.val?'#6B0F2B':'#e2e8f0'}`, background:conservarHistorial===o.val?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:conservarHistorial===o.val?'#6B0F2B':'#718096', transition:'all 0.2s' }}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontSize:11, color:'#718096', marginTop:6 }}>
+                  {conservarHistorial ? 'El historial de actividad se conservará en el sistema.' : 'El historial de actividad se eliminará permanentemente.'}
+                </p>
+              </div>
+
+              <div style={{ padding:'10px 12px', background:'rgba(183,28,28,0.08)', borderRadius:10, border:'1px solid rgba(183,28,28,0.2)', fontSize:12, color:'#B71C1C', fontFamily:'Montserrat,sans-serif', fontWeight:600 }}>
+                ⚠️ El empleado quedará inactivo y no podrá acceder al sistema.
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-institucional btn-sm" onClick={() => setModalDarBaja(null)}>Cancelar</button>
+              <button className="btn-institucional peligro btn-sm" onClick={darBaja} disabled={enviando}>
+                {enviando ? '⏳...' : '🚫 Confirmar baja'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal reactivar */}}
       {modalReactivar && (
         <div className="modal-overlay" onClick={() => setModalReactivar(null)}>
           <div className="modal" style={{ maxWidth:420 }} onClick={e => e.stopPropagation()}>
