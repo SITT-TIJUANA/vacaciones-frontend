@@ -395,8 +395,10 @@ function FormNuevaSolicitud({ onClose, onCreada }) {
 
   const calcDias = () => {
     if (!fechaInicio || !fechaFin) return 0;
-    const ini = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
+    const [iy,im,id] = fechaInicio.split('-').map(Number);
+    const [fy,fm,fd] = fechaFin.split('-').map(Number);
+    const ini = new Date(iy, im-1, id);
+    const fin = new Date(fy, fm-1, fd);
     if (fin < ini) return 0;
     let dias = 0;
     const cur = new Date(ini);
