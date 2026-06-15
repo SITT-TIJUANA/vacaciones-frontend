@@ -116,6 +116,13 @@ export default function MiPerfil({ onVerPeriodos }) {
         </div>
       ) : null}
 
+      {verPerfil && usuario?.empleado_id && (
+        <PerfilModal
+          empleadoId={usuario.empleado_id}
+          onClose={() => setVerPerfil(false)}
+          onVerPeriodos={onVerPeriodos}
+        />
+      )}
     </div>
   );
 }
