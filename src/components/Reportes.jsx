@@ -679,15 +679,17 @@ export default function Reportes() {
         <GraficaDonut3D
           titulo="📋 Solicitudes por Estatus"
           datos={[
-            {label:'Aprobadas', valor:parseInt(tot.solicitudes_aprobadas)||0, color:'#27ae60'},
+            {label:'Aprobadas',  valor:parseInt(tot.solicitudes_aprobadas)||0,  color:'#27ae60'},
             {label:'Pendientes', valor:parseInt(tot.solicitudes_pendientes)||0, color:'#F59E0B'},
+            {label:'Rechazadas', valor:0, color:'#E53E3E'},
           ]}
-          onClic={d=>setModalGrafica({
-            titulo:'Solicitudes de Vacaciones',
+          onClicGlobal={()=>setModalGrafica({
+            titulo:'📋 Solicitudes por Estatus',
             filas:[
-              ['✅ Aprobadas', `${parseInt(tot.solicitudes_aprobadas)||0}`],
+              ['✅ Aprobadas',  `${parseInt(tot.solicitudes_aprobadas)||0}`],
               ['⏳ Pendientes', `${parseInt(tot.solicitudes_pendientes)||0}`],
-              ['📋 Total', `${(parseInt(tot.solicitudes_aprobadas)||0)+(parseInt(tot.solicitudes_pendientes)||0)}`],
+              ['❌ Rechazadas', '0'],
+              ['📋 Total',      `${(parseInt(tot.solicitudes_aprobadas)||0)+(parseInt(tot.solicitudes_pendientes)||0)}`],
             ],
           })}
         />
@@ -981,7 +983,7 @@ function GraficaBarrasH3D({ titulo, datos }) {
 }
 
 // ── Gráfica Donut 3D ──────────────────────────────────────
-function GraficaDonut3D({ titulo, datos, onClic }) {
+function GraficaDonut3D({ titulo, datos, onClic, onClicGlobal }) {
   const [hover, setHover] = useState(null);
   const [animPct, setAnimPct] = useState(0);
 
@@ -999,7 +1001,10 @@ function GraficaDonut3D({ titulo, datos, onClic }) {
     return () => clearTimeout(t);
   }, [datos]);
 
-  const total = datos.reduce((s,d)=>s+(parseInt(d.valor)||0),0)||1;
+  const totalReal = datos.reduce((s,d)=>s+(parseInt(d.valor)||0),0);
+  const total = totalReal || 1;
+  // Si solo un slice tiene valor, dibujamos el donut completo de ese color
+  const soloUno = datos.filter(d=>parseInt(d.valor)>0).length <= 1;
   const SIZE = 180, CX = 90, CY = 90, R_OUT = 70, R_IN = 38, DEPTH = 10;
 
   const getCoords = (angle, r) => ({
@@ -1010,7 +1015,13 @@ function GraficaDonut3D({ titulo, datos, onClic }) {
   const slices = [];
   let a = -Math.PI / 2;
   datos.forEach((d,i) => {
-    const span = (d.valor / total) * 2 * Math.PI * (animPct/100);
+    const v = parseInt(d.valor)||0;
+    let span;
+    if (soloUno) {
+      span = v > 0 ? 2 * Math.PI * (animPct/100) : 0;
+    } else {
+      span = (v / total) * 2 * Math.PI * (animPct/100);
+    }
     slices.push({ ...d, a1:a, a2:a+span, i });
     a += span;
   });
@@ -1053,8 +1064,8 @@ function GraficaDonut3D({ titulo, datos, onClic }) {
             );
           })}
           {/* Centro blanco */}
-          <circle cx={CX} cy={CY} r={R_IN-2} fill="white"/>
-          <text x={CX} y={CY+4} textAnchor="middle" fontSize="13" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e">{datos.reduce((s,d)=>s+(parseInt(d.valor)||0),0)}</text>
+          <circle cx={CX} cy={CY} r={R_IN-2} fill="white" style={{cursor:onClicGlobal?'pointer':'default'}} onClick={()=>onClicGlobal&&onClicGlobal()}/>
+          <text x={CX} y={CY+4} textAnchor="middle" fontSize="13" fontWeight="900" fontFamily="Montserrat" fill="#1a1a2e" style={{cursor:onClicGlobal?'pointer':'default'}} onClick={()=>onClicGlobal&&onClicGlobal()}>{datos.reduce((s,d)=>s+(parseInt(d.valor)||0),0)}</text>
         </svg>
 
         {/* Leyenda */}
