@@ -56,6 +56,7 @@ export default function Usuarios() {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ username: '', password: '', rol: 'empleado', empleado_id: '' });
   const [modalPassword, setModalPassword] = useState(null);
+  const [modalVincular, setModalVincular] = useState(null);
   const [modalBienvenida, setModalBienvenida] = useState(null); // {id, username}
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -158,6 +159,7 @@ export default function Usuarios() {
                         <button className={`btn-institucional btn-sm ${u.activo ? 'peligro' : 'dorado'}`} onClick={() => toggleActivo(u.id, u.activo)}>
                           {u.activo ? '🔒' : '🔓'}
                         </button>
+                        <button style={{padding:"4px 8px",borderRadius:8,border:"1px solid #1B5E20",background:"rgba(27,94,32,0.08)",color:"#1B5E20",cursor:"pointer",fontWeight:700,fontSize:11}} onClick={()=>setModalVincular({id:u.id,username:u.username,empleado_id:u.empleado_id||""})}>🔗</button>
                         <button style={{padding:"4px 8px",borderRadius:8,border:"1px solid #C9A84C",background:"rgba(201,168,76,0.1)",color:"#92400E",cursor:"pointer",fontWeight:700,fontSize:11}} onClick={()=>setModalPassword({id:u.id,username:u.username})}>🔑</button>
                         <button className="btn-institucional peligro btn-sm" onClick={() => eliminar(u.id)}>🗑️</button>
                       </div>
@@ -220,6 +222,9 @@ export default function Usuarios() {
     </div>
     {modalPassword && (
       <ModalCambiarPassword usuario={modalPassword} onClose={()=>setModalPassword(null)}/>
+    )}
+    {modalVincular && (
+      <ModalVincularEmpleado usuario={modalVincular} empleados={empleados} onClose={()=>setModalVincular(null)} onGuardado={()=>{ cargar(); setModalVincular(null); }}/>
     )}
     </>
   );
@@ -332,6 +337,67 @@ function ModalEnviarBienvenida({ usuario, onClose }) {
             <button onClick={enviar} disabled={enviando}
               style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#0a1f3d,#1a3a6b)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:13}}>
               {enviando?'⏳ Enviando...':'📧 Enviar correo'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ModalVincularEmpleado({ usuario, empleados, onClose, onGuardado }) {
+  const [empId, setEmpId] = useState(usuario.empleado_id || '');
+  const [enviando, setEnviando] = useState(false);
+  const [ok, setOk] = useState(false);
+
+  const guardar = async () => {
+    setEnviando(true);
+    try {
+      await api.put(`/api/usuarios/${usuario.id}`, { empleado_id: empId || null });
+      setOk(true);
+      setTimeout(() => onGuardado(), 1500);
+    } catch(e) { alert(e.response?.data?.error || 'Error'); }
+    finally { setEnviando(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header" style={{background:'linear-gradient(135deg,#1B5E20,#2E7D32)'}}>
+          <h2>🔗 Vincular Empleado</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{display:'flex',flexDirection:'column',gap:14}}>
+          {ok ? (
+            <div style={{textAlign:'center',padding:'20px 0'}}>
+              <div style={{fontSize:48}}>✅</div>
+              <div style={{fontWeight:800,color:'#1B5E20',marginTop:8}}>¡Vinculado correctamente!</div>
+            </div>
+          ) : (
+            <>
+              <div style={{background:'#EEF2FF',borderRadius:10,padding:'12px',fontSize:13,color:'#3730a3',fontWeight:600}}>
+                👤 Usuario: <strong>{usuario.username}</strong>
+              </div>
+              <div>
+                <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Vincular con empleado</label>
+                <select value={empId} onChange={e=>setEmpId(e.target.value)}
+                  style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}>
+                  <option value="">— Sin vincular —</option>
+                  {empleados.map(e=>(
+                    <option key={e.id} value={e.id}>{e.nombre} {e.apellido_paterno} — {e.puesto||'Sin puesto'}</option>
+                  ))}
+                </select>
+                <p style={{fontSize:11,color:'#718096',marginTop:4}}>Puedes vincular o desvincular en cualquier momento.</p>
+              </div>
+            </>
+          )}
+        </div>
+        {!ok && (
+          <div className="modal-footer">
+            <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
+            <button onClick={guardar} disabled={enviando}
+              style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#1B5E20,#2E7D32)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:13}}>
+              {enviando?'⏳...':'🔗 Guardar'}
             </button>
           </div>
         )}
