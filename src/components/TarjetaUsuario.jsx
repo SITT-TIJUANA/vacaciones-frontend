@@ -121,7 +121,7 @@ export default function TarjetaUsuario() {
         {/* Panel expandido */}
         {hovered && (
           <div style={{
-            position:'absolute',right:62,top:'50%',transform:'translateY(-50%)',
+            position:'fixed',right:80,top:pos.y,
             background:`linear-gradient(135deg,${r.color}f0,${r.color}d0)`,
             backdropFilter:'blur(20px)',
             border:`1px solid ${r.accent}40`,
@@ -131,6 +131,8 @@ export default function TarjetaUsuario() {
             boxShadow:`0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px ${r.accent}20`,
             animation:'slideIn 0.2s cubic-bezier(0.34,1.56,0.64,1)',
             minWidth:160,
+            maxWidth:'calc(100vw - 100px)',
+            zIndex:9999,
           }}>
             {/* Flecha */}
             <div style={{position:'absolute',right:-6,top:'50%',transform:'translateY(-50%)',width:12,height:12,background:r.color,border:`1px solid ${r.accent}40`,borderRadius:2,rotate:'45deg',borderLeft:'none',borderBottom:'none'}}/>
