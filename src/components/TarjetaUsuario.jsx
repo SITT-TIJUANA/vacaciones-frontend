@@ -64,8 +64,10 @@ export default function TarjetaUsuario() {
   };
 
   const r = ROLES[rolEfectivo] || ROLES.empleado;
-  const nombre = empleado ? `${empleado.nombre} ${empleado.apellido_paterno}` : usuario?.username || 'Usuario';
-  const iniciales = nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const nombre = empleado 
+    ? `${empleado.nombre||''} ${empleado.apellido_paterno||''}`.trim() || usuario?.username || 'Usuario'
+    : usuario?.username || 'Usuario';
+  const iniciales = nombre.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
 
   return (
     <div
