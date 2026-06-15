@@ -143,6 +143,7 @@ export default function IncapacidadesPage() {
                   onEditar={()=>setModalEditar(inc)}
                   onEliminar={async()=>{ if(!window.confirm('¿Eliminar?'))return; await api.delete(`/api/incapacidades/${inc.id}`); cargar(); mostrarToast('✅ Eliminada'); }}
                   onPDF={()=>setModalPDF(inc)}
+                  recetas={recetas}
                 />
               ))}
             </div>
@@ -269,7 +270,7 @@ export default function IncapacidadesPage() {
 }
 
 // ── Tarjeta incapacidad ───────────────────────────────────
-function TarjetaIncapacidad({ inc, esAdmin, onEditar, onEliminar, onPDF }) {
+function TarjetaIncapacidad({ inc, esAdmin, onEditar, onEliminar, onPDF, recetas }) {
   const tipo = TIPOS[inc.tipo] || { label:inc.tipo, icon:'🏥', color:'#1B5E20' };
   return (
     <div style={{background:'#fff',borderRadius:16,padding:'18px 22px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)',borderLeft:`4px solid ${tipo.color}`,display:'flex',gap:16,flexWrap:'wrap',alignItems:'flex-start'}}>
@@ -294,6 +295,22 @@ function TarjetaIncapacidad({ inc, esAdmin, onEditar, onEliminar, onPDF }) {
         </div>
         {inc.observaciones && <div style={{marginTop:6,fontSize:12,color:'#718096',fontStyle:'italic'}}>💬 {inc.observaciones}</div>}
       </div>
+      {/* Receta vinculada */}
+      {(() => {
+        const receta = recetas?.find(r=>r.incapacidad_id===inc.id);
+        if (!receta) return null;
+        return (
+          <div style={{width:'100%',marginTop:10,borderTop:'1px solid #f0f0f0',paddingTop:10,display:'flex',alignItems:'center',gap:12}}>
+            <img src={receta.foto_url} alt="Receta" onClick={()=>window.open(receta.foto_url,'_blank')}
+              style={{width:60,height:60,objectFit:'cover',borderRadius:8,border:'2px solid #1B5E20',cursor:'pointer',flexShrink:0}}/>
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:'#1B5E20'}}>📋 Receta médica adjunta</div>
+              <div style={{fontSize:10,color:'#718096',marginTop:2}}>{receta.descripcion||'Sin descripción'}</div>
+              <div style={{fontSize:10,color:'#718096'}}>{String(receta.fecha||'').substring(0,10)}</div>
+            </div>
+          </div>
+        );
+      })()}
       {esAdmin && (
         <div style={{display:'flex',flexDirection:'column',gap:8,flexShrink:0}}>
           <button onClick={onPDF} style={{padding:'8px 16px',borderRadius:10,background:'#1B5E20',color:'#fff',border:'none',cursor:'pointer',fontWeight:700,fontSize:12,fontFamily:'Montserrat,sans-serif'}}>📄 PDF</button>
@@ -529,11 +546,6 @@ function ModalSubirReceta({ incapacidades, onClose, onGuardado }) {
           )}
 
           <div>
-            <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Fecha</label>
-            <input type="date" value={form.fecha} onChange={e=>setForm({...form,fecha:e.target.value})} style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}/>
-          </div>
-
-          <div>
             <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Descripción</label>
             <input value={form.descripcion} onChange={e=>setForm({...form,descripcion:e.target.value})} placeholder="Ej: Receta de médico familiar" style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}/>
           </div>
@@ -647,7 +659,6 @@ function ModalPDFIncapacidad({ inc, onClose }) {
       doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10);
       doc.text('DETALLES DE LA INCAPACIDAD',pW/2,y+7,{align:'center'});
 
-      y += 16;
       const detalles = [
         ['Tipo:', `${tipo.icon} ${tipo.label}`],
         ['Fecha inicio:', fmtFecha(inc.fecha_inicio)],
@@ -659,38 +670,58 @@ function ModalPDFIncapacidad({ inc, onClose }) {
       ];
       doc.setFillColor(248,255,248); doc.setDrawColor(27,94,32); doc.setLineWidth(0.3);
       doc.roundedRect(14,y,pW-28,detalles.length*10+12,3,3,'FD');
-      detalles.forEach(([l,v],i)=>{
-        const row = y+10+i*10;
-        doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(27,94,32);
-        doc.text(l,22,row);
-        doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-        doc.text(String(v),80,row);
-      });
-
-      // Receta médica si seleccionada
+      // Receta médica si seleccionada - en la misma hoja compacto
+      let recetaImg = null;
       if (recetaSel) {
         const rec = recetas.find(r=>r.id===recetaSel);
         if (rec) {
-          y += detalles.length*10+24;
-          doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(27,94,32);
-          doc.text('RECETA MÉDICA',pW/2,y,{align:'center'});
-          doc.setDrawColor(201,168,76); doc.setLineWidth(0.5);
-          doc.line(14,y+2,pW-14,y+2);
           try {
             const ir = await fetch(rec.foto_url);
             if (ir.ok) {
               const ib = await ir.blob();
-              const ib64 = await new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(ib); });
-              const imgW = 120, imgH = 80;
-              doc.addImage(ib64,'JPEG',(pW-imgW)/2,y+8,imgW,imgH);
-              y += imgH+16;
+              recetaImg = await new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(ib); });
             }
           } catch(e){}
         }
       }
 
+      // Layout compacto: si hay receta, poner detalles y receta lado a lado
+      y += 16;
+      if (recetaImg) {
+        // Detalles a la izquierda, receta a la derecha
+        const colW = (pW-30)/2;
+        doc.setFillColor(248,255,248); doc.setDrawColor(27,94,32); doc.setLineWidth(0.3);
+        doc.roundedRect(14,y,colW,detalles.length*9+12,3,3,'FD');
+        detalles.forEach(([l,v],i)=>{
+          const row = y+9+i*9;
+          doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(27,94,32);
+          doc.text(l,18,row);
+          doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+          doc.text(String(v),52,row);
+        });
+        // Receta derecha
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(27,94,32);
+        doc.text('RECETA MÉDICA',16+colW+colW/2,y-2,{align:'center'});
+        const recH = Math.min(detalles.length*9+12, 80);
+        doc.addImage(recetaImg,'JPEG',16+colW,y,colW-2,recH);
+        doc.setDrawColor(27,94,32); doc.setLineWidth(0.3);
+        doc.rect(16+colW,y,colW-2,recH);
+        y += Math.max(detalles.length*9+12, recH) + 10;
+      } else {
+        doc.setFillColor(248,255,248); doc.setDrawColor(27,94,32); doc.setLineWidth(0.3);
+        doc.roundedRect(14,y,pW-28,detalles.length*9+12,3,3,'FD');
+        detalles.forEach(([l,v],i)=>{
+          const row = y+9+i*9;
+          doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(27,94,32);
+          doc.text(l,22,row);
+          doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+          doc.text(String(v),72,row);
+        });
+        y += detalles.length*9+22;
+      }
+
       // Firmas
-      y = Math.max(y + (detalles.length*10+24), 200);
+      y = Math.max(y, 200);
       const firmas = [
         {label:'Firma del Empleado', nombre:`${inc.nombre||''} ${inc.apellido_paterno||''}`},
         {label:'Vo.Bo. Recursos Humanos', nombre:'Recursos Humanos'},
