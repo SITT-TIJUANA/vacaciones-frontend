@@ -42,10 +42,8 @@ export default function AltaPersonal({ onCreado }) {
   const handleFoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setFoto(file);
-    const reader = new FileReader();
-    reader.onload = ev => setPreview(ev.target.result);
-    reader.readAsDataURL(file);
+    setCropArchivo(file);
+    e.target.value = '';
   };
 
   const handleSubmit = async () => {
@@ -247,7 +245,13 @@ export default function AltaPersonal({ onCreado }) {
     {cropArchivo && (
       <CropFoto
         archivo={cropArchivo}
-        onConfirmar={file => { setForm(f=>({...f, foto:file})); setCropArchivo(null); }}
+        onConfirmar={file => {
+          setFoto(file);
+          const reader = new FileReader();
+          reader.onload = ev => setPreview(ev.target.result);
+          reader.readAsDataURL(file);
+          setCropArchivo(null);
+        }}
         onCancelar={() => setCropArchivo(null)}
       />
     )}
