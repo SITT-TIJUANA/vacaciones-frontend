@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { useTema } from '../../hooks/useTema';
 import jsPDF from 'jspdf';
 import { BtnRegresar, BtnCerrarSesion } from '../../components/BotonesNav';
 import 'jspdf-autotable';
@@ -73,7 +74,7 @@ export default function PermisosPage() {
   return (
     <div style={{ minHeight:'100vh', background:'#F7F8FC', fontFamily:'Montserrat,sans-serif' }}>
       {/* Header */}
-      <div className="modulo-header" style={{ background:'linear-gradient(135deg,#0a1f3d,#1a3a6b)', padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+      <div className="modulo-header" style={{ ...headerStyle('linear-gradient(135deg,#0a1f3d,#1a3a6b)'), padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
         <div>
           <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:2, textTransform:'uppercase' }}>SITT · Control de</div>
           <div style={{ fontSize:28, fontWeight:900, color:'#fff', fontFamily:'Playfair Display,serif', fontStyle:'italic' }}>Permisos Laborales</div>
