@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import CropFoto from './CropFoto';
 import { useAuth } from '../context/AuthContext';
 import PeriodosDetalle from './PeriodosDetalle';
 
@@ -20,6 +21,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
   const [errBienvenida, setErrBienvenida] = useState('');
   const [formPerfil, setFormPerfil] = useState({});
   const [nuevaFoto, setNuevaFoto] = useState(null);
+  const [cropArchivo, setCropArchivo] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
   const [guardandoPerfil, setGuardandoPerfil] = useState(false);
   const fotoRef = useRef();
@@ -526,6 +528,13 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
             )}
           </div>
         </div>
+      )}
+      {cropArchivo && (
+        <CropFoto
+          archivo={cropArchivo}
+          onConfirmar={file => { setNuevaFoto(file); setCropArchivo(null); }}
+          onCancelar={() => setCropArchivo(null)}
+        />
       )}
     </>
   );
