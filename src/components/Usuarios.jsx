@@ -55,6 +55,7 @@ export default function Usuarios() {
   const [cargando, setCargando] = useState(true);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ username: '', password: '', rol: 'empleado', empleado_id: '' });
+  const [modalPassword, setModalPassword] = useState(null); // {id, username}
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
 
@@ -213,6 +214,66 @@ export default function Usuarios() {
           </div>
         </div>
       )}
+    </div>
+    {/* Modal cambiar contraseña */}
+    {modalPassword && (
+      <ModalCambiarPassword usuario={modalPassword} onClose={()=>setModalPassword(null)}/>
+    )}
+  );
+}
+
+function ModalCambiarPassword({ usuario, onClose }) {
+  const [pass, setPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+  const [ok, setOk] = useState(false);
+
+  const guardar = async () => {
+    if (!pass || pass.length < 6) { setError('Mínimo 6 caracteres'); return; }
+    if (pass !== confirmPass) { setError('Las contraseñas no coinciden'); return; }
+    setEnviando(true); setError('');
+    try {
+      await api.post(`/api/auth/reset-password/${usuario.id}`, { password_nuevo: pass });
+      setOk(true);
+      setTimeout(() => onClose(), 2000);
+    } catch(e) { setError(e.response?.data?.error || 'Error al actualizar'); }
+    finally { setEnviando(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{maxWidth:380}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>🔑 Cambiar Contraseña</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{background:'#EEF2FF',borderRadius:10,padding:'10px 14px',fontSize:13,color:'#3730a3',fontWeight:600}}>
+            👤 Usuario: <strong>{usuario.username}</strong>
+          </div>
+          {error && <div style={{background:'#FFF5F5',border:'1px solid #FED7D7',borderRadius:8,padding:'10px',color:'#B71C1C',fontSize:13}}>⚠️ {error}</div>}
+          {ok && <div style={{background:'#F0FFF4',border:'1px solid #c6f6d5',borderRadius:8,padding:'10px',color:'#1B5E20',fontSize:13,fontWeight:700}}>✅ Contraseña actualizada correctamente</div>}
+          <div>
+            <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Nueva contraseña</label>
+            <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="Mínimo 6 caracteres"
+              style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}/>
+          </div>
+          <div>
+            <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Confirmar contraseña</label>
+            <input type="password" value={confirmPass} onChange={e=>setConfirmPass(e.target.value)} placeholder="Repetir contraseña"
+              style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}
+              onKeyDown={e=>e.key==='Enter'&&guardar()}/>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
+          <button onClick={guardar} disabled={enviando||ok}
+            style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#6B0F2B,#9B1540)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:13}}>
+            {enviando?'⏳...':'✅ Actualizar'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
