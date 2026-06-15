@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { useTema } from '../../hooks/useTema';
 import jsPDF from 'jspdf';
 import { BtnRegresar, BtnCerrarSesion } from '../../components/BotonesNav';
+import Notificaciones from '../../components/Notificaciones';
 import 'jspdf-autotable';
 
 const TIPOS = {
@@ -82,6 +83,7 @@ export default function PermisosPage() {
         </div>
         <div style={{ display:'flex', gap:10, alignItems:'center' }}>
           <BtnRegresar />
+          <Notificaciones />
           <BtnCerrarSesion />
           <div style={{ width:1, height:30, background:'rgba(255,255,255,0.15)', margin:'0 4px' }}/>
           {/* Botones solo en header */}
