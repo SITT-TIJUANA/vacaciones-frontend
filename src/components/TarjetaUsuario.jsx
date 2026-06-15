@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function TarjetaUsuario() {
-  const { usuario, rolEfectivo } = useAuth();
+  const { usuario, rolEfectivo, modoEmpleado, setModoEmpleado } = useAuth();
   const [empleado, setEmpleado] = useState(null);
   const [hovered, setHovered] = useState(false);
   const [rotX, setRotX] = useState(0);
@@ -129,8 +129,14 @@ export default function TarjetaUsuario() {
               <div style={{fontSize:9,fontWeight:800,color:r.accent,fontFamily:'Montserrat,sans-serif',letterSpacing:1.5,textTransform:'uppercase',marginBottom:2}}>{r.label}</div>
               {empleado?.puesto && <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',fontFamily:'Montserrat,sans-serif'}}>{empleado.puesto}</div>}
               {empleado?.departamento && <div style={{fontSize:8,color:'rgba(255,255,255,0.3)',fontFamily:'Montserrat,sans-serif',marginTop:1}}>{empleado.departamento}</div>}
+              {usuario?.empleado_id && (usuario?.rol==='admin'||usuario?.rol==='rrhh') && (
+                <button onClick={e=>{e.stopPropagation();setModoEmpleado(!modoEmpleado);setHovered(false);setPanelFijo(false);}}
+                  style={{marginTop:8,padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.3)',background:modoEmpleado?'rgba(201,168,76,0.3)':'rgba(255,255,255,0.1)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:700,fontSize:10,width:'100%',textAlign:'center'}}>
+                  {modoEmpleado?'🛡️ Ver como Admin':'👤 Ver como Empleado'}
+                </button>
+              )}
               <button onClick={e=>{e.stopPropagation();setModalPass(true);setHovered(false);setPanelFijo(false);}}
-                style={{marginTop:10,padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.1)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:700,fontSize:10,width:'100%',textAlign:'center'}}>
+                style={{marginTop:6,padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.1)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:700,fontSize:10,width:'100%',textAlign:'center'}}>
                 🔑 Cambiar contraseña
               </button>
             </div>
