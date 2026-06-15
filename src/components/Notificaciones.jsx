@@ -116,8 +116,8 @@ export default function Notificaciones() {
       {/* Panel */}
       {abierto && (
         <div style={{
-          position:'absolute', top:'calc(100% + 8px)', right:0,
-          width:300, background:'#fff', borderRadius:16,
+          position:'fixed', top:60, right:8,
+          width:'min(300px, calc(100vw - 16px))', background:'#fff', borderRadius:16,
           boxShadow:'0 20px 60px rgba(0,0,0,0.2)',
           border:'1px solid rgba(0,0,0,0.08)',
           zIndex:9999, overflow:'hidden',
