@@ -6,6 +6,7 @@ export default function TarjetaUsuario() {
   const { usuario, rolEfectivo } = useAuth();
   const [empleado, setEmpleado] = useState(null);
   const [hovered, setHovered] = useState(false);
+  const [modalPass, setModalPass] = useState(false);
   const [rotX, setRotX] = useState(0);
   const [rotY, setRotY] = useState(0);
   const [pos, setPos] = useState({ x: window.innerWidth - 70, y: 90 });
@@ -70,6 +71,8 @@ export default function TarjetaUsuario() {
   const iniciales = nombre.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
 
   return (
+    <>
+    {modalPass && <ModalCambiarPropiaPassword onClose={()=>setModalPass(false)}/>}
     <div
       ref={cardRef}
       onMouseDown={e=>{e.preventDefault();startDrag(e.clientX,e.clientY);}}
