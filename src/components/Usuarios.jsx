@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const ROLES_INFO = [
   {
@@ -346,6 +347,7 @@ function ModalEnviarBienvenida({ usuario, onClose }) {
 }
 
 function ModalVincularEmpleado({ usuario, empleados, onClose, onGuardado }) {
+  const { refrescarUsuario } = useAuth();
   const [empId, setEmpId] = useState(usuario.empleado_id || '');
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState(false);
@@ -354,6 +356,8 @@ function ModalVincularEmpleado({ usuario, empleados, onClose, onGuardado }) {
     setEnviando(true);
     try {
       await api.put(`/api/usuarios/${usuario.id}`, { empleado_id: empId || null });
+      // Refrescar usuario en contexto
+      try { await refrescarUsuario(); } catch(e) {}
       setOk(true);
       setTimeout(() => onGuardado(), 1500);
     } catch(e) { alert(e.response?.data?.error || 'Error'); }
