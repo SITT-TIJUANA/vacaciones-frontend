@@ -234,7 +234,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
                 {[
                   { label:'Correo electrónico', value:empleado.email, icon:'✉️' },
                   { label:'Teléfono', value:empleado.telefono, icon:'📱' },
-                  { label:'Fecha de ingreso', value:empleado.fecha_ingreso ? new Date(empleado.fecha_ingreso).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}) : null, icon:'📆' },
+                  { label:'Fecha de ingreso', value:empleado.fecha_ingreso ? (() => { const [y,m,d]=String(empleado.fecha_ingreso).substring(0,10).split('-'); return new Date(parseInt(y),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}); })() : null, icon:'📆' },
                   { label:'Antigüedad', value:empleado.fecha_ingreso ? calcularAntiguedad(empleado.fecha_ingreso) : null, icon:'⏱️' },
                   { label:'Periodo actual', value:info ? (() => {
                     if (!empleado.fecha_ingreso) return null;
@@ -546,7 +546,8 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
 
 function fmtFecha(f) {
   if (!f) return '—';
-  return new Date(f).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
+  const [y,m,d] = String(f).substring(0,10).split('-');
+  return new Date(parseInt(y),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'});
 }
 
 function calcularAntiguedad(fechaIngreso) {
