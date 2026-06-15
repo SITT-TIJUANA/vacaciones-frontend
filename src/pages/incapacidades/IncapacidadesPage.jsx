@@ -618,16 +618,21 @@ function ModalSubirReceta({ incapacidades, onClose, onGuardado }) {
 
 // ── Modal PDF incapacidad ─────────────────────────────────
 function ModalPDFIncapacidad({ inc, onClose }) {
-  const [recetas, setRecetas] = useState([]);
-  const [recetaSel, setRecetaSel] = useState('');
+  const [recetaVinculada, setRecetaVinculada] = useState(null);
+  const [incluirReceta, setIncluirReceta] = useState(true);
   const [generando, setGenerando] = useState(false);
 
   useEffect(()=>{
     api.get('/api/incapacidades/recetas').then(r=>{
-      setRecetas(r.data.filter(x=>x.empleado_id===inc.empleado_id));
+      const todas = r.data.filter(x=>x.empleado_id===inc.empleado_id);
+      // Buscar la receta vinculada a esta incapacidad
+      const vinculada = todas.find(x=>x.incapacidad_id===inc.id);
+      setRecetaVinculada(vinculada||null);
+      setIncluirReceta(!!vinculada);
     }).catch(()=>{});
   },[inc]);
 
+  const recetaSel = incluirReceta && recetaVinculada ? recetaVinculada.id : '';
   const tipo = TIPOS[inc.tipo]||{label:inc.tipo,icon:'🏥'};
 
   const generar = async () => {
@@ -713,8 +718,8 @@ function ModalPDFIncapacidad({ inc, onClose }) {
       doc.roundedRect(14,y,pW-28,detalles.length*10+12,3,3,'FD');
       // Receta médica si seleccionada - en la misma hoja compacto
       let recetaImg = null;
-      if (recetaSel) {
-        const rec = recetas.find(r=>r.id===recetaSel);
+      if (recetaSel && recetaVinculada) {
+        const rec = recetaVinculada;
         if (rec) {
           try {
             const ir = await fetch(rec.foto_url);
@@ -806,13 +811,24 @@ function ModalPDFIncapacidad({ inc, onClose }) {
             <div style={{fontSize:12,color:'#718096',marginTop:2}}>{fmtFecha(inc.fecha_inicio)} → {fmtFecha(inc.fecha_fin)}</div>
           </div>
 
-          {recetas.length>0 && (
-            <div>
-              <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Incluir receta médica (opcional)</label>
-              <select value={recetaSel} onChange={e=>setRecetaSel(e.target.value)} style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}>
-                <option value="">Sin receta</option>
-                {recetas.map(r=><option key={r.id} value={r.id}>{fmtFecha(r.fecha)} {r.descripcion?`— ${r.descripcion}`:''}</option>)}
-              </select>
+          {recetaVinculada ? (
+            <div style={{background:'#F0FFF4',borderRadius:12,padding:'12px 16px',border:'1px solid #c6f6d5'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div>
+                  <div style={{fontWeight:800,fontSize:12,color:'#1B5E20'}}>📋 Receta médica vinculada</div>
+                  <div style={{fontSize:11,color:'#718096',marginTop:2}}>{recetaVinculada.descripcion||'Sin descripción'} · {fmtFecha(recetaVinculada.fecha)}</div>
+                </div>
+                <img src={recetaVinculada.foto_url} alt="" style={{width:44,height:44,borderRadius:8,objectFit:'cover',border:'2px solid #1B5E20'}}/>
+              </div>
+              <label style={{display:'flex',alignItems:'center',gap:8,marginTop:10,cursor:'pointer'}}>
+                <input type="checkbox" checked={incluirReceta} onChange={e=>setIncluirReceta(e.target.checked)} style={{accentColor:'#1B5E20',width:16,height:16}}/>
+                <span style={{fontSize:12,fontWeight:700,color:'#1B5E20',fontFamily:'Montserrat,sans-serif'}}>Incluir foto de receta en el PDF</span>
+              </label>
+            </div>
+          ) : (
+            <div style={{background:'#f7f8fc',borderRadius:12,padding:'12px 16px',border:'1px solid #e2e8f0',textAlign:'center'}}>
+              <div style={{fontSize:13,color:'#718096',fontWeight:600}}>📋 No hay receta médica vinculada a este registro</div>
+              <div style={{fontSize:11,color:'#a0aec0',marginTop:4}}>Puedes subir una desde la sección "Recetas médicas"</div>
             </div>
           )}
         </div>
