@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import api from '../services/api';
+import CropFoto from './CropFoto';
 import escudoSitt from '../assets/escudo-sitt.png';
 
 function calcularDiasCorrespondientes(fechaIngreso) {
@@ -25,6 +26,7 @@ export default function AltaPersonal({ onCreado }) {
   const [foto, setFoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [enviando, setEnviando] = useState(false);
+  const [cropArchivo, setCropArchivo] = useState(null);
   const [error, setError] = useState('');
   const [exito, setExito] = useState(false);
   const fileRef = useRef();
@@ -241,5 +243,12 @@ export default function AltaPersonal({ onCreado }) {
         </div>
       </div>
     </div>
+    {cropArchivo && (
+      <CropFoto
+        archivo={cropArchivo}
+        onConfirmar={file => { setForm(f=>({...f, foto:file})); setCropArchivo(null); }}
+        onCancelar={() => setCropArchivo(null)}
+      />
+    )}
   );
 }
