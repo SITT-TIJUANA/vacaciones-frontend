@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import Notificaciones from '../components/Notificaciones';
 import Tablero from '../components/Tablero';
 import Solicitudes from '../components/Solicitudes';
 import Reportes from '../components/Reportes';
