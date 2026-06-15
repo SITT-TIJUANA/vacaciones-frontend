@@ -248,22 +248,63 @@ export default function IncapacidadesPage() {
       {modalNueva && <ModalNuevaIncapacidad onClose={()=>setModalNueva(false)} onGuardado={()=>{cargar();setModalNueva(false);mostrarToast('✅ Incapacidad registrada');}}/>}
       {modalEditar && <ModalEditarIncapacidad inc={modalEditar} onClose={()=>setModalEditar(null)} onGuardado={()=>{cargar();setModalEditar(null);mostrarToast('✅ Incapacidad actualizada');}}/>}
       {modalReceta && <ModalSubirReceta incapacidades={incapacidades} onClose={()=>setModalReceta(false)} onGuardado={()=>{cargar();setModalReceta(false);mostrarToast('✅ Receta subida');}}/>}
-      {modalVerReceta && (
-        <div className="modal-overlay" onClick={()=>setModalVerReceta(null)}>
-          <div style={{maxWidth:700,width:'95%',background:'#fff',borderRadius:16,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.4)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{background:'linear-gradient(135deg,#1B5E20,#2E7D32)',padding:'14px 20px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{color:'#fff',fontWeight:800,fontFamily:'Montserrat,sans-serif'}}>📋 Receta médica{esAdmin?` — ${modalVerReceta.nombre} ${modalVerReceta.apellido_paterno}`:''}</span>
-              <button style={{background:'none',border:'none',color:'#fff',fontSize:20,cursor:'pointer'}} onClick={()=>setModalVerReceta(null)}>✕</button>
-            </div>
-            <div style={{padding:20}}>
-              <img src={modalVerReceta.foto_url} alt="Receta" style={{width:'100%',borderRadius:10,maxHeight:'70vh',objectFit:'contain'}}/>
-              <div style={{marginTop:12,textAlign:'center'}}>
-                <a href={modalVerReceta.foto_url} target="_blank" rel="noreferrer" style={{padding:'10px 20px',background:'#1B5E20',color:'#fff',borderRadius:8,textDecoration:'none',fontWeight:700,fontSize:13,fontFamily:'Montserrat,sans-serif'}}>🔗 Abrir en nueva pestaña</a>
+      {modalVerReceta && (() => {
+        const inc = incapacidades.find(i=>i.id===modalVerReceta.incapacidad_id);
+        const tipo = inc ? (TIPOS[inc.tipo]||{label:inc.tipo,icon:'🏥',color:'#1B5E20'}) : null;
+        return (
+          <div className="modal-overlay" onClick={()=>setModalVerReceta(null)}>
+            <div style={{maxWidth:560,width:'95%',background:'#fff',borderRadius:20,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.4)',maxHeight:'92vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+              <div style={{background:'linear-gradient(135deg,#1B5E20,#2E7D32)',padding:'16px 20px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,zIndex:2}}>
+                <div>
+                  <div style={{color:'#fff',fontWeight:900,fontFamily:'Playfair Display,serif',fontStyle:'italic',fontSize:18}}>📋 Receta Médica</div>
+                  {esAdmin && <div style={{color:'rgba(255,255,255,0.7)',fontSize:12,fontFamily:'Montserrat,sans-serif',marginTop:2}}>{modalVerReceta.nombre} {modalVerReceta.apellido_paterno}</div>}
+                </div>
+                <button style={{background:'rgba(255,255,255,0.15)',border:'none',color:'#fff',width:30,height:30,borderRadius:'50%',cursor:'pointer',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setModalVerReceta(null)}>✕</button>
+              </div>
+
+              <div style={{padding:20,display:'flex',flexDirection:'column',gap:16}}>
+                {/* Registro vinculado */}
+                {inc && (
+                  <div style={{background:'#F0FFF4',borderRadius:14,padding:'14px 16px',border:'1.5px solid #c6f6d5'}}>
+                    <div style={{fontSize:11,fontWeight:700,color:'#718096',textTransform:'uppercase',letterSpacing:1,marginBottom:8}}>Registro de incapacidad vinculado</div>
+                    {esAdmin && <div style={{fontWeight:900,fontSize:15,color:'#1a1a2e',fontFamily:'Playfair Display,serif',fontStyle:'italic',marginBottom:8}}>{inc.nombre} {inc.apellido_paterno}</div>}
+                    <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+                      <span style={{fontSize:22}}>{tipo.icon}</span>
+                      <span style={{fontWeight:800,fontSize:14,color:tipo.color}}>{tipo.label}</span>
+                      <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:800,background:inc.con_goce?'#E8F5E9':'#F5F5F5',color:inc.con_goce?'#1B5E20':'#6B7280'}}>
+                        {inc.con_goce?'💰 Con goce':'🚫 Sin goce'}
+                      </span>
+                    </div>
+                    <div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:'#4A5568'}}>
+                      <span>📅 {fmtFecha(inc.fecha_inicio)} → {fmtFecha(inc.fecha_fin)}</span>
+                      <span>🗓️ <strong>{inc.dias}</strong> días</span>
+                      {inc.folio_imss && <span>📄 Folio: {inc.folio_imss}</span>}
+                    </div>
+                    {inc.observaciones && <div style={{marginTop:6,fontSize:11,color:'#718096',fontStyle:'italic'}}>💬 {inc.observaciones}</div>}
+                  </div>
+                )}
+
+                {!inc && modalVerReceta.descripcion && (
+                  <div style={{background:'#f7f8fc',borderRadius:10,padding:'10px 14px',fontSize:13,color:'#4A5568',fontStyle:'italic'}}>💬 {modalVerReceta.descripcion}</div>
+                )}
+
+                {/* Foto receta */}
+                <div>
+                  <div style={{fontSize:11,fontWeight:700,color:'#718096',textTransform:'uppercase',letterSpacing:1,marginBottom:8}}>Foto de la receta</div>
+                  <img src={modalVerReceta.foto_url} alt="Receta" style={{width:'100%',borderRadius:10,objectFit:'contain',border:'1px solid #e2e8f0'}}/>
+                </div>
+
+                <div style={{textAlign:'center'}}>
+                  <a href={modalVerReceta.foto_url} target="_blank" rel="noreferrer"
+                    style={{padding:'10px 24px',background:'linear-gradient(135deg,#1B5E20,#2E7D32)',color:'#fff',borderRadius:10,textDecoration:'none',fontWeight:700,fontSize:13,fontFamily:'Montserrat,sans-serif',display:'inline-block'}}>
+                    🔗 Abrir en nueva pestaña
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
       {modalPDF && <ModalPDFIncapacidad inc={modalPDF} onClose={()=>setModalPDF(null)}/>}
     </div>
   );
