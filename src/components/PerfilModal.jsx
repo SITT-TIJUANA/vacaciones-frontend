@@ -18,6 +18,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
   const [passB, setPassB] = useState('');
   const [okBienvenida, setOkBienvenida] = useState(false);
   const [errBienvenida, setErrBienvenida] = useState('');
+  const [passB, setPassB] = useState('');
   const [formPerfil, setFormPerfil] = useState({});
   const [nuevaFoto, setNuevaFoto] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
@@ -470,6 +471,60 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
             <img src={empleado.foto_url} alt={nombre} className="foto-modal-img" />
             <div style={{ textAlign:'center',marginTop:12,color:'#fff',fontFamily:'Playfair Display,serif',fontStyle:'italic',fontWeight:900,fontSize:16 }}>{nombre}</div>
             <button onClick={()=>setFotoExpandida(false)} style={{ position:'absolute',top:-12,right:-12,background:'var(--g)',border:'none',color:'#fff',width:36,height:36,borderRadius:'50%',cursor:'pointer',fontSize:18,display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
+          </div>
+        </div>
+      )}
+      {/* Modal bienvenida */}
+      {modalBienvenida && (
+        <div className="modal-overlay" style={{zIndex:1500}} onClick={()=>setModalBienvenida(false)}>
+          <div className="modal" style={{maxWidth:400}} onClick={e=>e.stopPropagation()}>
+            <div className="modal-header" style={{background:'linear-gradient(135deg,#0a1f3d,#1a3a6b)'}}>
+              <h2>📧 Enviar Bienvenida</h2>
+              <button className="modal-close" onClick={()=>setModalBienvenida(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{display:'flex',flexDirection:'column',gap:14}}>
+              {okBienvenida ? (
+                <div style={{textAlign:'center',padding:'20px 0'}}>
+                  <div style={{fontSize:48,marginBottom:12}}>✅</div>
+                  <div style={{fontWeight:800,fontSize:16,color:'#1B5E20'}}>¡Correo enviado!</div>
+                  <div style={{fontSize:13,color:'#718096',marginTop:6}}>Se envió a {empleado?.email}</div>
+                </div>
+              ) : (
+                <>
+                  <div style={{background:'#EEF2FF',borderRadius:10,padding:'12px 16px',fontSize:13,color:'#3730a3',fontWeight:600}}>
+                    📧 Se enviará a: <strong>{empleado?.email}</strong>
+                  </div>
+                  {errBienvenida && <div style={{background:'#FFF5F5',border:'1px solid #FED7D7',borderRadius:8,padding:'10px',color:'#B71C1C',fontSize:13}}>⚠️ {errBienvenida}</div>}
+                  <div>
+                    <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Nueva contraseña *</label>
+                    <input type="text" value={passB} onChange={e=>setPassB(e.target.value)} placeholder="Contraseña que recibirá el usuario"
+                      style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}/>
+                    <p style={{fontSize:11,color:'#718096',marginTop:4}}>Se actualizará la contraseña y se incluirá en el correo.</p>
+                  </div>
+                </>
+              )}
+            </div>
+            {!okBienvenida && (
+              <div className="modal-footer">
+                <button className="btn-institucional btn-sm" onClick={()=>setModalBienvenida(false)}>Cancelar</button>
+                <button disabled={enviandoBienvenida} onClick={async()=>{
+                  if (!passB || passB.length < 6) { setErrBienvenida('Mínimo 6 caracteres'); return; }
+                  setEnviandoBienvenida(true); setErrBienvenida('');
+                  try {
+                    const usersResp = await api.get('/api/usuarios');
+                    const u = usersResp.data.find(x=>x.empleado_id===empleadoId);
+                    if (!u) { setErrBienvenida('Este empleado no tiene usuario en el sistema'); setEnviandoBienvenida(false); return; }
+                    await api.post(`/api/usuarios/${u.id}/bienvenida`, { password: passB });
+                    setOkBienvenida(true);
+                    setTimeout(()=>{ setModalBienvenida(false); setOkBienvenida(false); setPassB(''); },2500);
+                  } catch(e) { setErrBienvenida(e.response?.data?.error||'Error al enviar'); }
+                  finally { setEnviandoBienvenida(false); }
+                }}
+                  style={{padding:'10px 24px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#0a1f3d,#1a3a6b)',color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:13}}>
+                  {enviandoBienvenida?'⏳ Enviando...':'📧 Enviar correo'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
