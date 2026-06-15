@@ -40,7 +40,6 @@ export default function MiPerfil({ onVerPeriodos }) {
     <div className="fade-in">
       <div className="section-header">
         <h2 className="section-title">Mi Perfil</h2>
-        <button className="btn-institucional" onClick={() => setModalPass(true)}>🔑 Cambiar Contraseña</button>
       </div>
 
       {!usuario?.empleado_id ? (
@@ -117,10 +116,6 @@ export default function MiPerfil({ onVerPeriodos }) {
         </div>
       ) : null}
 
-      {/* Cambiar contraseña — disponible en el monograma flotante */}
-      <div style={{background:'#EEF2FF',borderRadius:14,padding:'14px 18px',textAlign:'center'}}>
-        <div style={{fontSize:13,color:'#3730a3',fontWeight:700}}>🔑 Para cambiar tu contraseña usa el monograma flotante</div>
-        <div style={{fontSize:11,color:'#718096',marginTop:4}}>Da clic en tu círculo con iniciales → "Cambiar contraseña"</div>
-      </div>    </div>
+    </div>
   );
 }
