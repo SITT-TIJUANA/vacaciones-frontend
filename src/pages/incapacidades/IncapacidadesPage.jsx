@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { BtnRegresar, BtnCerrarSesion } from '../../components/BotonesNav';
 import api from '../../services/api';
+import { useTema } from '../../hooks/useTema';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -19,6 +20,7 @@ function fmtFecha(f) {
 }
 
 export default function IncapacidadesPage() {
+  const { headerStyle } = useTema();
   const { rolEfectivo } = useAuth();
   const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
   const [tab, setTab] = useState('incapacidades');
