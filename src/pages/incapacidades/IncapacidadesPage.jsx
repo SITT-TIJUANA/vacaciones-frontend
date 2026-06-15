@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const TIPOS = {
-  imss_general:          { label:'IMSS General',          icon:'🏥', color:'#2563EB' },
+  smm_general:          { label:'Servicios Médicos Municipales',          icon:'🏥', color:'#2563EB' },
   maternidad:            { label:'Maternidad',            icon:'🤱', color:'#DB2777' },
   riesgo_trabajo:        { label:'Riesgo de Trabajo',     icon:'⚠️', color:'#D97706' },
   enfermedad_profesional:{ label:'Enfermedad Profesional',icon:'🧬', color:'#7C3AED' },
@@ -207,7 +207,7 @@ export default function IncapacidadesPage() {
             <div style={{background:'#fff',borderRadius:16,padding:'20px 24px',boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
               <div style={{fontWeight:800,color:'#1a1a2e',marginBottom:16,fontSize:14}}>Por tipo de incapacidad</div>
               {[
-                {label:'IMSS General',val:parseInt(stats.imss_general)||0,color:'#2563EB',icon:'🏥'},
+                {label:'Servicios Médicos Municipales',val:parseInt(stats.smm_general)||0,color:'#2563EB',icon:'🏥'},
                 {label:'Maternidad',val:parseInt(stats.maternidad)||0,color:'#DB2777',icon:'🤱'},
                 {label:'Riesgo de Trabajo',val:parseInt(stats.riesgo_trabajo)||0,color:'#D97706',icon:'⚠️'},
                 {label:'Enf. Profesional',val:parseInt(stats.enfermedad_profesional)||0,color:'#7C3AED',icon:'🧬'},
@@ -282,7 +282,7 @@ export default function IncapacidadesPage() {
                     <div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:'#4A5568'}}>
                       <span>📅 {fmtFecha(inc.fecha_inicio)} → {fmtFecha(inc.fecha_fin)}</span>
                       <span>🗓️ <strong>{inc.dias}</strong> días</span>
-                      {inc.folio_imss && <span>📄 Folio: {inc.folio_imss}</span>}
+                      {inc.folio_smm && <span>📄 Folio: {inc.folio_smm}</span>}
                     </div>
                     {inc.observaciones && <div style={{marginTop:6,fontSize:11,color:'#718096',fontStyle:'italic'}}>💬 {inc.observaciones}</div>}
                   </div>
@@ -336,7 +336,7 @@ function TarjetaIncapacidad({ inc, esAdmin, onEditar, onEliminar, onPDF, recetas
         <div style={{marginTop:8,fontSize:13,color:'#4A5568',display:'flex',gap:16,flexWrap:'wrap'}}>
           <span>📅 {fmtFecha(inc.fecha_inicio)} → {fmtFecha(inc.fecha_fin)}</span>
           <span>🗓️ <strong>{inc.dias}</strong> días</span>
-          {inc.folio_imss && <span>📄 Folio: {inc.folio_imss}</span>}
+          {inc.folio_smm && <span>📄 Folio: {inc.folio_smm}</span>}
         </div>
         {inc.observaciones && <div style={{marginTop:6,fontSize:12,color:'#718096',fontStyle:'italic'}}>💬 {inc.observaciones}</div>}
       </div>
@@ -369,7 +369,7 @@ function TarjetaIncapacidad({ inc, esAdmin, onEditar, onEliminar, onPDF, recetas
 
 // ── Modal nueva incapacidad ───────────────────────────────
 function ModalNuevaIncapacidad({ onClose, onGuardado }) {
-  const [form, setForm] = useState({ empleado_id:'', tipo:'imss_general', fecha_inicio:'', fecha_fin:'', dias:'', folio_imss:'', con_goce:true, observaciones:'' });
+  const [form, setForm] = useState({ empleado_id:'', tipo:'smm_general', fecha_inicio:'', fecha_fin:'', dias:'', folio_smm:'', con_goce:true, observaciones:'' });
   const [empleados, setEmpleados] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -440,8 +440,8 @@ function ModalNuevaIncapacidad({ onClose, onGuardado }) {
 
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div>
-              <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Folio IMSS</label>
-              <input value={form.folio_imss} onChange={e=>setForm({...form,folio_imss:e.target.value})} placeholder="Número de folio" style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}/>
+              <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:6,textTransform:'uppercase'}}>Folio SMM</label>
+              <input value={form.folio_smm} onChange={e=>setForm({...form,folio_smm:e.target.value})} placeholder="Número de folio" style={{width:'100%',padding:'10px 12px',borderRadius:10,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:13,boxSizing:'border-box'}}/>
             </div>
             <div>
               <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:8,textTransform:'uppercase'}}>Goce de sueldo</label>
@@ -474,7 +474,7 @@ function ModalNuevaIncapacidad({ onClose, onGuardado }) {
 
 // ── Modal editar incapacidad ──────────────────────────────
 function ModalEditarIncapacidad({ inc, onClose, onGuardado }) {
-  const [form, setForm] = useState({ tipo:inc.tipo, fecha_inicio:String(inc.fecha_inicio).substring(0,10), fecha_fin:String(inc.fecha_fin).substring(0,10), dias:String(inc.dias), folio_imss:inc.folio_imss||'', con_goce:inc.con_goce, observaciones:inc.observaciones||'' });
+  const [form, setForm] = useState({ tipo:inc.tipo, fecha_inicio:String(inc.fecha_inicio).substring(0,10), fecha_fin:String(inc.fecha_fin).substring(0,10), dias:String(inc.dias), folio_smm:inc.folio_smm||'', con_goce:inc.con_goce, observaciones:inc.observaciones||'' });
   const [enviando, setEnviando] = useState(false);
 
   const guardar = async () => {
@@ -508,8 +508,8 @@ function ModalEditarIncapacidad({ inc, onClose, onGuardado }) {
               <input type="number" value={form.dias} onChange={e=>setForm({...form,dias:e.target.value})} style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
             </div>
             <div>
-              <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:5,textTransform:'uppercase'}}>Folio IMSS</label>
-              <input value={form.folio_imss} onChange={e=>setForm({...form,folio_imss:e.target.value})} style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+              <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:5,textTransform:'uppercase'}}>Folio SMM</label>
+              <input value={form.folio_smm} onChange={e=>setForm({...form,folio_smm:e.target.value})} style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
             </div>
           </div>
           <div>
@@ -722,7 +722,7 @@ function ModalPDFIncapacidad({ inc, onClose }) {
         ['Fecha inicio:', fmtFecha(inc.fecha_inicio)],
         ['Fecha fin:', fmtFecha(inc.fecha_fin)],
         ['Días de incapacidad:', `${inc.dias} días`],
-        ['Folio IMSS:', inc.folio_imss||'—'],
+        ['Folio SMM:', inc.folio_smm||'—'],
         ['Goce de sueldo:', inc.con_goce?'Con goce de sueldo':'Sin goce de sueldo'],
         ...(inc.observaciones?[['Observaciones:', inc.observaciones]]:[]),
       ];
