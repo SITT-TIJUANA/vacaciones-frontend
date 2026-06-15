@@ -18,7 +18,6 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
   const [passB, setPassB] = useState('');
   const [okBienvenida, setOkBienvenida] = useState(false);
   const [errBienvenida, setErrBienvenida] = useState('');
-  const [passB, setPassB] = useState('');
   const [formPerfil, setFormPerfil] = useState({});
   const [nuevaFoto, setNuevaFoto] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
