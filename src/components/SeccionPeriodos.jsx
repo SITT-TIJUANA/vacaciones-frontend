@@ -520,8 +520,11 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
 
   const calcDias = () => {
     if (!form.fecha_inicio || !form.fecha_fin) return 0;
-    const ini = new Date(form.fecha_inicio);
-    const fin = new Date(form.fecha_fin);
+    // Usar split para evitar problema de zona horaria
+    const [iy,im,id] = form.fecha_inicio.split('-').map(Number);
+    const [fy,fm,fd] = form.fecha_fin.split('-').map(Number);
+    const ini = new Date(iy, im-1, id);
+    const fin = new Date(fy, fm-1, fd);
     if (fin < ini) return 0;
     let d = 0; const c = new Date(ini);
     while (c <= fin) { if (c.getDay()!==0&&c.getDay()!==6) d++; c.setDate(c.getDate()+1); }
