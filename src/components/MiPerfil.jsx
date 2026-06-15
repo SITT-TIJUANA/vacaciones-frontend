@@ -8,9 +8,6 @@ export default function MiPerfil({ onVerPeriodos }) {
   const [perfil, setPerfil] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [modalPass, setModalPass] = useState(false);
-  const [formPass, setFormPass] = useState({ password_actual: '', password_nuevo: '', confirmar: '' });
-  const [msgPass, setMsgPass] = useState('');
-  const [errPass, setErrPass] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [verPerfil, setVerPerfil] = useState(false);
 
@@ -31,23 +28,6 @@ export default function MiPerfil({ onVerPeriodos }) {
       setCargando(false);
     }
   }, [usuario]);
-
-  const cambiarPassword = async () => {
-    if (!formPass.password_actual || !formPass.password_nuevo) { setErrPass('Completa todos los campos'); return; }
-    if (formPass.password_nuevo !== formPass.confirmar) { setErrPass('Las contraseñas no coinciden'); return; }
-    if (formPass.password_nuevo.length < 6) { setErrPass('Mínimo 6 caracteres'); return; }
-    setEnviando(true); setErrPass(''); setMsgPass('');
-    try {
-      await api.post('/api/auth/cambiar-password', { password_actual: formPass.password_actual, password_nuevo: formPass.password_nuevo });
-      setMsgPass('✅ Contraseña actualizada correctamente');
-      setFormPass({ password_actual: '', password_nuevo: '', confirmar: '' });
-      setTimeout(() => { setModalPass(false); setMsgPass(''); }, 2000);
-    } catch (e) {
-      setErrPass(e.response?.data?.error || 'Error al cambiar contraseña');
-    } finally { setEnviando(false); }
-  };
-
-  if (cargando) return <div className="loader-wrapper"><div className="loader" /></div>;
 
   const anioActual = new Date().getFullYear();
   const totalDisponible = perfil?.total_disponible ?? 0;
