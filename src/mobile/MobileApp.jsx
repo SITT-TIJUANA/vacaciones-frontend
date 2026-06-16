@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import MobileMenu from './MobileMenu';
 import MobileDashboard from './MobileDashboard';
 import MobileSolicitudes from './MobileSolicitudes';
 import MobilePermisos from './MobilePermisos';
