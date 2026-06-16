@@ -203,22 +203,32 @@ export default function SeccionPermisos() {
               <button className="modal-close" onClick={() => setVerFoto(null)}>✕</button>
             </div>
             <div style={{ padding:20 }}>
-              {verFoto && (verFoto.includes('.pdf') || verFoto.includes('/raw/') || verFoto.includes('application/pdf')) ? (
-                <div style={{ textAlign:'center', padding:'32px 20px' }}>
-                  <div style={{ fontSize:64, marginBottom:16 }}>📄</div>
-                  <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'#4A5568', marginBottom:16 }}>Permiso firmado en PDF</div>
-                  <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional filled">
-                    📥 Abrir / Descargar PDF
-                  </a>
-                </div>
-              ) : (
-                <img src={verFoto} alt="Permiso firmado" style={{ width:'100%', borderRadius:10, display:'block' }} />
-              )}
-              <div style={{ marginTop:12, textAlign:'center' }}>
-                <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
-                  🔗 Abrir en nueva pestaña
-                </a>
-              </div>
+              {(() => {
+                const esPDF = verFoto && (verFoto.includes('.pdf') || verFoto.includes('/raw/'));
+                // Para PDF, Cloudinary genera preview cambiando extensión a .jpg
+                const previewUrl = esPDF
+                  ? verFoto.replace('/raw/upload/', '/image/upload/').replace(/\.pdf$/i, '.jpg')
+                  : verFoto;
+                return (
+                  <>
+                    <div style={{ maxHeight:500, overflow:'auto', borderRadius:10, border:'1px solid #e2e8f0' }}>
+                      <img src={previewUrl} alt="Permiso firmado"
+                        style={{ width:'100%', display:'block', borderRadius:10 }}
+                        onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }}
+                      />
+                      <div style={{ display:'none', textAlign:'center', padding:'32px 20px' }}>
+                        <div style={{ fontSize:48, marginBottom:12 }}>📄</div>
+                        <div style={{ fontSize:13, color:'#718096', fontFamily:'Montserrat,sans-serif' }}>Vista previa no disponible</div>
+                      </div>
+                    </div>
+                    <div style={{ marginTop:12, textAlign:'center', display:'flex', gap:10, justifyContent:'center' }}>
+                      <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
+                        {esPDF ? '📥 Descargar PDF' : '🔗 Abrir original'}
+                      </a>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
