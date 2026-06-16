@@ -9,7 +9,6 @@ import OrganigramaPage from './pages/OrganigramaPage';
 import IncapacidadesPage from './pages/incapacidades/IncapacidadesPage';
 import PermisosPage from './pages/permisos/PermisosPage';
 import './assets/styles/global.css';
-import MobileApp from './mobile/MobileApp';
 import './assets/styles/mobile.css';
 import MexicoMode from './components/MexicoMode';
 import TarjetaUsuario from './components/TarjetaUsuario';
@@ -63,41 +62,23 @@ function TarjetaUsuarioConAuth() {
   return <TarjetaUsuario />;
 }
 
-function AppRouter() {
-  const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  const { usuario } = useAuth();
-  if (isMobile && usuario) return <MobileApp />;
-  return (
-    <>
-      <MexicoMode />
-      <TarjetaUsuarioConAuth />
-      <Routes>
-        <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="/menu" element={<ProtectedRoute><MenuModulos /></ProtectedRoute>} />
-        <Route path="/personal" element={<ProtectedRoute><PersonalPage /></ProtectedRoute>} />
-        <Route path="/organigrama" element={<ProtectedRoute><OrganigramaPage /></ProtectedRoute>} />
-        <Route path="/incapacidades" element={<ProtectedRoute><IncapacidadesPage /></ProtectedRoute>} />
-        <Route path="/permisos" element={<ProtectedRoute><PermisosPage /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
-  );
-}
-
-function AppRouterWithLogin() {
-  const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  const { usuario } = useAuth();
-  if (isMobile && !usuario) return <Login />;
-  return <AppRouter />;
-}
-
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
-          <AppRouterWithLogin />
+          <MexicoMode />
+          <TarjetaUsuarioConAuth />
+          <Routes>
+            <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/menu" element={<ProtectedRoute><MenuModulos /></ProtectedRoute>} />
+            <Route path="/personal" element={<ProtectedRoute><PersonalPage /></ProtectedRoute>} />
+            <Route path="/organigrama" element={<ProtectedRoute><OrganigramaPage /></ProtectedRoute>} />
+            <Route path="/incapacidades" element={<ProtectedRoute><IncapacidadesPage /></ProtectedRoute>} />
+            <Route path="/permisos" element={<ProtectedRoute><PermisosPage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
