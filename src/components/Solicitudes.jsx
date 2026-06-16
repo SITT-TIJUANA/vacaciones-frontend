@@ -23,12 +23,13 @@ async function generarPermiso(s, cfg={}) {
   let fotoBase64 = null, logoBase64 = null;
   try {
     const logoRes = await fetch(`${window.location.origin}/vacaciones-frontend/escudo-sitt.png?t=${Date.now()}`);
-    logoBase64 = await new Promise(r => { const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(await logoRes.blob()); });
+    const logoBlob = await logoRes.blob();
+    logoBase64 = await new Promise(r => { const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(logoBlob); });
   } catch(e) {}
   if (s.foto_url) {
     try {
       const r = await fetch(`https://vacaciones-backend-7ota.onrender.com/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`, { headers:{'Authorization':`Bearer ${localStorage.getItem('token')}`} });
-      if (r.ok) fotoBase64 = await new Promise(res=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.readAsDataURL(await r.blob()); });
+      if (r.ok) { const blob = await r.blob(); fotoBase64 = await new Promise(res=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.readAsDataURL(blob); }); }
     } catch(e) {}
   }
 
