@@ -1,22 +1,35 @@
 {
   "name": "Control de Vacaciones SITT",
-  "short_name": "Vacaciones SITT",
-  "description": "Sistema de Control de Vacaciones - SITT Ayuntamiento de Tijuana",
+  "short_name": "SITT Vacaciones",
+  "description": "Sistema de Control de Vacaciones — H. XXV Ayuntamiento de Tijuana",
   "start_url": "/vacaciones-frontend/",
   "scope": "/vacaciones-frontend/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#FFFFFF",
+  "background_color": "#6B0F2B",
   "theme_color": "#6B0F2B",
-  "lang": "es-MX",
+  "orientation": "portrait",
   "icons": [
-    { "src": "/vacaciones-frontend/icon-72x72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
-    { "src": "/vacaciones-frontend/icon-96x96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
-    { "src": "/vacaciones-frontend/icon-128x128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "/vacaciones-frontend/icon-144x144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "/vacaciones-frontend/icon-152x152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
-    { "src": "/vacaciones-frontend/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
-    { "src": "/vacaciones-frontend/icon-384x384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
-    { "src": "/vacaciones-frontend/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+    {
+      "src": "/vacaciones-frontend/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vacaciones-frontend/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vacaciones-frontend/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/vacaciones-frontend/escudo-sitt.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
   ]
 }
