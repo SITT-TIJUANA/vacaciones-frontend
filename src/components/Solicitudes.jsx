@@ -382,6 +382,12 @@ export default function Solicitudes({ onActualizarNotif }) {
           onConfirmar={(c) => resolver(resolviendo.id, 'rechazada', c)}
         />
       )}
+      {modalConfigPDF && (
+        <ModalConfigVacacionesPDF
+          solicitud={modalConfigPDF}
+          onClose={() => setModalConfigPDF(null)}
+        />
+      )}
     </div>
   );
 }
