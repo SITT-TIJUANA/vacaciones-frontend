@@ -203,7 +203,17 @@ export default function SeccionPermisos() {
               <button className="modal-close" onClick={() => setVerFoto(null)}>✕</button>
             </div>
             <div style={{ padding:20 }}>
-              <img src={verFoto} alt="Permiso firmado" style={{ width:'100%', borderRadius:10, display:'block' }} />
+              {verFoto && (verFoto.includes('.pdf') || verFoto.includes('/raw/') || verFoto.includes('application/pdf')) ? (
+                <div style={{ textAlign:'center', padding:'32px 20px' }}>
+                  <div style={{ fontSize:64, marginBottom:16 }}>📄</div>
+                  <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'#4A5568', marginBottom:16 }}>Permiso firmado en PDF</div>
+                  <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional filled">
+                    📥 Abrir / Descargar PDF
+                  </a>
+                </div>
+              ) : (
+                <img src={verFoto} alt="Permiso firmado" style={{ width:'100%', borderRadius:10, display:'block' }} />
+              )}
               <div style={{ marginTop:12, textAlign:'center' }}>
                 <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
                   🔗 Abrir en nueva pestaña
