@@ -335,3 +335,23 @@
     gap: 8px !important;
     font-size: 11px !important;
   }
+
+/* ── LAPTOP IMPROVEMENTS (> 1024px) ── */
+@media (min-width: 1025px) {
+  .dash-main { padding: 28px 32px 100px; max-width: 1400px; margin: 0 auto; }
+  .card { padding: 28px; border-radius: 20px; }
+  .section-title { font-size: 30px; }
+  .kpi-card { padding: 24px; border-radius: 20px; }
+  .kpi-card .kpi-value { font-size: 48px; }
+  .modal { max-width: 560px; border-radius: 20px; }
+  .modal-lg { max-width: 720px; }
+  .form-control { padding: 12px 16px; font-size: 14px; }
+  .btn-institucional { font-size: 13px; height: 2.8em; border-radius: 10px; }
+  .btn-lg { font-size: 15px; height: 3.4em; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .empleado-card { width: 200px; height: 265px; }
+  thead th { padding: 14px 16px; font-size: 11px; }
+  tbody td { padding: 14px 16px; font-size: 13px; }
+}
