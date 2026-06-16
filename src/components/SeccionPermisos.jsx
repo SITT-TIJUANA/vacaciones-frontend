@@ -221,9 +221,9 @@ export default function SeccionPermisos() {
                         <div style={{ fontSize:13, color:'#718096', fontFamily:'Montserrat,sans-serif' }}>Vista previa no disponible</div>
                       </div>
                     </div>
-                    <div style={{ marginTop:12, textAlign:'center', display:'flex', gap:10, justifyContent:'center' }}>
-                      <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
-                        {esPDF ? '📥 Descargar PDF' : '🔗 Ver completo'}
+                    <div style={{ marginTop:12, textAlign:'center', display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+                      <a href={previewUrl} download="permiso-firmado.jpg" className="btn-institucional filled btn-sm">
+                        📥 Descargar imagen
                       </a>
                     </div>
                   </>
