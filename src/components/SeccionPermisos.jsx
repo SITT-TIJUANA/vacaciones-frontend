@@ -204,10 +204,10 @@ export default function SeccionPermisos() {
             </div>
             <div style={{ padding:20 }}>
               {(() => {
-                const esPDF = verFoto && (verFoto.includes('.pdf') || verFoto.includes('/raw/'));
-                // Para PDF, Cloudinary genera preview cambiando extensión a .jpg
+                const esPDF = verFoto && (verFoto.includes('/raw/upload/') || verFoto.toLowerCase().endsWith('.pdf'));
+                // Preview: raw/upload -> image/upload y .pdf -> .jpg
                 const previewUrl = esPDF
-                  ? verFoto.replace('/raw/upload/', '/image/upload/').replace(/\.pdf$/i, '.jpg')
+                  ? verFoto.replace('/raw/upload/', '/image/upload/pg_1/').replace('.pdf', '.jpg')
                   : verFoto;
                 return (
                   <>
@@ -222,7 +222,7 @@ export default function SeccionPermisos() {
                       </div>
                     </div>
                     <div style={{ marginTop:12, textAlign:'center', display:'flex', gap:10, justifyContent:'center' }}>
-                      <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
+                      <a href={esPDF ? verFoto.replace("/raw/upload/", "/raw/upload/fl_attachment/") : verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
                         {esPDF ? '📥 Descargar PDF' : '🔗 Ver completo'}
                       </a>
                     </div>
