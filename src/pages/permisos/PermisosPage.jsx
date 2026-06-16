@@ -414,8 +414,9 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
           </div>
 
           {!form.turno_completo && (
-          <input type="time" value={form.hora_salida} onChange={e=>setForm({...form,hora_salida:e.target.value})}
-            style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box' }}/>
+            <input type="time" value={form.hora_salida} onChange={e=>setForm({...form,hora_salida:e.target.value})}
+              style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box' }}/>
+          )}
         </div>
       </div>
 
