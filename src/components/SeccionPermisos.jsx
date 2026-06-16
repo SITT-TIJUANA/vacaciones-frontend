@@ -161,7 +161,7 @@ export default function SeccionPermisos() {
                         <input
                           ref={el => inputRef.current[p.id] = el}
                           type="file"
-                          accept="image/*"
+                          accept="image/*,application/pdf"
                           style={{ display:'none' }}
                           onChange={e => subirFoto(p.id, e.target.files[0])}
                         />
@@ -172,7 +172,7 @@ export default function SeccionPermisos() {
                         </button>
                       </div>
                       <div style={{ position:'relative' }}>
-                        <input type="file" accept="image/*" capture="environment" style={{ display:'none' }}
+                        <input type="file" accept="image/*,application/pdf" style={{ display:'none' }}
                           id={`cam-${p.id}`} onChange={e => subirFoto(p.id, e.target.files[0])} />
                         <button className="btn-institucional btn-sm" style={{ fontSize:11 }}
                           disabled={subiendo === p.id}
