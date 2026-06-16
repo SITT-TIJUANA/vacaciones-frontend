@@ -12,10 +12,8 @@ async function generarPermiso(s, cfg={}) {
   const BLANCO = [255,255,255];
   const GRIS   = [248,245,245];
 
-  // Obtener foto del empleado si tiene
   let fotoBase64 = null;
   let logoBase64 = null;
-
   try {
     const logoRes = await fetch(`${window.location.origin}/vacaciones-frontend/escudo-sitt.png?t=${Date.now()}`);
     const logoBlob = await logoRes.blob();
@@ -26,13 +24,8 @@ async function generarPermiso(s, cfg={}) {
     try {
       const token = localStorage.getItem('token');
       const API = 'https://vacaciones-backend-7ota.onrender.com';
-      const r = await fetch(`${API}/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (r.ok) {
-        const blob = await r.blob();
-        fotoBase64 = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); });
-      }
+      const r = await fetch(`${API}/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (r.ok) { const blob = await r.blob(); fotoBase64 = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); }); }
     } catch(e) {}
   }
 
@@ -40,168 +33,182 @@ async function generarPermiso(s, cfg={}) {
   const pageH = 279.4;
   const hoy = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
 
-  // ── HEADER GUINDA ──
+  // ── HEADER ──
   doc.setFillColor(...GUINDA);
   doc.rect(0, 0, pageW, 48, 'F');
   doc.setFillColor(...DORADO);
   doc.rect(0, 48, pageW, 2.5, 'F');
 
-  // Logo
-  if (logoBase64) {
-    try { doc.addImage(logoBase64, 'PNG', 8, 6, 30, 30); } catch(e) {}
-  }
-
-  // Foto empleado
+  if (logoBase64) { try { doc.addImage(logoBase64, 'PNG', 8, 6, 30, 30); } catch(e) {} }
   if (fotoBase64) {
     try {
       doc.addImage(fotoBase64, 'JPEG', pageW-46, 4, 36, 36);
-      doc.setDrawColor(...DORADO);
-      doc.setLineWidth(1);
-      doc.rect(pageW-46, 4, 36, 36);
+      doc.setDrawColor(...DORADO); doc.setLineWidth(1); doc.rect(pageW-46, 4, 36, 36);
     } catch(e) {}
   }
 
-  // Textos header
-  doc.setTextColor(...BLANCO);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(13);
-  doc.text('H. XXV Ayuntamiento de Tijuana', 44, 14);
-  doc.setFontSize(10);
-  doc.setFont('helvetica','normal');
-  doc.text('Sistema Integral de Transporte de Tijuana — SITT', 44, 21);
-  doc.text('Dirección de Operaciones', 44, 27);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...DORADO);
-  doc.text('PERMISO DE VACACIONES', 44, 35);
-  doc.setTextColor(...BLANCO);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  doc.text(`Expedido el: ${hoy}`, 44, 41);
+  // Título configurable
+  doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text(cfg.titulo || 'CONSTANCIA DE VACACIONES', 44, 16);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(cfg.subtitulo || 'H. XXV Ayuntamiento de Tijuana — SITT', 44, 23);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...DORADO);
+  doc.text(`Expedido el: ${hoy}`, 44, 38);
 
   // ── DATOS EMPLEADO ──
   let y = 62;
-
-  // Recuadro datos
-  doc.setFillColor(...GRIS);
-  doc.setDrawColor(...GUINDA);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(14, y, pageW-28, 44, 3, 3, 'FD');
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...GUINDA);
+  doc.setFillColor(...GRIS); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
+  doc.roundedRect(14, y, pageW-28, 48, 3, 3, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...GUINDA);
   doc.text('DATOS DEL EMPLEADO', 20, y+8);
+  doc.setDrawColor(...DORADO); doc.setLineWidth(0.5); doc.line(20, y+10, pageW-20, y+10);
 
-  doc.setDrawColor(...DORADO);
-  doc.setLineWidth(0.5);
-  doc.line(20, y+10, pageW-20, y+10);
-
-  const datos = [
-    ['Nombre completo:', `${s.nombre||''} ${s.apellido_paterno||''} ${s.apellido_materno||''}`.trim()],
-    ['Puesto:', s.puesto || '—', true], // true = wrap
-    ['Departamento:', s.departamento || '—'],
-    ['No. de empleado:', s.numero_empleado || '—'],
+  const datosEmp = [
+    { label:'Nombre:', valor:`${s.nombre||''} ${s.apellido_paterno||''} ${s.apellido_materno||''}`.trim(), col:20, row:y+18 },
+    { label:'Puesto:', valor:s.puesto||'—', col:20, row:y+30, wrap:true },
+    { label:'Departamento:', valor:s.departamento||'—', col:115, row:y+18 },
+    { label:'No. Empleado:', valor:s.numero_empleado||'—', col:115, row:y+30 },
   ];
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  doc.setTextColor(50,50,50);
-  datos.forEach(([label, valor], i) => {
-    const col = i < 2 ? 20 : 115;
-    const row = y + 16 + (i % 2) * 12;
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(...GUINDA);
+  datosEmp.forEach(({label,valor,col,row,wrap}) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
     doc.text(label, col, row);
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(50,50,50);
-    doc.text(valor, col + 36, row);
+    doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+    if (wrap) {
+      const lines = doc.splitTextToSize(String(valor), 70);
+      doc.text(lines, col+28, row);
+    } else {
+      doc.text(String(valor), col+28, row);
+    }
   });
 
   // ── PERIODO VACACIONAL ──
-  y += 56;
-
-  doc.setFillColor(...GUINDA);
-  doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'F');
-  doc.setTextColor(...BLANCO);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(10);
-  doc.text('PERIODO VACACIONAL AUTORIZADO', pageW/2, y+7, { align:'center' });
+  y += 62;
+  doc.setFillColor(...GUINDA); doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'F');
+  doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text('PERIODO VACACIONAL AUTORIZADO', pageW/2, y+7, {align:'center'});
 
   y += 18;
-
-  // Fechas en grande
   const fi = (() => { const f=s.fecha_inicio; if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); })();
   const ff = (() => { const f=s.fecha_fin; if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); })();
 
-  // 3 cajas: inicio, flechita, fin
   const cajaW = 60;
-  doc.setFillColor(240,235,235);
-  doc.setDrawColor(...GUINDA);
-  doc.setLineWidth(0.3);
+  doc.setFillColor(240,235,235); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
   doc.roundedRect(14, y, cajaW, 28, 3, 3, 'FD');
   doc.roundedRect(pageW-14-cajaW, y, cajaW, 28, 3, 3, 'FD');
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(8);
-  doc.setTextColor(...GUINDA);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
   doc.text('FECHA DE INICIO', 14+cajaW/2, y+8, {align:'center'});
   doc.text('FECHA DE FIN', pageW-14-cajaW/2, y+8, {align:'center'});
-
-  doc.setFontSize(9);
-  doc.setTextColor(30,30,30);
+  doc.setFontSize(9); doc.setTextColor(30,30,30);
   doc.text(fi, 14+cajaW/2, y+18, {align:'center'});
   doc.text(ff, pageW-14-cajaW/2, y+18, {align:'center'});
-
-  // Flecha central
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(18);
-  doc.setTextColor(...GUINDA);
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...GUINDA);
   doc.text('→', pageW/2, y+18, {align:'center'});
 
-  // Total días
   y += 36;
-  doc.setFillColor(...GUINDA);
-  doc.roundedRect(pageW/2-30, y, 60, 16, 3, 3, 'F');
-  doc.setTextColor(...DORADO);
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(12);
+  doc.setFillColor(...GUINDA); doc.roundedRect(pageW/2-30, y, 60, 16, 3, 3, 'F');
+  doc.setTextColor(...DORADO); doc.setFont('helvetica','bold'); doc.setFontSize(12);
   doc.text(`${s.dias_solicitados} días hábiles`, pageW/2, y+10, {align:'center'});
 
-  // ── FIRMAS ──
-  y += 36;
+  // ── FIRMAS (hasta 4) ──
+  y += 32;
+  const firmasCfg = [
+    { etiqueta: cfg.firma1||'Firma del Empleado', nombre: cfg.nombre1||`${s.nombre||''} ${s.apellido_paterno||''}`.trim() },
+    { etiqueta: cfg.firma2||'Vo.Bo. Recursos Humanos', nombre: cfg.nombre2||'' },
+    { etiqueta: cfg.firma3||'Vo.Bo. Administración', nombre: cfg.nombre3||'' },
+  ];
+  if (cfg.firma4) firmasCfg.push({ etiqueta: cfg.firma4, nombre: cfg.nombre4||'' });
 
-  doc.setDrawColor(180,180,180);
-  doc.setLineWidth(0.3);
+  const numFirmas = firmasCfg.length;
+  const firmaW = (pageW - 28) / numFirmas;
+  const firmaY = y + 22;
 
-  const firma1X = 30, firma2X = pageW/2-20, firma3X = pageW-70;
-  const firmaY = y + 24;
-
-  [firma1X, firma2X, firma3X].forEach(x => {
-    doc.line(x, firmaY, x+60, firmaY);
+  doc.setDrawColor(180,180,180); doc.setLineWidth(0.3);
+  firmasCfg.forEach((f, i) => {
+    const x = 14 + i * firmaW;
+    const cx = x + firmaW/2;
+    doc.line(x+6, firmaY, x+firmaW-6, firmaY);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GUINDA);
+    const etLines = doc.splitTextToSize(f.etiqueta, firmaW-8);
+    doc.text(etLines, cx, firmaY+5, {align:'center'});
+    if (f.nombre) {
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(150,150,150);
+      doc.text(f.nombre, cx, firmaY+10, {align:'center'});
+    }
   });
 
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(8);
-  doc.setTextColor(...GUINDA);
-  doc.text(cfg.firma1||'Firma del Empleado', firma1X+30, firmaY+6, {align:'center'});
-  doc.text(cfg.firma2||'Vo.Bo. Recursos Humanos', firma2X+30, firmaY+6, {align:'center'});
-  doc.text(cfg.firma3||'Vo.Bo. Administración', firma3X+30, firmaY+6, {align:'center'});
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
-  doc.setTextColor(150,150,150);
-  doc.text(cfg.nombre1||`${s.nombre||''} ${s.apellido_paterno||''}`.trim(), firma1X+30, firmaY+11, {align:'center'});
-
   // ── FOOTER ──
-  doc.setFillColor(...GUINDA);
-  doc.rect(0, pageH-14, pageW, 14, 'F');
-  doc.setFillColor(...DORADO);
-  doc.rect(0, pageH-16, pageW, 2, 'F');
-  doc.setTextColor(...BLANCO);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7);
+  doc.setFillColor(...GUINDA); doc.rect(0, pageH-14, pageW, 14, 'F');
+  doc.setFillColor(...DORADO); doc.rect(0, pageH-16, pageW, 2, 'F');
+  doc.setTextColor(...BLANCO); doc.setFont('helvetica','normal'); doc.setFontSize(7);
   doc.text('Sistema de Control de Vacaciones — SITT · H. XXV Ayuntamiento de Tijuana', pageW/2, pageH-6, {align:'center'});
+
+  // ── DETALLE DE PERIODOS ──
+  y += 40;
+  let periodosData = null;
+  try {
+    const token = localStorage.getItem('token');
+    const API = 'https://vacaciones-backend-7ota.onrender.com';
+    const r = await fetch(`${API}/api/solicitudes/periodos-detalle/${s.empleado_id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (r.ok) periodosData = await r.json();
+  } catch(e) {}
+
+  if (periodosData?.periodos?.length) {
+    // Sección header
+    doc.setFillColor(...GUINDA);
+    doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'F');
+    doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('DETALLE DE PERIODOS Y VACACIONES', pageW/2, y+7, {align:'center'});
+    y += 14;
+
+    // Solo mostrar el período que corresponde a esta solicitud
+    const fechaSol = s.fecha_inicio?.substring(0,10);
+    const periodosRelevantes = periodosData.periodos.filter(p => {
+      // Período que contiene días tomados o que coincide con la solicitud
+      return p.vacaciones?.some(v => v.fecha_inicio?.substring(0,10) === fechaSol) || p.dias_tomados > 0;
+    });
+    const periodos = periodosRelevantes.length ? periodosRelevantes : periodosData.periodos.slice(0,2);
+
+    periodos.forEach((p, pi) => {
+      // Fila período
+      doc.setFillColor(248,240,242); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
+      doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
+      const fIni = p.fecha_inicio ? (() => { const[yr,m,d]=p.fecha_inicio.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '';
+      const fFin = p.fecha_fin ? (() => { const[yr,m,d]=p.fecha_fin.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '';
+      doc.text(`Periodo ${p.numero || pi+1}: ${fIni} — ${fFin}`, 18, y+7);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(80,80,80);
+      doc.text(`${p.dias_correspondientes||0} corresp. | ${p.dias_tomados||0} tomados | ${p.dias_disponibles||0} disponibles`, pageW-18, y+7, {align:'right'});
+      y += 13;
+
+      // Tabla vacaciones del período
+      if (p.vacaciones?.length) {
+        // Header tabla
+        const cols = [18, 60, 110, 155, 175];
+        const headers = ['Tipo','Fecha inicio','Fecha fin','Días','Notas'];
+        doc.setFillColor(220,210,213); doc.rect(14, y, pageW-28, 7, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GUINDA);
+        headers.forEach((h,i) => doc.text(h, cols[i], y+5));
+        y += 9;
+
+        // Filas
+        doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+        p.vacaciones.forEach((v, vi) => {
+          if (vi%2===0) { doc.setFillColor(252,248,249); doc.rect(14, y-1, pageW-28, 7, 'F'); }
+          const vfi = v.fecha_inicio ? (() => { const[yr,m,d]=v.fecha_inicio.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '—';
+          const vff = v.fecha_fin ? (() => { const[yr,m,d]=v.fecha_fin.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '—';
+          doc.text(String(v.tipo||'Sistema'), cols[0], y+4);
+          doc.text(vfi, cols[1], y+4);
+          doc.text(vff, cols[2], y+4);
+          doc.text(`${v.dias||v.dias_solicitados||0} días`, cols[3], y+4);
+          doc.text(String(v.notas||v.motivo||'vacaciones').substring(0,18), cols[4], y+4);
+          y += 7;
+        });
+      }
+      y += 4;
+    });
+  }
 
   doc.save(`Permiso_${(s.nombre||'').replace(/\s/g,'_')}_${s.fecha_inicio?.substring(0,10)||''}.pdf`);
 }
@@ -669,9 +676,11 @@ function ModalConfigVacacionesPDF({ solicitud: s, onClose }) {
     firma1: 'Firma del Empleado',
     firma2: 'Vo.Bo. Recursos Humanos',
     firma3: 'Vo.Bo. Administración',
+    firma4: '',
     nombre1: `${s.nombre||''} ${s.apellido_paterno||''}`.trim(),
-    nombre2: 'Recursos Humanos',
-    nombre3: 'Administración',
+    nombre2: '',
+    nombre3: '',
+    nombre4: '',
   });
   const [generando, setGenerando] = useState(false);
 
@@ -737,6 +746,17 @@ function ModalConfigVacacionesPDF({ solicitud: s, onClose }) {
                     style={{padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
                 </div>
               ))}
+              {/* Firma 4 opcional */}
+              <div style={{borderTop:'1px dashed #e2e8f0',paddingTop:8}}>
+                <label style={{display:'block',fontSize:11,color:'#718096',marginBottom:6,fontWeight:600}}>Firma adicional (opcional)</label>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  <input placeholder="Etiqueta firma 4" value={cfg.firma4} onChange={e=>setCfg(x=>({...x,firma4:e.target.value}))}
+                    style={{padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+                  <input placeholder="Nombre firma 4" value={cfg.nombre4} onChange={e=>setCfg(x=>({...x,nombre4:e.target.value}))}
+                    style={{padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+                </div>
+                <p style={{fontSize:10,color:'#a0aec0',marginTop:4}}>Si lo dejas vacío no aparece en el PDF.</p>
+              </div>
             </div>
           </div>
         </div>
