@@ -580,7 +580,7 @@ function ModalAsignarPeriodo({ solicitudId, empleadoId, onClose, onConfirmado })
                           Periodo {item.numero}
                         </div>
                         <div style={{ fontSize:11, color:'var(--g60)', marginTop:1 }}>
-                          {new Date(item.inicio).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} → {new Date(item.fin).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}
+                          {(()=>{const[y,m,d]=String(item.inicio).substring(0,10).split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});})()} → {(()=>{const[y,m,d]=String(item.fin).substring(0,10).split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});})()}
                         </div>
                         <div style={{ fontSize:11, color:'var(--g60)', marginTop:1 }}>
                           Tenía {item.dias_disponibles} días disponibles → quedará con <strong style={{ color: item.dias_disponibles-item.dias_a_usar > 0 ? '#1B5E20' : '#B71C1C' }}>{item.dias_disponibles - item.dias_a_usar} días</strong>
@@ -641,5 +641,6 @@ function ModalRechazar({ onClose, onConfirmar }) {
 
 function fmtFecha(f) {
   if (!f) return '—';
-  return new Date(f).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+  const [y,m,d] = String(f).substring(0,10).split('-').map(Number);
+  return new Date(y, m-1, d).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
 }
