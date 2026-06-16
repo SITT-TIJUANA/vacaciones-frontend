@@ -226,15 +226,15 @@ export default function PermisosPage() {
                       </div>
                     </div>
                     <div style={{ marginTop:12, textAlign:'center' }}>
-                      <a href={verFoto} target="_blank" rel="noreferrer" style={{ padding:'10px 20px', background:'#1a3a6b', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
-                        {esPDF ? '📥 Descargar PDF' : '🔗 Abrir original'}
+                      <a href={esPDF ? `https://docs.google.com/viewer?url=${encodeURIComponent(verFoto)}` : verFoto} target="_blank" rel="noreferrer" style={{ padding:'10px 20px', background:'#1a3a6b', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
+                        {esPDF ? '📥 Descargar PDF' : '🔗 Ver completo'}
                       </a>
                     </div>
                   </>
                 );
               })()}
               <div style={{ marginTop:12, textAlign:'center' }}>
-                <a href={verFoto} target="_blank" rel="noreferrer" style={{ padding:'10px 20px', background:'#1a3a6b', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
+                <a href={esPDF ? `https://docs.google.com/viewer?url=${encodeURIComponent(verFoto)}` : verFoto} target="_blank" rel="noreferrer" style={{ padding:'10px 20px', background:'#1a3a6b', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
                   🔗 Abrir en nueva pestaña
                 </a>
               </div>
