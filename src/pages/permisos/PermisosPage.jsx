@@ -32,8 +32,8 @@ function fmtHora(h) {
 // ── Componente principal ──────────────────────────────────
 export default function PermisosPage() {
   const { headerStyle } = useTema();
-  const { usuario, rolEfectivo } = useAuth();
-  const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
+  const { usuario, rolEfectivo, modoEmpleado } = useAuth();
+  const esAdmin = ['admin','rrhh'].includes(rolEfectivo) && !modoEmpleado;
   const [permisos, setPermisos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [seccion, setSeccion] = useState('solicitudes'); // solicitudes | nuevo | estadisticas
@@ -405,14 +405,12 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
         </div>
         <div>
           <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Hora de salida *</label>
-          {/* Turno completo toggle */}
-          <div style={{ marginBottom:8 }}>
-            <button onClick={()=>setForm({...form,turno_completo:!form.turno_completo,hora_salida:'',hora_regreso:''})}
-              style={{ padding:'8px 16px', borderRadius:20, border:`1.5px solid ${form.turno_completo?'#6B0F2B':'#e2e8f0'}`, background:form.turno_completo?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:form.turno_completo?'#6B0F2B':'#718096' }}>
-              {form.turno_completo ? '✅' : '☐'} Turno completo (no asistirá ese día)
-            </button>
+          <div style={{ marginBottom:6 }}>
+            <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:form.turno_completo?'#6B0F2B':'#718096' }}>
+              <input type="checkbox" checked={form.turno_completo} onChange={e=>setForm({...form,turno_completo:e.target.checked,hora_salida:'',hora_regreso:''})} style={{ width:16,height:16 }}/>
+              Turno completo (no asistirá)
+            </label>
           </div>
-
           {!form.turno_completo && (
             <input type="time" value={form.hora_salida} onChange={e=>setForm({...form,hora_salida:e.target.value})}
               style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box' }}/>
