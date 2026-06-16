@@ -22,8 +22,8 @@ function fmtFecha(f) {
 
 export default function IncapacidadesPage() {
   const { headerStyle } = useTema();
-  const { rolEfectivo } = useAuth();
-  const esAdmin = ['admin','rrhh'].includes(rolEfectivo);
+  const { rolEfectivo, modoEmpleado } = useAuth();
+  const esAdmin = ['admin','rrhh'].includes(rolEfectivo) && !modoEmpleado;
   const [tab, setTab] = useState('incapacidades');
   const [incapacidades, setIncapacidades] = useState([]);
   const [recetas, setRecetas] = useState([]);
@@ -43,9 +43,10 @@ export default function IncapacidadesPage() {
   const cargar = async () => {
     setCargando(true);
     try {
+      const empParam = !esAdmin && usuario?.empleado_id ? `?empleado_id=${usuario.empleado_id}` : '';
       const [r1, r2] = await Promise.all([
-        api.get('/api/incapacidades'),
-        api.get('/api/incapacidades/recetas'),
+        api.get(`/api/incapacidades${empParam}`),
+        api.get(`/api/incapacidades/recetas${empParam}`),
       ]);
       setIncapacidades(r1.data);
       setRecetas(r2.data);
@@ -57,7 +58,7 @@ export default function IncapacidadesPage() {
     finally { setCargando(false); }
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { cargar(); }, [esAdmin]);
 
   const deptos = [...new Set(incapacidades.map(i=>i.departamento).filter(Boolean))].sort();
 
