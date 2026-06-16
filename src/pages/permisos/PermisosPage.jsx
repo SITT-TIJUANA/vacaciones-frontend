@@ -572,6 +572,7 @@ function ModalConfigPDF({ permiso, onClose }) {
     firmaRRHH: true,
     firmaAdmin: true,
     tituloPermiso: 'PERMISO LABORAL',
+    subtitulo: 'H. XXV Ayuntamiento de Tijuana — SITT',
     firmaNombreEmpleado: `${permiso.nombre||''} ${permiso.apellido_paterno||''}`,
     firmaNombreRRHH: 'Recursos Humanos',
     firmaNombreAdmin: 'Administración',
@@ -653,7 +654,10 @@ function ModalConfigPDF({ permiso, onClose }) {
       doc.setFont('helvetica','bold'); doc.setTextColor(hr,hg,hb);
       doc.text(l,col,row);
       doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-      doc.text(v,col+30,row);
+      // splitTextToSize para texto largo
+      const maxW = 80;
+      const lines = doc.splitTextToSize(String(v), maxW);
+      doc.text(lines,col+30,row);
     });
 
     // Detalles permiso
@@ -766,6 +770,16 @@ function ModalConfigPDF({ permiso, onClose }) {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Títulos */}
+          <div>
+            <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:8, textTransform:'uppercase' }}>Título del documento</label>
+            <input value={cfg.tituloPermiso} onChange={e=>setCfg(c=>({...c,tituloPermiso:e.target.value}))}
+              style={{ width:'100%', padding:'8px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box', marginBottom:8 }}/>
+            <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase' }}>Subtítulo</label>
+            <input value={cfg.subtitulo} onChange={e=>setCfg(c=>({...c,subtitulo:e.target.value}))}
+              style={{ width:'100%', padding:'8px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box' }}/>
           </div>
 
           {/* Nombres firmas */}
