@@ -390,6 +390,7 @@ body {
   }
 }
 
+@media (max-width: 768px) {
   /* ── CALENDARIO MÓVIL ── */
   .calendario-nav {
     flex-direction: column !important;
