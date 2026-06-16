@@ -55,7 +55,10 @@ export default function PermisosPage() {
   const cargar = async () => {
     setCargando(true);
     try {
-      const r = await api.get('/api/permisos-laborales');
+      const url = esAdmin
+        ? '/api/permisos-laborales'
+        : `/api/permisos-laborales?empleado_id=${usuario?.empleado_id}`;
+      const r = await api.get(url);
       setPermisos(r.data);
       if (esAdmin) {
         const s = await api.get('/api/permisos-laborales/stats');
@@ -65,7 +68,7 @@ export default function PermisosPage() {
     finally { setCargando(false); }
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => { cargar(); }, [esAdmin]);
 
   const filtrados = permisos.filter(p => {
     if (filtroEstatus && p.estatus !== filtroEstatus) return false;
