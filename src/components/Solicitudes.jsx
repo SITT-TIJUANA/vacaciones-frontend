@@ -11,207 +11,165 @@ async function generarPermiso(s, cfg={}) {
   const DORADO = [201,168,76];
   const BLANCO = [255,255,255];
   const GRIS   = [248,245,245];
-
-  let fotoBase64 = null;
-  let logoBase64 = null;
-  try {
-    const logoRes = await fetch(`${window.location.origin}/vacaciones-frontend/escudo-sitt.png?t=${Date.now()}`);
-    const logoBlob = await logoRes.blob();
-    logoBase64 = await new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result); fr.readAsDataURL(logoBlob); });
-  } catch(e) {}
-
-  if (s.foto_url) {
-    try {
-      const token = localStorage.getItem('token');
-      const API = 'https://vacaciones-backend-7ota.onrender.com';
-      const r = await fetch(`${API}/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (r.ok) { const blob = await r.blob(); fotoBase64 = await new Promise(res => { const fr = new FileReader(); fr.onload = e => res(e.target.result); fr.readAsDataURL(blob); }); }
-    } catch(e) {}
-  }
-
   const pageW = 215.9;
   const pageH = 279.4;
   const hoy = new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
 
-  // ── HEADER ──
-  doc.setFillColor(...GUINDA);
-  doc.rect(0, 0, pageW, 48, 'F');
-  doc.setFillColor(...DORADO);
-  doc.rect(0, 48, pageW, 2.5, 'F');
+  // Helpers
+  const fmtF = (f) => { if(!f)return'—'; const[y,m,d]=String(f).substring(0,10).split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); };
+  const fmtFLong = (f) => { if(!f)return'—'; const[y,m,d]=String(f).substring(0,10).split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); };
 
-  if (logoBase64) { try { doc.addImage(logoBase64, 'PNG', 8, 6, 30, 30); } catch(e) {} }
-  if (fotoBase64) {
+  // Cargar recursos
+  let fotoBase64 = null, logoBase64 = null;
+  try {
+    const logoRes = await fetch(`${window.location.origin}/vacaciones-frontend/escudo-sitt.png?t=${Date.now()}`);
+    logoBase64 = await new Promise(r => { const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(await logoRes.blob()); });
+  } catch(e) {}
+  if (s.foto_url) {
     try {
-      doc.addImage(fotoBase64, 'JPEG', pageW-46, 4, 36, 36);
-      doc.setDrawColor(...DORADO); doc.setLineWidth(1); doc.rect(pageW-46, 4, 36, 36);
+      const r = await fetch(`https://vacaciones-backend-7ota.onrender.com/api/proxy-imagen?url=${encodeURIComponent(s.foto_url)}`, { headers:{'Authorization':`Bearer ${localStorage.getItem('token')}`} });
+      if (r.ok) fotoBase64 = await new Promise(res=>{ const fr=new FileReader(); fr.onload=e=>res(e.target.result); fr.readAsDataURL(await r.blob()); });
     } catch(e) {}
   }
 
-  // Título configurable
-  doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text(cfg.titulo || 'CONSTANCIA DE VACACIONES', 44, 16);
-  doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text(cfg.subtitulo || 'H. XXV Ayuntamiento de Tijuana — SITT', 44, 23);
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...DORADO);
-  doc.text(`Expedido el: ${hoy}`, 44, 38);
-
-  // ── DATOS EMPLEADO ──
-  let y = 62;
-  doc.setFillColor(...GRIS); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
-  doc.roundedRect(14, y, pageW-28, 48, 3, 3, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...GUINDA);
-  doc.text('DATOS DEL EMPLEADO', 20, y+8);
-  doc.setDrawColor(...DORADO); doc.setLineWidth(0.5); doc.line(20, y+10, pageW-20, y+10);
-
-  const datosEmp = [
-    { label:'Nombre:', valor:`${s.nombre||''} ${s.apellido_paterno||''} ${s.apellido_materno||''}`.trim(), col:20, row:y+18 },
-    { label:'Puesto:', valor:s.puesto||'—', col:20, row:y+30, wrap:true },
-    { label:'Departamento:', valor:s.departamento||'—', col:115, row:y+18 },
-    { label:'No. Empleado:', valor:s.numero_empleado||'—', col:115, row:y+30 },
-  ];
-  datosEmp.forEach(({label,valor,col,row,wrap}) => {
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
-    doc.text(label, col, row);
-    doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-    if (wrap) {
-      const lines = doc.splitTextToSize(String(valor), 70);
-      doc.text(lines, col+28, row);
-    } else {
-      doc.text(String(valor), col+28, row);
-    }
-  });
-
-  // ── PERIODO VACACIONAL ──
-  y += 62;
-  doc.setFillColor(...GUINDA); doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'F');
-  doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(10);
-  doc.text('PERIODO VACACIONAL AUTORIZADO', pageW/2, y+7, {align:'center'});
-
-  y += 18;
-  const fi = (() => { const f=s.fecha_inicio; if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); })();
-  const ff = (() => { const f=s.fecha_fin; if(!f)return'—'; const[yr,m,d]=f.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); })();
-
-  const cajaW = 60;
-  doc.setFillColor(240,235,235); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
-  doc.roundedRect(14, y, cajaW, 28, 3, 3, 'FD');
-  doc.roundedRect(pageW-14-cajaW, y, cajaW, 28, 3, 3, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
-  doc.text('FECHA DE INICIO', 14+cajaW/2, y+8, {align:'center'});
-  doc.text('FECHA DE FIN', pageW-14-cajaW/2, y+8, {align:'center'});
-  doc.setFontSize(9); doc.setTextColor(30,30,30);
-  doc.text(fi, 14+cajaW/2, y+18, {align:'center'});
-  doc.text(ff, pageW-14-cajaW/2, y+18, {align:'center'});
-  doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...GUINDA);
-  doc.text('→', pageW/2, y+18, {align:'center'});
-
-  y += 36;
-  doc.setFillColor(...GUINDA); doc.roundedRect(pageW/2-30, y, 60, 16, 3, 3, 'F');
-  doc.setTextColor(...DORADO); doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text(`${s.dias_solicitados} días hábiles`, pageW/2, y+10, {align:'center'});
-
-  // ── FIRMAS (hasta 4) ──
-  y += 32;
-  const firmasCfg = [
-    { etiqueta: cfg.firma1||'Firma del Empleado', nombre: cfg.nombre1||`${s.nombre||''} ${s.apellido_paterno||''}`.trim() },
-    { etiqueta: cfg.firma2||'Vo.Bo. Recursos Humanos', nombre: cfg.nombre2||'' },
-    { etiqueta: cfg.firma3||'Vo.Bo. Administración', nombre: cfg.nombre3||'' },
-  ];
-  if (cfg.firma4) firmasCfg.push({ etiqueta: cfg.firma4, nombre: cfg.nombre4||'' });
-
-  const numFirmas = firmasCfg.length;
-  const firmaW = (pageW - 28) / numFirmas;
-  const firmaY = y + 22;
-
-  doc.setDrawColor(180,180,180); doc.setLineWidth(0.3);
-  firmasCfg.forEach((f, i) => {
-    const x = 14 + i * firmaW;
-    const cx = x + firmaW/2;
-    doc.line(x+6, firmaY, x+firmaW-6, firmaY);
-    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GUINDA);
-    const etLines = doc.splitTextToSize(f.etiqueta, firmaW-8);
-    doc.text(etLines, cx, firmaY+5, {align:'center'});
-    if (f.nombre) {
-      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(150,150,150);
-      doc.text(f.nombre, cx, firmaY+10, {align:'center'});
-    }
-  });
-
-  // ── FOOTER ──
-  doc.setFillColor(...GUINDA); doc.rect(0, pageH-14, pageW, 14, 'F');
-  doc.setFillColor(...DORADO); doc.rect(0, pageH-16, pageW, 2, 'F');
-  doc.setTextColor(...BLANCO); doc.setFont('helvetica','normal'); doc.setFontSize(7);
-  doc.text('Sistema de Control de Vacaciones — SITT · H. XXV Ayuntamiento de Tijuana', pageW/2, pageH-6, {align:'center'});
-
-  // ── DETALLE DE PERIODOS ──
-  y += 40;
+  // Cargar periodos
   let periodosData = null;
   try {
-    const token = localStorage.getItem('token');
-    const API = 'https://vacaciones-backend-7ota.onrender.com';
-    const r = await fetch(`${API}/api/solicitudes/periodos-detalle/${s.empleado_id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const r = await fetch(`https://vacaciones-backend-7ota.onrender.com/api/solicitudes/periodos-detalle/${s.empleado_id}`, { headers:{'Authorization':`Bearer ${localStorage.getItem('token')}`} });
     if (r.ok) periodosData = await r.json();
   } catch(e) {}
 
+  // ── HEADER ──
+  doc.setFillColor(...GUINDA); doc.rect(0,0,pageW,46,'F');
+  doc.setFillColor(...DORADO); doc.rect(0,46,pageW,2,'F');
+  if (logoBase64) { try { doc.addImage(logoBase64,'PNG',8,6,28,28); } catch(e){} }
+  if (fotoBase64) { try { doc.addImage(fotoBase64,'JPEG',pageW-42,4,34,34); doc.setDrawColor(...DORADO); doc.setLineWidth(0.8); doc.rect(pageW-42,4,34,34); } catch(e){} }
+  doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text(cfg.titulo||'CONSTANCIA DE VACACIONES', 42, 15);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text(cfg.subtitulo||'H. XXV Ayuntamiento de Tijuana — SITT', 42, 22);
+  doc.setFontSize(7.5); doc.setTextColor(...DORADO);
+  doc.text(`Expedido el: ${hoy}`, 42, 36);
+
+  // ── DATOS EMPLEADO ──
+  let y = 56;
+  doc.setFillColor(...GRIS); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
+  doc.roundedRect(14,y,pageW-28,36,3,3,'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
+  doc.text('DATOS DEL EMPLEADO',20,y+7);
+  doc.setDrawColor(...DORADO); doc.setLineWidth(0.4); doc.line(20,y+9,pageW-20,y+9);
+  const datosEmp = [
+    {label:'Nombre:',   valor:`${s.nombre||''} ${s.apellido_paterno||''} ${s.apellido_materno||''}`.trim(), col:20, row:y+17},
+    {label:'Puesto:',   valor:s.puesto||'—', col:20, row:y+27, wrap:true},
+    {label:'Depto:',    valor:s.departamento||'—', col:118, row:y+17},
+    {label:'No. Emp:',  valor:s.numero_empleado||'—', col:118, row:y+27},
+  ];
+  datosEmp.forEach(({label,valor,col,row,wrap})=>{
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...GUINDA);
+    doc.text(label,col,row);
+    doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+    if(wrap){ const lines=doc.splitTextToSize(String(valor),72); doc.text(lines,col+22,row); }
+    else { doc.text(String(valor),col+22,row); }
+  });
+
+  // ── PERIODO VACACIONAL ──
+  y += 44;
+  doc.setFillColor(...GUINDA); doc.roundedRect(14,y,pageW-28,9,2,2,'F');
+  doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('PERIODO VACACIONAL AUTORIZADO',pageW/2,y+6.5,{align:'center'});
+
+  y += 13;
+  const fi = fmtFLong(s.fecha_inicio), ff2 = fmtFLong(s.fecha_fin);
+  const cajaW = 58;
+  doc.setFillColor(240,235,235); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
+  doc.roundedRect(14,y,cajaW,24,3,3,'FD');
+  doc.roundedRect(pageW-14-cajaW,y,cajaW,24,3,3,'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GUINDA);
+  doc.text('FECHA DE INICIO',14+cajaW/2,y+7,{align:'center'});
+  doc.text('FECHA DE FIN',pageW-14-cajaW/2,y+7,{align:'center'});
+  doc.setFontSize(8); doc.setTextColor(30,30,30);
+  doc.text(fi,14+cajaW/2,y+16,{align:'center'});
+  doc.text(ff2,pageW-14-cajaW/2,y+16,{align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...GUINDA);
+  doc.text('→',pageW/2,y+16,{align:'center'});
+
+  y += 30;
+  doc.setFillColor(...GUINDA); doc.roundedRect(pageW/2-28,y,56,13,3,3,'F');
+  doc.setTextColor(...DORADO); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text(`${s.dias_solicitados} días hábiles`,pageW/2,y+8.5,{align:'center'});
+
+  // ── DETALLE PERIODOS ──
+  y += 18;
   if (periodosData?.periodos?.length) {
-    // Sección header
-    doc.setFillColor(...GUINDA);
-    doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'F');
-    doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(9);
-    doc.text('DETALLE DE PERIODOS Y VACACIONES', pageW/2, y+7, {align:'center'});
-    y += 14;
+    doc.setFillColor(...GUINDA); doc.roundedRect(14,y,pageW-28,9,2,2,'F');
+    doc.setTextColor(...BLANCO); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+    doc.text('DETALLE DE PERIODOS Y VACACIONES',pageW/2,y+6.5,{align:'center'});
+    y += 12;
 
-    // Solo mostrar el período que corresponde a esta solicitud
     const fechaSol = s.fecha_inicio?.substring(0,10);
-    const periodosRelevantes = periodosData.periodos.filter(p => {
-      // Período que contiene días tomados o que coincide con la solicitud
-      return p.vacaciones?.some(v => v.fecha_inicio?.substring(0,10) === fechaSol) || p.dias_tomados > 0;
-    });
-    const periodos = periodosRelevantes.length ? periodosRelevantes : periodosData.periodos.slice(0,2);
+    const relevantes = periodosData.periodos.filter(p=>p.vacaciones?.some(v=>v.fecha_inicio?.substring(0,10)===fechaSol)||p.dias_tomados>0);
+    const periodos = relevantes.length ? relevantes : periodosData.periodos.slice(0,2);
 
-    periodos.forEach((p, pi) => {
+    periodos.forEach((p,pi)=>{
       // Fila período
-      doc.setFillColor(248,240,242); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.3);
-      doc.roundedRect(14, y, pageW-28, 10, 2, 2, 'FD');
-      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GUINDA);
-      const fIni = p.fecha_inicio ? (() => { const[yr,m,d]=p.fecha_inicio.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '';
-      const fFin = p.fecha_fin ? (() => { const[yr,m,d]=p.fecha_fin.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '';
-      doc.text(`Periodo ${p.numero || pi+1}: ${fIni} — ${fFin}`, 18, y+7);
-      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(80,80,80);
-      doc.text(`${p.dias_correspondientes||0} corresp. | ${p.dias_tomados||0} tomados | ${p.dias_disponibles||0} disponibles`, pageW-18, y+7, {align:'right'});
-      y += 13;
+      doc.setFillColor(248,240,242); doc.setDrawColor(...GUINDA); doc.setLineWidth(0.25);
+      doc.roundedRect(14,y,pageW-28,9,2,2,'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...GUINDA);
+      doc.text(`Periodo ${p.numero||pi+1}: ${fmtF(p.fecha_inicio)} — ${fmtF(p.fecha_fin)}`,18,y+6.5);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(80,80,80);
+      doc.text(`${p.dias_correspondientes||0} corresp. | ${p.dias_tomados||0} tomados | ${p.dias_disponibles||0} disponibles`,pageW-18,y+6.5,{align:'right'});
+      y += 12;
 
-      // Tabla vacaciones del período
       if (p.vacaciones?.length) {
-        // Header tabla
-        const cols = [18, 60, 110, 155, 175];
-        const headers = ['Tipo','Fecha inicio','Fecha fin','Días','Notas'];
-        doc.setFillColor(220,210,213); doc.rect(14, y, pageW-28, 7, 'F');
-        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...GUINDA);
-        headers.forEach((h,i) => doc.text(h, cols[i], y+5));
-        y += 9;
-
-        // Filas
-        doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-        p.vacaciones.forEach((v, vi) => {
-          if (vi%2===0) { doc.setFillColor(252,248,249); doc.rect(14, y-1, pageW-28, 7, 'F'); }
-          const vfi = v.fecha_inicio ? (() => { const[yr,m,d]=v.fecha_inicio.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '—';
-          const vff = v.fecha_fin ? (() => { const[yr,m,d]=v.fecha_fin.substring(0,10).split('-'); return new Date(parseInt(yr),parseInt(m)-1,parseInt(d)).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}); })() : '—';
-          doc.text(String(v.tipo||'Sistema'), cols[0], y+4);
-          doc.text(vfi, cols[1], y+4);
-          doc.text(vff, cols[2], y+4);
-          doc.text(`${v.dias||v.dias_solicitados||0} días`, cols[3], y+4);
-          doc.text(String(v.notas||v.motivo||'vacaciones').substring(0,18), cols[4], y+4);
-          y += 7;
+        const cols=[18,58,105,152,172];
+        const hdrs=['Tipo','Fecha inicio','Fecha fin','Días','Notas'];
+        doc.setFillColor(220,210,213); doc.rect(14,y,pageW-28,6.5,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...GUINDA);
+        hdrs.forEach((h,i)=>doc.text(h,cols[i],y+4.5));
+        y += 7;
+        doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(50,50,50);
+        p.vacaciones.forEach((v,vi)=>{
+          if(vi%2===0){doc.setFillColor(252,248,249);doc.rect(14,y-0.5,pageW-28,6.5,'F');}
+          doc.text(String(v.tipo||'Sistema'),cols[0],y+4);
+          doc.text(fmtF(v.fecha_inicio),cols[1],y+4);
+          doc.text(fmtF(v.fecha_fin),cols[2],y+4);
+          doc.text(`${v.dias||v.dias_solicitados||0}d`,cols[3],y+4);
+          doc.text(String(v.notas||v.motivo||'vacaciones').substring(0,20),cols[4],y+4);
+          y += 6.5;
         });
       }
-      y += 4;
+      y += 3;
     });
   }
 
+  // ── FIRMAS ──
+  y += 6;
+  const firmasCfg = [
+    {etiqueta:cfg.firma1||'Firma del Empleado', nombre:cfg.nombre1||`${s.nombre||''} ${s.apellido_paterno||''}`.trim()},
+    {etiqueta:cfg.firma2||'Vo.Bo. Recursos Humanos', nombre:cfg.nombre2||''},
+    {etiqueta:cfg.firma3||'Vo.Bo. Administración', nombre:cfg.nombre3||''},
+  ];
+  if (cfg.firma4) firmasCfg.push({etiqueta:cfg.firma4, nombre:cfg.nombre4||''});
+  const firmaW = (pageW-28)/firmasCfg.length;
+  const firmaY = y+20;
+  doc.setDrawColor(180,180,180); doc.setLineWidth(0.3);
+  firmasCfg.forEach((f,i)=>{
+    const x=14+i*firmaW, cx=x+firmaW/2;
+    doc.line(x+5,firmaY,x+firmaW-5,firmaY);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...GUINDA);
+    doc.text(doc.splitTextToSize(f.etiqueta,firmaW-8),cx,firmaY+4.5,{align:'center'});
+    if(f.nombre){doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(150,150,150);doc.text(f.nombre,cx,firmaY+9,{align:'center'});}
+  });
+
+  // ── FOOTER ──
+  doc.setFillColor(...GUINDA); doc.rect(0,pageH-12,pageW,12,'F');
+  doc.setFillColor(...DORADO); doc.rect(0,pageH-13.5,pageW,1.5,'F');
+  doc.setTextColor(...BLANCO); doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+  doc.text('Sistema de Control de Vacaciones — SITT · H. XXV Ayuntamiento de Tijuana',pageW/2,pageH-5,{align:'center'});
+
   doc.save(`Permiso_${(s.nombre||'').replace(/\s/g,'_')}_${s.fecha_inicio?.substring(0,10)||''}.pdf`);
 }
+
 
 export default function Solicitudes({ onActualizarNotif }) {
   const { usuario, rolEfectivo } = useAuth();
