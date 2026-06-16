@@ -225,19 +225,17 @@ export default function PermisosPage() {
                         <div style={{ fontSize:13, color:'#718096' }}>Vista previa no disponible</div>
                       </div>
                     </div>
-                    <div style={{ marginTop:12, textAlign:'center' }}>
+                    <div style={{ marginTop:12, textAlign:'center', display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+                      <a href={previewUrl} download="permiso-firmado.jpg" style={{ padding:'10px 20px', background:'#6B0F2B', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
+                        📥 Descargar imagen
+                      </a>
                       <a href={verFoto} target="_blank" rel="noreferrer" style={{ padding:'10px 20px', background:'#1a3a6b', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
-                        {esPDF ? '📥 Descargar PDF' : '🔗 Ver completo'}
+                        🔗 Ver original
                       </a>
                     </div>
                   </>
                 );
               })()}
-              <div style={{ marginTop:12, textAlign:'center' }}>
-                <a href={verFoto} target="_blank" rel="noreferrer" style={{ padding:'10px 20px', background:'#1a3a6b', color:'#fff', borderRadius:8, textDecoration:'none', fontWeight:700, fontSize:13 }}>
-                  🔗 Abrir en nueva pestaña
-                </a>
-              </div>
             </div>
           </div>
         </div>
@@ -343,7 +341,7 @@ function TarjetaPermiso({ permiso: p, esAdmin, onResolver, onSubirFoto, onVerFot
 
 // ── Form nuevo permiso ────────────────────────────────────
 function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
-  const [form, setForm] = useState({ tipo:'medico', fecha:'', hora_salida:'', hora_regreso:'', regresa:true, motivo:'' });
+  const [form, setForm] = useState({ tipo:'medico', fecha:'', hora_salida:'', hora_regreso:'', regresa:true, turno_completo:false, motivo:'' });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const [empleados, setEmpleados] = useState([]);
@@ -354,7 +352,8 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
   },[esAdmin]);
 
   const enviar = async () => {
-    if (!form.tipo||!form.fecha||!form.hora_salida) { setError('Tipo, fecha y hora de salida son obligatorios'); return; }
+    if (!form.tipo||!form.fecha) { setError('Tipo y fecha son obligatorios'); return; }
+    if (!form.turno_completo && !form.hora_salida) { setError('Ingresa la hora de salida o selecciona Turno Completo'); return; }
     if (form.tipo==='otro'&&!form.motivo.trim()) { setError('El motivo es obligatorio para permisos de tipo "Otro"'); return; }
     if (esAdmin && !empSel) { setError('Selecciona un empleado'); return; }
     setEnviando(true); setError('');
@@ -406,6 +405,15 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
         </div>
         <div>
           <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Hora de salida *</label>
+          {/* Turno completo toggle */}
+          <div style={{ marginBottom:8 }}>
+            <button onClick={()=>setForm({...form,turno_completo:!form.turno_completo,hora_salida:'',hora_regreso:''})}
+              style={{ padding:'8px 16px', borderRadius:20, border:`1.5px solid ${form.turno_completo?'#6B0F2B':'#e2e8f0'}`, background:form.turno_completo?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:12, color:form.turno_completo?'#6B0F2B':'#718096' }}>
+              {form.turno_completo ? '✅' : '☐'} Turno completo (no asistirá ese día)
+            </button>
+          </div>
+
+          {!form.turno_completo && (
           <input type="time" value={form.hora_salida} onChange={e=>setForm({...form,hora_salida:e.target.value})}
             style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', fontFamily:'Montserrat,sans-serif', fontSize:13, boxSizing:'border-box' }}/>
         </div>
@@ -423,7 +431,8 @@ function FormNuevoPermiso({ esAdmin, empleadoId, onCreado, onCancelar }) {
             ))}
           </div>
         </div>
-        {form.regresa && (
+        )}
+        {!form.turno_completo && form.regresa && (
           <>
             <label style={{ display:'block', fontWeight:700, fontSize:12, color:'#4A5568', marginBottom:6, textTransform:'uppercase', letterSpacing:0.5 }}>Hora de regreso (opcional)</label>
             <input type="time" value={form.hora_regreso} onChange={e=>setForm({...form,hora_regreso:e.target.value})}
@@ -557,11 +566,11 @@ function ModalFoto({ permiso, onClose, onGuardado }) {
           <div style={{ display:'flex', gap:10 }}>
             <label style={{ flex:1, padding:'14px', borderRadius:12, background:'#EEF2FF', border:'2px dashed #2a5298', cursor:'pointer', textAlign:'center', fontWeight:700, fontSize:13, color:'#2a5298' }}>
               🖼️ Subir foto/archivo
-              <input type="file" accept="image/*" style={{ display:'none' }} onChange={e=>subir(e.target.files[0])} disabled={subiendo}/>
+              <input type="file" accept="image/*,application/pdf" style={{ display:'none' }} onChange={e=>subir(e.target.files[0])} disabled={subiendo}/>
             </label>
             <label style={{ flex:1, padding:'14px', borderRadius:12, background:'#F0FFF4', border:'2px dashed #27ae60', cursor:'pointer', textAlign:'center', fontWeight:700, fontSize:13, color:'#27ae60' }}>
               📸 Tomar foto
-              <input type="file" accept="image/*" capture="environment" style={{ display:'none' }} onChange={e=>subir(e.target.files[0])} disabled={subiendo}/>
+              <input type="file" accept="image/*,application/pdf" capture="environment" style={{ display:'none' }} onChange={e=>subir(e.target.files[0])} disabled={subiendo}/>
             </label>
           </div>
           {subiendo && <div style={{ textAlign:'center', color:'#718096', fontWeight:700 }}>⏳ Subiendo...</div>}
@@ -690,14 +699,14 @@ function ModalConfigPDF({ permiso, onClose }) {
     doc.text('DETALLES DEL PERMISO',pageW/2,y+7,{align:'center'});
 
     y += 16;
-    const TIPOS_PDF = { medico:'🏥 Médico',escolar:'🏫 Escolar/Hijo',personal:'🏠 Personal/Familiar',emergencia:'⚡ Emergencia',legal:'⚖️ Legal/Judicial',otro:'🔧 Otro' };
+    const TIPOS_PDF = { medico:'Medico',escolar:'Escolar/Hijo',personal:'Personal/Familiar',emergencia:'Emergencia',legal:'Legal/Judicial',otro:'Otro' };
     const detalles = [
       ['Tipo de permiso:', TIPOS_PDF[permiso.tipo]||permiso.tipo],
       ['Fecha:', fmtFecha(permiso.fecha)],
-      ['Hora de salida:', fmtHora(permiso.hora_salida)],
+      ...(permiso.turno_completo ? [['Tipo de ausencia:', 'Turno completo']] : [['Hora de salida:', fmtHora(permiso.hora_salida)]]),
       ...(cfg.mostrarHoraRegreso && permiso.hora_regreso ? [['Hora de regreso:', fmtHora(permiso.hora_regreso)]] : []),
-      ...(!permiso.regresa ? [['Observación:', 'No regresa ese día']] : []),
-      ...(cfg.mostrarGoce ? [['Goce de sueldo:', permiso.con_goce ? '✅ Con goce de sueldo' : '❌ Sin goce de sueldo']] : []),
+      ...(!permiso.regresa ? [['Observacion:', 'No regresa ese dia']] : []),
+      ...(cfg.mostrarGoce ? [['Goce de sueldo:', permiso.con_goce ? 'Con goce de sueldo' : 'Sin goce de sueldo']] : []),
       ...(cfg.mostrarMotivo && permiso.motivo ? [['Motivo:', permiso.motivo]] : []),
     ];
 
