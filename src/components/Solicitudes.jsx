@@ -4,10 +4,10 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useAuth } from '../context/AuthContext';
 
-async function generarPermiso(s) {
+async function generarPermiso(s, cfg={}) {
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'letter' });
-
-  const GUINDA = [107,15,43];
+  const colorHex = cfg.color || '#6B0F2B';
+  const GUINDA = [parseInt(colorHex.slice(1,3),16),parseInt(colorHex.slice(3,5),16),parseInt(colorHex.slice(5,7),16)];
   const DORADO = [201,168,76];
   const BLANCO = [255,255,255];
   const GRIS   = [248,245,245];
@@ -99,7 +99,7 @@ async function generarPermiso(s) {
 
   const datos = [
     ['Nombre completo:', `${s.nombre||''} ${s.apellido_paterno||''} ${s.apellido_materno||''}`.trim()],
-    ['Puesto:', s.puesto || '—'],
+    ['Puesto:', s.puesto || '—', true], // true = wrap
     ['Departamento:', s.departamento || '—'],
     ['No. de empleado:', s.numero_empleado || '—'],
   ];
@@ -184,14 +184,14 @@ async function generarPermiso(s) {
   doc.setFont('helvetica','bold');
   doc.setFontSize(8);
   doc.setTextColor(...GUINDA);
-  doc.text('Firma del Empleado', firma1X+30, firmaY+6, {align:'center'});
-  doc.text('Vo.Bo. Recursos Humanos', firma2X+30, firmaY+6, {align:'center'});
-  doc.text('Vo.Bo. Administración', firma3X+30, firmaY+6, {align:'center'});
+  doc.text(cfg.firma1||'Firma del Empleado', firma1X+30, firmaY+6, {align:'center'});
+  doc.text(cfg.firma2||'Vo.Bo. Recursos Humanos', firma2X+30, firmaY+6, {align:'center'});
+  doc.text(cfg.firma3||'Vo.Bo. Administración', firma3X+30, firmaY+6, {align:'center'});
 
   doc.setFont('helvetica','normal');
   doc.setFontSize(7);
   doc.setTextColor(150,150,150);
-  doc.text(`${s.nombre||''} ${s.apellido_paterno||''}`.trim(), firma1X+30, firmaY+11, {align:'center'});
+  doc.text(cfg.nombre1||`${s.nombre||''} ${s.apellido_paterno||''}`.trim(), firma1X+30, firmaY+11, {align:'center'});
 
   // ── FOOTER ──
   doc.setFillColor(...GUINDA);
@@ -214,6 +214,7 @@ export default function Solicitudes({ onActualizarNotif }) {
   const [filtroEstatus, setFiltroEstatus] = useState('');
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
   const [resolviendo, setResolviendo] = useState(null);
+  const [modalConfigPDF, setModalConfigPDF] = useState(null);
   const [toast, setToast] = useState(null);
 
   const mostrarToast = (msg, tipo='exito') => {
@@ -343,8 +344,8 @@ export default function Solicitudes({ onActualizarNotif }) {
                           try {
                             const r = await api.get(`/api/empleados/${s.empleado_id}`);
                             const emp = r.data.empleado || r.data;
-                            generarPermiso({ ...s, ...emp, dias_solicitados: s.dias_solicitados });
-                          } catch(e) { generarPermiso({ ...s }); }
+                            setModalConfigPDF({ ...s, ...emp, dias_solicitados: s.dias_solicitados });
+                          } catch(e) { setModalConfigPDF({ ...s }); }
                         }}>
                         📄 Permiso
                       </button>
@@ -643,4 +644,104 @@ function fmtFecha(f) {
   if (!f) return '—';
   const [y,m,d] = String(f).substring(0,10).split('-').map(Number);
   return new Date(y, m-1, d).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ── Modal configuración PDF Vacaciones ───────────────────
+function ModalConfigVacacionesPDF({ solicitud: s, onClose }) {
+  const COLORES = [
+    { nombre:'Guinda SITT', valor:'#6B0F2B' },
+    { nombre:'Azul marino', valor:'#0a1f3d' },
+    { nombre:'Verde', valor:'#1B5E20' },
+    { nombre:'Gris', valor:'#374151' },
+    { nombre:'Morado', valor:'#4C1D95' },
+    { nombre:'Negro', valor:'#1a1a2e' },
+  ];
+  const [cfg, setCfg] = useState({
+    color: '#6B0F2B',
+    titulo: 'CONSTANCIA DE VACACIONES',
+    subtitulo: 'H. XXV Ayuntamiento de Tijuana — SITT',
+    firma1: 'Firma del Empleado',
+    firma2: 'Vo.Bo. Recursos Humanos',
+    firma3: 'Vo.Bo. Administración',
+    nombre1: `${s.nombre||''} ${s.apellido_paterno||''}`.trim(),
+    nombre2: 'Recursos Humanos',
+    nombre3: 'Administración',
+  });
+  const [generando, setGenerando] = useState(false);
+
+  const hexRGB = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+
+  const generar = async () => {
+    setGenerando(true);
+    try {
+      await generarPermiso(s, cfg);
+      onClose();
+    } catch(e) { console.error(e); }
+    finally { setGenerando(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{maxWidth:500}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header" style={{background:'linear-gradient(135deg,#6B0F2B,#9B1540)'}}>
+          <h2>📄 Configurar PDF</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{display:'flex',flexDirection:'column',gap:16}}>
+          {/* Preview empleado */}
+          <div style={{background:'#f7f8fc',borderRadius:12,padding:'12px 16px',fontSize:13,color:'#4A5568'}}>
+            <strong>{s.nombre} {s.apellido_paterno}</strong> — {s.dias_solicitados} días
+            <span style={{color:'#718096',marginLeft:8}}>({String(s.fecha_inicio||'').substring(0,10)} → {String(s.fecha_fin||'').substring(0,10)})</span>
+          </div>
+
+          {/* Color */}
+          <div>
+            <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:8,textTransform:'uppercase'}}>Color del PDF</label>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {COLORES.map(c=>(
+                <button key={c.valor} onClick={()=>setCfg(x=>({...x,color:c.valor}))} title={c.nombre}
+                  style={{width:32,height:32,borderRadius:'50%',background:c.valor,border:`3px solid ${cfg.color===c.valor?'#C9A84C':'transparent'}`,cursor:'pointer',boxShadow:cfg.color===c.valor?'0 0 0 2px #C9A84C40':'none',transition:'all 0.2s'}}/>
+              ))}
+            </div>
+          </div>
+
+          {/* Títulos */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            <div>
+              <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:5,textTransform:'uppercase'}}>Título</label>
+              <input value={cfg.titulo} onChange={e=>setCfg(x=>({...x,titulo:e.target.value}))}
+                style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+            </div>
+            <div>
+              <label style={{display:'block',fontWeight:700,fontSize:11,color:'#4A5568',marginBottom:5,textTransform:'uppercase'}}>Subtítulo</label>
+              <input value={cfg.subtitulo} onChange={e=>setCfg(x=>({...x,subtitulo:e.target.value}))}
+                style={{width:'100%',padding:'8px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+            </div>
+          </div>
+
+          {/* Firmas */}
+          <div>
+            <label style={{display:'block',fontWeight:700,fontSize:12,color:'#4A5568',marginBottom:8,textTransform:'uppercase'}}>Firmas</label>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {[['firma1','nombre1'],['firma2','nombre2'],['firma3','nombre3']].map(([fk,nk],i)=>(
+                <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  <input placeholder={`Etiqueta firma ${i+1}`} value={cfg[fk]} onChange={e=>setCfg(x=>({...x,[fk]:e.target.value}))}
+                    style={{padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+                  <input placeholder={`Nombre ${i+1}`} value={cfg[nk]} onChange={e=>setCfg(x=>({...x,[nk]:e.target.value}))}
+                    style={{padding:'7px 10px',borderRadius:8,border:'1.5px solid #e2e8f0',fontFamily:'Montserrat,sans-serif',fontSize:12,boxSizing:'border-box'}}/>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-institucional btn-sm" onClick={onClose}>Cancelar</button>
+          <button onClick={generar} disabled={generando}
+            style={{padding:'10px 24px',borderRadius:10,border:'none',background:`linear-gradient(135deg,${cfg.color},${cfg.color}cc)`,color:'#fff',cursor:'pointer',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:13}}>
+            {generando?'⏳ Generando...':'📄 Generar PDF'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
