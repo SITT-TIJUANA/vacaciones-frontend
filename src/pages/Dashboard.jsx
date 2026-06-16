@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   { id:'solicitudes',  icon:'📋', label:'Solicitudes', roles:['admin','rrhh','empleado'] },
   { id:'calendario',   icon:'📅', label:'Calendario',  roles:['admin','rrhh','empleado'] },
   { id:'periodos-sec',  icon:'🗂️', label:'Periodos',    roles:['admin','rrhh','empleado'] },
-  { id:'permisos',     icon:'📄', label:'Permisos',    roles:['admin','rrhh','empleado'] },
+  { id:'permisos',     icon:'📄', label:'Formatos',    roles:['admin','rrhh','empleado'] },
   { id:'reportes',     icon:'📊', label:'Reportes',    roles:['admin','rrhh'] },
   { id:'adeudados',    icon:'💰', label:'Adeudados',   roles:['admin','rrhh'] },
 ];
