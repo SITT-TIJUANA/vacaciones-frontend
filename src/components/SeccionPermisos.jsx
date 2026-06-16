@@ -222,7 +222,7 @@ export default function SeccionPermisos() {
                       </div>
                     </div>
                     <div style={{ marginTop:12, textAlign:'center', display:'flex', gap:10, justifyContent:'center' }}>
-                      <a href={esPDF ? `https://docs.google.com/viewer?url=${encodeURIComponent(verFoto)}` : verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
+                      <a href={verFoto} target="_blank" rel="noreferrer" className="btn-institucional dorado btn-sm">
                         {esPDF ? '📥 Descargar PDF' : '🔗 Ver completo'}
                       </a>
                     </div>
