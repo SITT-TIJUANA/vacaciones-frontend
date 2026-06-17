@@ -42,7 +42,15 @@ export default function MiPerfil({ onVerPeriodos }) {
         <h2 className="section-title">Mi Perfil</h2>
       </div>
 
-      {!usuario?.empleado_id ? (
+      {perfil?.modalidad === 'asimilable' ? (
+        <div className="card" style={{ textAlign:'center', padding:40 }}>
+          <div style={{ fontSize:48, marginBottom:16 }}>📋</div>
+          <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:22, color:'var(--g)', marginBottom:8 }}>Personal Asimilable</div>
+          <div style={{ fontSize:14, color:'var(--g60)', fontFamily:'Montserrat,sans-serif', maxWidth:360, margin:'0 auto' }}>
+            Como empleado asimilable, no aplican períodos de vacaciones según la modalidad de contratación.
+          </div>
+        </div>
+      ) : !usuario?.empleado_id ? (
         <div className="card" style={{ textAlign: 'center', padding: 60 }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>👤</div>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: 800, color: 'var(--guinda)', fontSize: 20, marginBottom: 8 }}>
