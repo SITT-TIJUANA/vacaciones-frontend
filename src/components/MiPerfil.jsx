@@ -82,6 +82,13 @@ export default function MiPerfil({ onVerPeriodos }) {
                 </div>
                 <div style={{ opacity: 0.85, marginTop: 4 }}>{perfil.empleado.puesto || 'Sin puesto'}</div>
                 <div style={{ opacity: 0.7, fontSize: 13, marginTop: 4 }}>🏢 {perfil.empleado.departamento || '—'}</div>
+                <div style={{ marginTop:6, display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20,
+                  background: perfil.empleado.modalidad==='asimilable'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.15)',
+                  border: `1px solid ${perfil.empleado.modalidad==='asimilable'?'#f59e0b':'rgba(255,255,255,0.3)'}`,
+                  fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:800,
+                  color: perfil.empleado.modalidad==='asimilable'?'#f59e0b':'#fff' }}>
+                  {perfil.empleado.modalidad==='asimilable'?'📋 Asimilable':'🏛️ Confianza'}
+                </div>
               </div>
               <div style={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
                 <div style={{ fontFamily: 'Montserrat', fontSize: 52, fontWeight: 900, color: 'var(--dorado)', lineHeight: 1 }}>{periodoActual.dias_disponibles ?? '—'}</div>
