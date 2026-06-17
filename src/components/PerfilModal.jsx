@@ -187,6 +187,13 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
               <div className="perfil-puesto">{empleado.puesto||'Sin puesto'}</div>
               {empleado.departamento && <div style={{ marginTop:5,fontSize:12,opacity:.8 }}>🏢 {empleado.departamento}</div>}
               {empleado.numero_empleado && <div style={{ marginTop:3,fontSize:12,opacity:.7 }}># {empleado.numero_empleado}</div>}
+              <div style={{ marginTop:6, display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20,
+                background: empleado.modalidad==='asimilable'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.15)',
+                border: `1px solid ${empleado.modalidad==='asimilable'?'#f59e0b':'rgba(255,255,255,0.3)'}`,
+                fontSize:11, fontFamily:'Montserrat,sans-serif', fontWeight:800,
+                color: empleado.modalidad==='asimilable'?'#92400e':'#fff' }}>
+                {empleado.modalidad==='asimilable'?'📋 Asimilable':'🏛️ Confianza'}
+              </div>
               {info && <div style={{ marginTop:8,fontSize:11,opacity:.8 }}>⏳ {info.mesesFaltantes} meses para el siguiente periodo</div>}
             </div>
             <div className="dias-ring" style={{ flexShrink:0, marginLeft:'auto' }}>
