@@ -19,7 +19,7 @@ export default function AltaPersonal({ onCreado }) {
     numero_empleado: '', puesto: '', departamento: '',
     fecha_ingreso: '', email: '', telefono: '',
     dias_vacaciones: '0',
-    username: '', password: '', modalidad: 'CONFIANZA',
+    username: '', password: '', modalidad: 'confianza',
   });
   const [diasAuto, setDiasAuto] = useState(0);
   const [diasManual, setDiasManual] = useState(false);
