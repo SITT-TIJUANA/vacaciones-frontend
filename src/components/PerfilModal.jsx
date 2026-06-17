@@ -73,6 +73,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
       fecha_ingreso: e?.fecha_ingreso ? e.fecha_ingreso.split('T')[0] : '',
       email: e?.email || '',
       telefono: e?.telefono || '',
+      modalidad: e?.modalidad || 'confianza',
     });
     setNuevaFoto(null); setPreviewFoto(null);
     setEditandoPerfil(true);
@@ -391,6 +392,7 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
                       { key:'puesto', label:'Puesto', placeholder:'Ej: Director' },
                       { key:'departamento', label:'Departamento', placeholder:'Ej: Dirección' },
                       { key:'fecha_ingreso', label:'Fecha de Ingreso', type:'date' },
+                      { key:'modalidad', label:'Modalidad', type:'select', options:[{v:'confianza',l:'🏛️ Confianza'},{v:'asimilable',l:'📋 Asimilable'}] },
                     ]},
                     { titulo:'📞 Contacto', campos:[
                       { key:'email', label:'Correo', type:'email', placeholder:'correo@tijuana.gob.mx' },
@@ -403,7 +405,13 @@ export default function PerfilModal({ empleadoId, onClose, onActualizar, onVerPe
                         {campos.map(c => (
                           <div key={c.key} className="form-group">
                             <label>{c.label}</label>
-                            <input type={c.type||'text'} className="form-control" placeholder={c.placeholder||''} value={formPerfil[c.key]||''} onChange={e=>setFormPerfil({...formPerfil,[c.key]:e.target.value})} />
+                            {c.type==='select' ? (
+                              <select className="form-control" value={formPerfil[c.key]||''} onChange={e=>setFormPerfil({...formPerfil,[c.key]:e.target.value})}>
+                                {c.options?.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                              </select>
+                            ) : (
+                              <input type={c.type||'text'} className="form-control" placeholder={c.placeholder||''} value={formPerfil[c.key]||''} onChange={e=>setFormPerfil({...formPerfil,[c.key]:e.target.value})} />
+                            )}
                           </div>
                         ))}
                       </div>
