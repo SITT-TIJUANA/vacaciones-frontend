@@ -214,17 +214,7 @@ export default function AltaPersonal({ onCreado }) {
                 Si se proporcionan, el empleado podrá iniciar sesión y solicitar vacaciones.
               </p>
               <div className="form-grid">
-                <div className="form-group">
-                  <label>Modalidad *</label>
-                  <div style={{ display:'flex', gap:10 }}>
-                    {['CONFIANZA','ASIMILABLE'].map(m=>(
-                      <button key={m} type="button" onClick={()=>setForm({...form,modalidad:m})}
-                        style={{ flex:1, padding:'10px', borderRadius:10, border:`1.5px solid ${form.modalidad===m?'#6B0F2B':'#e2e8f0'}`, background:form.modalidad===m?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:form.modalidad===m?'#6B0F2B':'#718096' }}>
-                        {m==='CONFIANZA'?'⭐ Confianza':'🔵 Asimilable'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
                 <div className="form-group">
                   <label>Modalidad *</label>
                   <div style={{ display:'flex', gap:8 }}>
