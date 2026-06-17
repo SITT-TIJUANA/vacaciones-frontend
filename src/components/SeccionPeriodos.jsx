@@ -168,6 +168,14 @@ export default function SeccionPeriodos({ empleadoInicial }) {
             </div>
           ) : cargando ? (
             <div className="loader-wrapper"><div className="loader"/></div>
+          ) : datos?.es_asimilable ? (
+            <div style={{ textAlign:'center', padding:48 }}>
+              <div style={{ fontSize:56, marginBottom:16 }}>📋</div>
+              <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:24, color:'var(--g)', marginBottom:10 }}>Personal Asimilable</div>
+              <div style={{ fontSize:14, color:'var(--g60)', fontFamily:'Montserrat,sans-serif', maxWidth:400, margin:'0 auto', lineHeight:1.6 }}>
+                <strong>{empleadoSel?.nombre} {empleadoSel?.apellido_paterno}</strong> es personal asimilable.<br/>No aplican períodos de vacaciones según la modalidad de contratación vigente.
+              </div>
+            </div>
           ) : datos ? (
             <DetallePeriodos
               empleado={empleadoSel}
