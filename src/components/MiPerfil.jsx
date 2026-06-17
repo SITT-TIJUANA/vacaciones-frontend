@@ -17,10 +17,12 @@ export default function MiPerfil({ onVerPeriodos }) {
         .then(r => setPerfil({
           empleado: r.data.empleado,
           periodos: r.data.periodos,
-          solicitudes: r.data.periodos.flatMap(p => p.solicitudes||[]),
+          solicitudes: (r.data.periodos||[]).flatMap(p => p.solicitudes||[]),
           total_disponible: r.data.total_disponible,
           total_tomado: r.data.total_tomado,
           total_correspondiente: r.data.total_correspondiente,
+          modalidad: r.data.empleado?.modalidad || 'confianza',
+          es_asimilable: r.data.es_asimilable || r.data.empleado?.modalidad === 'asimilable',
         }))
         .catch(console.error)
         .finally(() => setCargando(false));
@@ -42,7 +44,7 @@ export default function MiPerfil({ onVerPeriodos }) {
         <h2 className="section-title">Mi Perfil</h2>
       </div>
 
-      {perfil?.modalidad === 'asimilable' ? (
+      {perfil?.es_asimilable ? (
         <div className="card" style={{ textAlign:'center', padding:40 }}>
           <div style={{ fontSize:48, marginBottom:16 }}>📋</div>
           <div style={{ fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900, fontSize:22, color:'var(--g)', marginBottom:8 }}>Personal Asimilable</div>
