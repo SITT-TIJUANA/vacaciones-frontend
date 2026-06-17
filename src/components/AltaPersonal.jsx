@@ -19,7 +19,7 @@ export default function AltaPersonal({ onCreado }) {
     numero_empleado: '', puesto: '', departamento: '',
     fecha_ingreso: '', email: '', telefono: '',
     dias_vacaciones: '0',
-    username: '', password: '',
+    username: '', password: '', modalidad: 'CONFIANZA',
   });
   const [diasAuto, setDiasAuto] = useState(0);
   const [diasManual, setDiasManual] = useState(false);
@@ -62,7 +62,7 @@ export default function AltaPersonal({ onCreado }) {
       setExito(true);
       setTimeout(() => {
         setExito(false);
-        setForm({ nombre:'',apellido_paterno:'',apellido_materno:'',numero_empleado:'',puesto:'',departamento:'',fecha_ingreso:'',email:'',telefono:'',dias_vacaciones:'0',username:'',password:'' });
+        setForm({ nombre:'',apellido_paterno:'',apellido_materno:'',numero_empleado:'',puesto:'',departamento:'',fecha_ingreso:'',email:'',telefono:'',dias_vacaciones:'0',username:'',password:'',modalidad:'confianza' });
         setFoto(null); setPreview(null); setDiasAuto(0); setDiasManual(false);
         onCreado?.();
       }, 2200);
@@ -214,6 +214,29 @@ export default function AltaPersonal({ onCreado }) {
                 Si se proporcionan, el empleado podrá iniciar sesión y solicitar vacaciones.
               </p>
               <div className="form-grid">
+                <div className="form-group">
+                  <label>Modalidad *</label>
+                  <div style={{ display:'flex', gap:10 }}>
+                    {['CONFIANZA','ASIMILABLE'].map(m=>(
+                      <button key={m} type="button" onClick={()=>setForm({...form,modalidad:m})}
+                        style={{ flex:1, padding:'10px', borderRadius:10, border:`1.5px solid ${form.modalidad===m?'#6B0F2B':'#e2e8f0'}`, background:form.modalidad===m?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:13, color:form.modalidad===m?'#6B0F2B':'#718096' }}>
+                        {m==='CONFIANZA'?'⭐ Confianza':'🔵 Asimilable'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Modalidad *</label>
+                  <div style={{ display:'flex', gap:8 }}>
+                    {['confianza','asimilable'].map(m=>(
+                      <button key={m} type="button" onClick={()=>setForm({...form,modalidad:m})}
+                        style={{ flex:1, padding:'10px', borderRadius:10, border:`1.5px solid ${form.modalidad===m?'#6B0F2B':'#e2e8f0'}`, background:form.modalidad===m?'rgba(107,15,43,0.08)':'#fff', cursor:'pointer', fontFamily:'Montserrat,sans-serif', fontWeight:700, fontSize:13, color:form.modalidad===m?'#6B0F2B':'#718096', textTransform:'uppercase' }}>
+                        {m === 'confianza' ? '🏛️ Confianza' : '📋 Asimilable'}
+                      </button>
+                    ))}
+                  </div>
+                  {form.modalidad==='asimilable' && <p style={{fontSize:11,color:'#718096',marginTop:4}}>⚠️ Los empleados asimilables no generan períodos de vacaciones.</p>}
+                </div>
                 <div className="form-group"><label>Usuario *</label><input className="form-control" placeholder="usuario.apellido" value={form.username} onChange={e=>setForm({...form,username:e.target.value})} /></div>
                 <div className="form-group"><label>Contraseña temporal *</label><input type="password" className="form-control" placeholder="Mínimo 6 caracteres" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} /></div>
               </div>
