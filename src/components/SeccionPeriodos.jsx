@@ -4,53 +4,8 @@ import { useAuth } from '../context/AuthContext';
 
 function fmtFecha(f) {
   if (!f) return '—';
-  // Parsear como fecha local para evitar offset de timezone
   const [y,m,d] = f.substring(0,10).split('-');
   return new Date(parseInt(y), parseInt(m)-1, parseInt(d)).toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' });
-}
-
-// Calcular periodos desde fecha de ingreso
-function calcularPeriodos(fechaIngreso) {
-  if (!fechaIngreso) return [];
-  const ingreso = new Date(fechaIngreso);
-  const hoy = new Date();
-  const periodos = [];
-  let inicio = new Date(ingreso);
-  let numPeriodo = 1;
-
-  while (inicio <= hoy) {
-    const fin = new Date(inicio);
-    fin.setMonth(fin.getMonth() + 6);
-    fin.setDate(fin.getDate() - 1);
-
-    const completado = fin < hoy;
-    const enCurso = !completado && inicio <= hoy;
-
-    // Meses faltantes si está en curso
-    let mesesFaltantes = 0;
-    if (enCurso) {
-      const finReal = new Date(inicio);
-      finReal.setMonth(finReal.getMonth() + 6);
-      mesesFaltantes = Math.ceil((finReal - hoy) / (1000 * 60 * 60 * 24 * 30));
-    }
-
-    periodos.push({
-      numero: numPeriodo,
-      fecha_inicio: new Date(inicio),
-      fecha_fin: fin,
-      completado,
-      en_curso: enCurso,
-      meses_faltantes: mesesFaltantes,
-    });
-
-    if (!completado && !enCurso) break;
-    inicio = new Date(fin);
-    inicio.setDate(inicio.getDate() + 1);
-    numPeriodo++;
-    if (numPeriodo > 30) break; // safety
-  }
-
-  return periodos;
 }
 
 export default function SeccionPeriodos({ empleadoInicial }) {
@@ -68,7 +23,6 @@ export default function SeccionPeriodos({ empleadoInicial }) {
   useEffect(() => {
     api.get('/api/empleados').then(r => {
       setEmpleados(r.data);
-      // Si viene empleado preseleccionado desde botón
       const idBuscar = empleadoInicial || (rolEfectivo === 'empleado' ? usuario?.empleado_id : null);
       if (idBuscar) {
         const emp = r.data.find(e => e.id === idBuscar);
@@ -89,18 +43,14 @@ export default function SeccionPeriodos({ empleadoInicial }) {
 
   const eliminarHistorico = async (id) => {
     if (!window.confirm('¿Eliminar este registro histórico?')) return;
-    try {
-      await api.delete(`/api/solicitudes/manual/${id}`);
-      recargar();
-    } catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
+    try { await api.delete(`/api/solicitudes/manual/${id}`); recargar(); }
+    catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
   };
 
   const eliminarVacacion = async (id) => {
     if (!window.confirm('¿Eliminar este registro de vacaciones?')) return;
-    try {
-      await api.delete(`/api/solicitudes/${id}`);
-      recargar();
-    } catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
+    try { await api.delete(`/api/solicitudes/${id}`); recargar(); }
+    catch(e) { alert(e.response?.data?.error || 'Error al eliminar'); }
   };
 
   const recargar = () => {
@@ -126,7 +76,6 @@ export default function SeccionPeriodos({ empleadoInicial }) {
 
       <div style={{ display:'grid', gridTemplateColumns: rolEfectivo==='empleado' ? '1fr' : '280px 1fr', gap:20, alignItems:'start' }}>
 
-        {/* Lista empleados — oculta para empleado */}
         {rolEfectivo !== 'empleado' && <div className="card" style={{ padding:0, overflow:'hidden', position:'sticky', top:80 }}>
           <div style={{ padding:'12px 14px', borderBottom:'1px solid var(--g20)', background:'var(--g-soft)' }}>
             <input className="form-control" placeholder="🔍 Buscar empleado..." value={busqueda}
@@ -158,7 +107,6 @@ export default function SeccionPeriodos({ empleadoInicial }) {
           </div>
         </div>}
 
-        {/* Panel detalle */}
         <div>
           {!empleadoSel ? (
             <div style={{ textAlign:'center',padding:'80px 20px',color:'var(--g60)' }}>
@@ -203,16 +151,18 @@ export default function SeccionPeriodos({ empleadoInicial }) {
 }
 
 function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, onRegistrarHistorico, onEditarSolicitud, onEliminarSolicitud, onEliminarHistorico }) {
-  // Usar directamente los periodos del backend (ya calculados correctamente)
   const periodos = datos.periodos || [];
   const periodoEnCurso = periodos.find(p => p.en_curso);
   const periodosCompletados = periodos.filter(p => p.completado);
-  const totalCorrespondidos = periodosCompletados.length * 10;
+
+  // ✅ FIX: usar datos del backend directamente, no calcular manualmente
+  const totalCorrespondidos = datos.total_correspondiente || 0;
+  const totalTomado = datos.total_tomado || 0;
+  const totalDisponible = datos.total_disponible || 0;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
-      {/* Header empleado */}
       <div className="card" style={{ padding:'20px 24px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
           {empleado.foto_url
@@ -231,12 +181,11 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
             )}
           </div>
           <div style={{ textAlign:'center',padding:'14px 20px',background:'var(--g-soft)',borderRadius:14,border:'1px solid rgba(107,15,43,0.15)',flexShrink:0 }}>
-            <div style={{ fontFamily:'Playfair Display,serif',fontStyle:'italic',fontWeight:900,fontSize:44,color:'var(--g)',lineHeight:1 }}>{datos.total_disponible}</div>
+            <div style={{ fontFamily:'Playfair Display,serif',fontStyle:'italic',fontWeight:900,fontSize:44,color:'var(--g)',lineHeight:1 }}>{totalDisponible}</div>
             <div style={{ fontSize:10,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'var(--g60)',textTransform:'uppercase',marginTop:4 }}>días disponibles</div>
           </div>
         </div>
 
-        {/* Resumen */}
         <div style={{ marginTop:16,padding:'14px 16px',background:'var(--g-soft)',borderRadius:12,border:'1px solid rgba(107,15,43,0.15)' }}>
           <div style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:13,color:'var(--g)',marginBottom:8 }}>
             📊 Desde tu ingreso el {fmtFecha(empleado.fecha_ingreso)}:
@@ -244,12 +193,12 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
           <div style={{ fontSize:14,color:'var(--g60)',lineHeight:1.8 }}>
             ✅ <strong style={{ color:'var(--g)' }}>{periodosCompletados.length} periodos completados</strong> de 6 meses cada uno<br/>
             📋 Te corresponden <strong style={{ color:'var(--g)' }}>{totalCorrespondidos} días en total</strong><br/>
-            🏖️ Has tomado <strong style={{ color:'var(--d-dk)' }}>{totalCorrespondidos - datos.total_disponible} días</strong> de vacaciones<br/>
-            ✨ Tienes <strong style={{ color:'#1B5E20' }}>{datos.total_disponible} días disponibles</strong>
+            🏖️ Has tomado <strong style={{ color:'var(--d-dk)' }}>{totalTomado} días</strong> de vacaciones<br/>
+            ✨ Tienes <strong style={{ color:'#1B5E20' }}>{totalDisponible} días disponibles</strong>
           </div>
           {periodoEnCurso && (
             <div style={{ marginTop:10,padding:'8px 12px',background:'rgba(230,81,0,0.08)',borderRadius:8,border:'1px solid rgba(230,81,0,0.2)',fontSize:12,color:'#E65100',fontFamily:'Montserrat,sans-serif',fontWeight:700 }}>
-              ⏳ Faltan {periodoEnCurso.meses_faltantes} mes{periodoEnCurso.meses_faltantes!==1?'es':''} para completar el Periodo {periodoEnCurso.numero} y acumular 10 días más
+              ⏳ Faltan {periodoEnCurso.meses_faltantes} mes{periodoEnCurso.meses_faltantes!==1?'es':''} para completar el Periodo {periodoEnCurso.numero} y acumular {10 + Math.floor((periodoEnCurso.numero - 1) / 2)} días más
             </div>
           )}
         </div>
@@ -263,35 +212,24 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
         )}
       </div>
 
-      {/* HISTORIAL COMPLETO CRONOLÓGICO */}
+      {/* HISTORIAL COMPLETO */}
       {(() => {
-        // Juntar solicitudes aprobadas + manuales de todos los periodos
         const todasVacaciones = [];
         periodos.forEach(p => {
           (p.solicitudes||[]).forEach(s => todasVacaciones.push({
-            fecha_inicio: s.fecha_inicio,
-            fecha_fin: s.fecha_fin,
-            dias: s.dias_solicitados,
-            tipo: 'aprobada',
-            aprobado_por: s.aprobado_por_username,
-            notas: s.motivo || '',
-            id: s.id,
-            periodo: p.numero,
+            fecha_inicio: s.fecha_inicio, fecha_fin: s.fecha_fin,
+            dias: s.dias_solicitados, tipo: 'aprobada',
+            aprobado_por: s.aprobado_por_username, notas: s.motivo || '',
+            id: s.id, periodo: p.numero,
           }));
           (p.manuales||[]).forEach(m => todasVacaciones.push({
-            fecha_inicio: m.fecha_inicio,
-            fecha_fin: m.fecha_fin,
-            dias: m.dias,
-            tipo: 'manual',
-            aprobado_por: m.registrado_por_username,
-            notas: m.notas || '',
-            id: m.id,
-            periodo: p.numero,
+            fecha_inicio: m.fecha_inicio, fecha_fin: m.fecha_fin,
+            dias: m.dias, tipo: 'manual',
+            aprobado_por: m.registrado_por_username, notas: m.notas || '',
+            id: m.id, periodo: p.numero,
           }));
         });
-        // Ordenar por fecha
         todasVacaciones.sort((a,b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
-
         if (!todasVacaciones.length) return null;
 
         return (
@@ -308,17 +246,14 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                   background: v.tipo==='manual' ? 'rgba(230,81,0,0.04)' : 'var(--g-soft)',
                   border: `1.5px solid ${v.tipo==='manual' ? 'rgba(230,81,0,0.18)' : 'rgba(107,15,43,0.12)'}`,
                 }}>
-                  {/* Número */}
                   <div style={{ width:28, height:28, borderRadius:'50%', background: v.tipo==='manual'?'#E65100':'var(--g)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:12, flexShrink:0 }}>
                     {i+1}
                   </div>
-                  {/* Info */}
                   <div style={{ flex:1, minWidth:200 }}>
                     <div style={{ fontFamily:'Montserrat,sans-serif', fontWeight:800, fontSize:14, color: v.tipo==='manual'?'#E65100':'var(--g)', marginBottom:4 }}>
                       {v.fecha_inicio
                         ? `${fmtFecha(v.fecha_inicio)}${v.fecha_fin && v.fecha_fin.substring(0,10)!==v.fecha_inicio.substring(0,10) ? ` al ${fmtFecha(v.fecha_fin)}` : ''}`
-                        : 'Sin fecha registrada'
-                      }
+                        : 'Sin fecha registrada'}
                     </div>
                     <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', fontSize:12, color:'var(--g60)' }}>
                       <span style={{ fontFamily:'Montserrat,sans-serif', fontWeight:900, fontSize:16, color: v.tipo==='manual'?'#E65100':'var(--g)' }}>
@@ -331,7 +266,7 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                         {v.tipo==='manual' ? '📂 Manual' : '✅ Solicitud aprobada'}
                       </span>
                       <span>Periodo {v.periodo}</span>
-                      {v.aprobado_por && <span>{v.tipo==='manual'?'Registrado':'Aprobado'} por: {v.aprobado_por}</span>}
+                      {v.aprobado_por && <span>{v.tipo==='manual'?'Registrado':'Aprobado'} por: @{v.aprobado_por}</span>}
                     </div>
                     {v.notas && <div style={{ fontSize:11, color:'var(--g60)', marginTop:4, fontStyle:'italic' }}>💬 {v.notas}</div>}
                   </div>
@@ -353,7 +288,6 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
         periodos.map(p => {
           const key = `periodo-${p.numero}`;
           const abierto = expandido[key] !== false;
-          const pct = p.dias_correspondientes > 0 ? Math.round((p.dias_tomados/p.dias_correspondientes)*100) : 0;
           const todasVacaciones = [
             ...(p.solicitudes||[]).map(s => ({ ...s, tipo:'sistema' })),
             ...(p.manuales||[]).map(h => ({ ...h, tipo:'historico' })),
@@ -361,8 +295,6 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
 
           return (
             <div key={key} style={{ borderRadius:16, border:`1.5px solid ${p.completado?'var(--g20)':p.en_curso?'rgba(230,81,0,0.3)':'var(--g20)'}`, overflow:'hidden' }}>
-
-              {/* Header */}
               <div onClick={()=>setExpandido(e=>({...e,[key]:!abierto}))}
                 style={{ padding:'16px 20px', cursor:'pointer', display:'flex', alignItems:'center', gap:12,
                   background: p.en_curso?'rgba(230,81,0,0.06)':abierto?'var(--g-soft)':'var(--g10)' }}>
@@ -383,12 +315,12 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                   </div>
                   {p.completado && (
                     <div style={{ fontSize:11,fontFamily:'Montserrat,sans-serif',fontWeight:600,color:'var(--g60)' }}>
-                      10 días correspondieron · {p.dias_tomados} tomados · {p.dias_disponibles} disponibles
+                      {p.dias_correspondientes} días correspondieron · {p.dias_tomados} tomados · {p.dias_disponibles} disponibles
                     </div>
                   )}
                   {p.en_curso && (
                     <div style={{ fontSize:11,fontFamily:'Montserrat,sans-serif',fontWeight:700,color:'#E65100' }}>
-                      Aún no se acumulan días — completa el periodo para ganar 10 días
+                      Aún no se acumulan días — completa el periodo para ganar {p.dias_correspondientes || (10 + Math.floor((p.numero-1)/2))} días
                     </div>
                   )}
                 </div>
@@ -401,12 +333,10 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                 <span style={{ fontSize:18,transition:'transform 0.3s',transform:abierto?'rotate(180deg)':'rotate(0deg)',color:'var(--g)' }}>▾</span>
               </div>
 
-              {/* Cuerpo */}
               {abierto && (
                 <div style={{ padding:'16px 20px',background:'var(--w)',display:'flex',flexDirection:'column',gap:14 }}>
                   {p.completado ? (
                     <>
-                      {/* Stats 3 columnas */}
                       <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10 }}>
                         {[
                           { label:'Días acumulados en este periodo',value:p.dias_correspondientes,color:'var(--g)',icon:'📋' },
@@ -421,7 +351,6 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                         ))}
                       </div>
 
-                      {/* Vacaciones */}
                       <div>
                         <div style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:11,color:'var(--g)',textTransform:'uppercase',letterSpacing:'0.6px',marginBottom:8 }}>
                           Vacaciones tomadas en este periodo:
@@ -467,10 +396,9 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                         )}
                       </div>
 
-                      {/* Nota */}
                       <div style={{ padding:'10px 14px',background:'#E8F5E9',borderRadius:10,border:'1px solid #C8E6C9',fontSize:12,color:'#1B5E20',fontFamily:'Montserrat,sans-serif',fontWeight:600 }}>
                         ℹ️ Periodo {p.numero} del {fmtFecha(p.fecha_inicio)} al {fmtFecha(p.fecha_fin)}.
-                        Te correspondieron <strong>10 días</strong>, tomaste <strong>{p.dias_tomados} días</strong> y tienes <strong>{p.dias_disponibles} días disponibles</strong>.
+                        Te correspondieron <strong>{p.dias_correspondientes} días</strong>, tomaste <strong>{p.dias_tomados} días</strong> y tienes <strong>{p.dias_disponibles} días disponibles</strong>.
                       </div>
                     </>
                   ) : p.en_curso ? (
@@ -479,7 +407,7 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
                       <div style={{ fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:14,color:'#E65100',marginBottom:6 }}>Periodo en curso</div>
                       <div style={{ fontSize:13,color:'var(--g60)',lineHeight:1.6 }}>
                         Del <strong>{fmtFecha(p.fecha_inicio)}</strong> al <strong>{fmtFecha(p.fecha_fin)}</strong>.<br/>
-                        Faltan <strong style={{ color:'#E65100' }}>{p.meses_faltantes} mes{p.meses_faltantes!==1?'es':''}</strong> para completarlo y acumular <strong>10 días más</strong>.
+                        Faltan <strong style={{ color:'#E65100' }}>{p.meses_faltantes} mes{p.meses_faltantes!==1?'es':''}</strong> para completarlo y acumular <strong>{10 + Math.floor((p.numero-1)/2)} días más</strong>.
                       </div>
                     </div>
                   ) : null}
@@ -493,34 +421,6 @@ function DetallePeriodos({ empleado, datos, esAdmin, expandido, setExpandido, on
   );
 }
 
-
-function calcularPeriodosReales(fechaIngreso) {
-  if (!fechaIngreso) return [];
-  const ingreso = new Date(fechaIngreso);
-  const hoy = new Date();
-  const periodos = [];
-  let inicio = new Date(ingreso);
-  let num = 1;
-  while (inicio <= hoy && num <= 20) {
-    const fin = new Date(inicio);
-    fin.setMonth(fin.getMonth() + 6);
-    fin.setDate(fin.getDate() - 1);
-    // Solo agregar periodos COMPLETADOS (no el que está en curso)
-    if (fin < hoy) {
-      periodos.push({
-        numero: num,
-        inicio: new Date(inicio),
-        fin: new Date(fin),
-        label: `Periodo ${num}: ${inicio.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} — ${fin.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}`,
-      });
-    }
-    inicio = new Date(fin);
-    inicio.setDate(inicio.getDate() + 1);
-    num++;
-  }
-  return periodos;
-}
-
 function ModalHistorico({ empleadoId, onClose, onGuardado }) {
   const [form, setForm] = useState({ fecha_inicio:'', fecha_fin:'', dias:'', notas:'' });
   const [guardando, setGuardando] = useState(false);
@@ -528,7 +428,6 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
 
   const calcDias = () => {
     if (!form.fecha_inicio || !form.fecha_fin) return 0;
-    // Usar split para evitar problema de zona horaria
     const [iy,im,id] = form.fecha_inicio.split('-').map(Number);
     const [fy,fm,fd] = form.fecha_fin.split('-').map(Number);
     const ini = new Date(iy, im-1, id);
@@ -539,12 +438,10 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
     return d;
   };
 
-  // Si ponen fecha inicio y fin, calculamos días. Si no, usan el campo manual
   const diasCalc = form.fecha_inicio && form.fecha_fin ? calcDias() : parseInt(form.dias||0);
 
   const guardar = async () => {
     if (!form.fecha_inicio) { setError('La fecha de inicio es obligatoria'); return; }
-    if (!form.fecha_fin) { setForm(f => ({...f, fecha_fin: form.fecha_inicio})); }
     if (!diasCalc || diasCalc <= 0) { setError('Indica los días correctamente'); return; }
     setGuardando(true); setError('');
     try {
@@ -572,7 +469,6 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
             📂 Registra vacaciones que ya ocurrieron antes de usar este sistema. Los días se descontarán automáticamente del periodo más viejo al más nuevo.
           </div>
           {error && <div style={{padding:'10px 12px',background:'#FFEBEE',borderRadius:8,color:'#B71C1C',fontSize:12,fontWeight:600}}>⚠️ {error}</div>}
-
           <div className="form-grid">
             <div className="form-group">
               <label>Fecha de inicio *</label>
@@ -583,7 +479,6 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
               <input type="date" className="form-control" value={form.fecha_fin} min={form.fecha_inicio} onChange={e=>setForm({...form,fecha_fin:e.target.value})} />
             </div>
           </div>
-
           {form.fecha_inicio && form.fecha_fin && diasCalc > 0 ? (
             <div style={{background:'var(--g-soft)',borderRadius:10,padding:'10px 14px',display:'flex',alignItems:'center',gap:10}}>
               <span style={{fontFamily:'Playfair Display,serif',fontStyle:'italic',fontWeight:900,fontSize:32,color:'var(--g)'}}>{diasCalc}</span>
@@ -595,7 +490,6 @@ function ModalHistorico({ empleadoId, onClose, onGuardado }) {
               <input type="number" className="form-control" min="1" placeholder="Ej: 5" value={form.dias} onChange={e=>setForm({...form,dias:e.target.value})} />
             </div>
           )}
-
           <div className="form-group">
             <label>Notas (opcional)</label>
             <input className="form-control" placeholder="Ej: Vacaciones mayo 2025..." value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} />
@@ -616,7 +510,6 @@ function ModalEditarSolicitud({ solicitud, onClose, onGuardado }) {
     fecha_fin:solicitud.fecha_fin?.split('T')[0]||'',
     dias_solicitados:solicitud.dias_solicitados,
     anio:solicitud.anio,
-    periodo_semestre:solicitud.periodo_semestre||1,
     motivo:solicitud.motivo||'',
     estatus:solicitud.estatus,
   });
