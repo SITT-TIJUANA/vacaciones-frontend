@@ -20,6 +20,8 @@ export default function SeccionPeriodos({ empleadoInicial }) {
   const [expandido, setExpandido] = useState({});
   const esAdmin = ['admin','rrhh'].includes(usuario?.rol);
 
+  const [resumenTodos, setResumenTodos] = useState({});
+
   useEffect(() => {
     api.get('/api/empleados').then(r => {
       setEmpleados(r.data);
@@ -28,6 +30,13 @@ export default function SeccionPeriodos({ empleadoInicial }) {
         const emp = r.data.find(e => e.id === idBuscar);
         if (emp) seleccionarEmpleado(emp);
       }
+    }).catch(console.error);
+
+    // Cargar días disponibles reales de todos
+    api.get('/api/solicitudes/resumen-todos').then(r => {
+      const map = {};
+      r.data.forEach(e => { map[e.empleado_id] = e; });
+      setResumenTodos(map);
     }).catch(console.error);
   }, [empleadoInicial]);
 
@@ -70,6 +79,12 @@ export default function SeccionPeriodos({ empleadoInicial }) {
 
   return (
     <div className="fade-in">
+      <style>{`
+        @keyframes goldPulse {
+          0%,100% { text-shadow: 0 2px 8px rgba(201,168,76,0.4), 0 1px 0 rgba(255,255,255,0.3); transform: perspective(200px) rotateX(8deg) scale(1); }
+          50% { text-shadow: 0 4px 16px rgba(201,168,76,0.8), 0 2px 0 rgba(255,255,255,0.5); transform: perspective(200px) rotateX(8deg) scale(1.08); }
+        }
+      `}</style>
       <div className="section-header">
         <h2 className="section-title">Periodos de Vacaciones</h2>
       </div>
@@ -99,9 +114,34 @@ export default function SeccionPeriodos({ empleadoInicial }) {
                   </div>
                   <div style={{ fontSize:10,color:'var(--g60)' }}>{emp.departamento||'—'}</div>
                 </div>
-                <div style={{ fontFamily:'Montserrat,sans-serif',fontWeight:900,fontSize:16,color:'var(--g)',flexShrink:0 }}>
-                  {emp.dias_disponibles??'—'}
-                </div>
+                {(() => {
+                  const r = resumenTodos[emp.id];
+                  const dias = r ? r.total_disponible : null;
+                  const asimilable = r?.es_asimilable;
+                  if (asimilable) return (
+                    <div style={{ textAlign:'center', flexShrink:0 }}>
+                      <div style={{ fontSize:9, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'#92400e', background:'rgba(245,158,11,0.15)', padding:'2px 6px', borderRadius:8 }}>Asimilable</div>
+                    </div>
+                  );
+                  return (
+                    <div style={{ textAlign:'center', flexShrink:0, minWidth:52 }}>
+                      <div style={{
+                        fontFamily:'Playfair Display,serif', fontStyle:'italic', fontWeight:900,
+                        fontSize:22, lineHeight:1,
+                        color: dias === null ? 'var(--g60)' : dias === 0 ? '#B71C1C' : '#C9A84C',
+                        textShadow: dias > 0 ? '0 2px 8px rgba(201,168,76,0.5), 0 1px 0 rgba(255,255,255,0.3)' : 'none',
+                        animation: dias > 0 ? 'goldPulse 2.5s ease-in-out infinite' : 'none',
+                        transform: 'perspective(200px) rotateX(8deg)',
+                        display:'block',
+                      }}>
+                        {dias === null ? '—' : dias}
+                      </div>
+                      <div style={{ fontSize:8, fontFamily:'Montserrat,sans-serif', fontWeight:700, color:'var(--g60)', textTransform:'uppercase', letterSpacing:0.3, marginTop:1 }}>
+                        {dias === null ? '' : 'días disp.'}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
