@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { VacacionesLogo, useMexicoGame } from '../components/MexicoMode';
+import { useMexicoGame } from '../components/MexicoMode';
 
 // ─── Íconos lluvia ────────────────────────────────────────
 const ICONOS_LLUVIA = [
@@ -112,12 +112,8 @@ export default function Login() {
           backgroundImage:`url('${import.meta.env.BASE_URL}login-bg.jpg')`,
           backgroundSize:'cover', backgroundPosition:'center',
           backgroundColor:'#6B0F2B' }}>
-          {/* Overlay sutil */}
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, transparent 60%, rgba(107,15,43,0.4) 100%)' }}/>
-          {/* Logo sobre imagen */}
-          <div style={{ position:'absolute', bottom:16, left:0, right:0, display:'flex', justifyContent:'center' }}>
-            <VacacionesLogo onActivar={activar}/>
-          </div>
+          {/* Overlay sutil + clic para modo México */}
+          <div onClick={activar} style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, transparent 60%, rgba(107,15,43,0.3) 100%)', cursor:'pointer' }} title="⚽ Haz clic aquí"/>
         </div>
 
         {/* Formulario */}
